@@ -7,7 +7,6 @@ const TABS = [
   { href: "/", label: "Home" },
   { href: "/learn", label: "Learn" },
   { href: "/practice", label: "Practice" },
-  { href: "/notes", label: "Notes" },
 ];
 
 export function Nav() {

@@ -461,68 +461,12 @@ input[type="search"] {
   border-top: 1px dashed var(--border);
 }
 
-/* ---------- notes ---------- */
-.notes-layout {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 20px;
-  align-items: start;
-}
-.doc-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  border: 1px solid transparent;
-  background: none;
-  color: var(--text);
-  padding: 8px 10px;
-  border-radius: 8px;
-}
-.doc-item:hover {
-  background: var(--surface-2);
-}
-.doc-item.on {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.viewer {
-  width: 100%;
-  height: calc(100vh - 150px);
-  min-height: 520px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-.hit {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  border-top: 1px solid var(--border);
-  padding: 8px 4px;
-  color: var(--text);
-  font-size: 0.85rem;
-}
-.hit:hover {
-  background: var(--surface-2);
-}
-mark {
-  background: #ffe58a;
-  color: #000;
-  border-radius: 3px;
-}
-
 @media (max-width: 860px) {
-  .learn-layout,
-  .notes-layout {
+  .learn-layout {
     grid-template-columns: 1fr;
   }
   .toc {
     position: static;
-  }
-  .viewer {
-    height: 75vh;
   }
   .topbar-inner {
     gap: 12px;
