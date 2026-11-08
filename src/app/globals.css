@@ -461,12 +461,49 @@ input[type="search"] {
   border-top: 1px dashed var(--border);
 }
 
+/* Grid/flex children default to min-width: auto, so one wide formula would stretch the
+   whole column past the screen edge. Let them shrink and scroll wide math instead. */
+.learn-layout > *,
+.stack > *,
+.card {
+  min-width: 0;
+}
+.rich,
+.flash,
+.callout {
+  overflow-wrap: anywhere;
+}
+.katex:has(.mtable) {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  vertical-align: middle;
+}
+
 @media (max-width: 860px) {
   .learn-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
   }
   .toc {
     position: static;
+  }
+  .grid.cols-3,
+  .grid.cols-5 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .card {
+    padding: 14px;
+  }
+  .steps li {
+    padding-left: 32px;
+  }
+  h1 {
+    font-size: 1.55rem;
+  }
+  h2 {
+    font-size: 1.15rem;
   }
   .topbar-inner {
     gap: 12px;
