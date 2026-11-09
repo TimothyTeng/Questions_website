@@ -512,3 +512,168 @@ input[type="search"] {
     display: none;
   }
 }
+
+/* ---------- interactive figures ---------- */
+.viz {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 14px 0;
+  background: var(--surface);
+  overflow: hidden;
+}
+.viz-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.viz-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+}
+.viz-fig {
+  min-width: 0;
+}
+.viz-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.viz-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: var(--surface-2);
+  border-radius: 10px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.viz-3d {
+  cursor: grab;
+  touch-action: none;
+}
+.viz-3d:active {
+  cursor: grabbing;
+}
+.viz-3d-wrap {
+  position: relative;
+}
+.viz-3d-tools {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+}
+.viz-3d-tools .btn {
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+}
+.viz-grid {
+  stroke: var(--border);
+  stroke-width: 0.7;
+}
+.viz-axis line {
+  stroke: var(--muted);
+  stroke-width: 1.2;
+}
+.viz-tick {
+  font-size: 10px;
+  fill: var(--muted);
+}
+.viz-label {
+  font-size: 13px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--surface-2);
+  stroke-width: 3px;
+}
+.viz-handle {
+  cursor: grab;
+  touch-action: none;
+}
+.viz-hint {
+  margin-top: 6px;
+}
+.viz-readout {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  display: grid;
+  gap: 4px;
+  overflow-x: auto;
+}
+.viz-read-label {
+  color: var(--muted);
+  margin-right: 6px;
+  font-size: 0.82rem;
+}
+.viz-read.good {
+  color: var(--good);
+}
+.viz-read.bad {
+  color: var(--bad);
+}
+.viz-read.warn {
+  color: var(--warn);
+}
+.viz-tasks .callout-title {
+  color: var(--muted);
+}
+.viz-task {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.viz-task input {
+  margin-top: 4px;
+}
+.viz-task.done span {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+.viz-controls {
+  display: grid;
+  gap: 8px;
+}
+.viz-slider {
+  display: grid;
+  gap: 2px;
+  font-size: 0.88rem;
+}
+.viz-slider input {
+  width: 100%;
+}
+.viz-vec {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.88rem;
+  flex-wrap: wrap;
+}
+.viz-vec input {
+  width: 58px;
+  padding: 4px 6px;
+}
+.viz-toggle {
+  font-size: 0.88rem;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  cursor: pointer;
+}
+@media (max-width: 760px) {
+  .viz-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

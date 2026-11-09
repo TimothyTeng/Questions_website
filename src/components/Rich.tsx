@@ -5,16 +5,19 @@ import { memo } from "react";
 // newline = paragraph, "- " = bullet.
 
 function renderInline(text: string): string {
-  return text
+  // Bold markers may wrap math (e.g. **$x$ is an eigenvector**), so track bold state across parts.
+  let bold = false;
+  const html = text
     .split(/(\$\$[\s\S]+?\$\$|\$[^$]+?\$)/g)
     .map((part) => {
       if (part.startsWith("$$") && part.endsWith("$$") && part.length > 4)
         return katex.renderToString(part.slice(2, -2), { displayMode: true, throwOnError: false });
       if (part.startsWith("$") && part.endsWith("$") && part.length > 2)
         return katex.renderToString(part.slice(1, -1), { throwOnError: false });
-      return escapeHtml(part).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      return escapeHtml(part).replace(/\*\*/g, () => ((bold = !bold) ? "<strong>" : "</strong>"));
     })
     .join("");
+  return bold ? `${html}</strong>` : html;
 }
 
 function escapeHtml(s: string): string {

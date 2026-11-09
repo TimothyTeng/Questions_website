@@ -5,7 +5,8 @@ import { useState } from "react";
 import { Rich, RichInline, Tex } from "@/components/Rich";
 import { useFlag } from "@/lib/progress";
 import { TOPICS, topicById } from "@/lib/topics";
-import type { Lesson, LessonSection, RecallCard, WorkedExample } from "@/lib/types";
+import type { Lesson, LessonSection, RecallCard, TopicId, WorkedExample } from "@/lib/types";
+import { SectionVisuals } from "@/components/viz/registry";
 
 export function LessonView({ lesson }: { lesson: Lesson }) {
   const meta = topicById(lesson.topic);
@@ -74,7 +75,7 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
   );
 }
 
-function SectionCard({ s, n, topic }: { s: LessonSection; n: number; topic: string }) {
+function SectionCard({ s, n, topic }: { s: LessonSection; n: number; topic: TopicId }) {
   const [done, setDone] = useFlag(`${topic}:s${n}`);
   return (
     <section id={`s${n}`} className="card">
@@ -92,6 +93,8 @@ function SectionCard({ s, n, topic }: { s: LessonSection; n: number; topic: stri
         <div className="callout-title">Intuition</div>
         <Rich text={s.intuition} />
       </div>
+
+      <SectionVisuals topic={topic} section={n - 1} />
 
       <h3>Key ideas</h3>
       <ul className="rich" style={{ paddingLeft: 20 }}>
