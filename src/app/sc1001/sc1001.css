@@ -1,0 +1,333 @@
+/* SC1001 section: code blocks, HackerEarth-style IDE and mock-test layout. */
+
+.md code,
+.ide code,
+.small code {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0 4px;
+}
+pre.code {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 6px 0 10px;
+  overflow-x: auto;
+  white-space: pre;
+  tab-size: 4;
+}
+pre.code.bad {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+/* The left rule makes leading spaces visible, e.g. in star-pattern outputs. */
+.opt pre.code {
+  margin: 0;
+  padding: 2px 8px;
+  background: transparent;
+  border: 0;
+  border-left: 2px solid var(--border);
+  border-radius: 0;
+}
+.md h4,
+.ide-problem h4 {
+  margin: 14px 0 4px;
+  font-size: 0.95rem;
+}
+.btn.sm {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+.link-btn {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  padding: 0 0 0 8px;
+}
+textarea.mono-input,
+textarea.answer-input,
+input.answer-input {
+  width: 100%;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+textarea.mono-input,
+textarea.answer-input.mono,
+input.answer-input {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 0.88rem;
+}
+.diff-easy {
+  background: var(--good-soft);
+  color: var(--good);
+}
+.diff-medium {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.diff-hard {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+.ai-bar select {
+  padding: 4px 8px;
+  max-width: 260px;
+}
+
+/* ---------- IDE ---------- */
+.ide {
+  display: grid;
+  grid-template-columns: var(--split, 42%) 6px 1fr;
+  height: calc(100vh - 56px);
+  background: var(--bg);
+}
+.ide-problem {
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
+  padding: 20px 22px 40px;
+  background: var(--surface);
+}
+.ide-divider {
+  cursor: col-resize;
+  background: var(--border);
+  touch-action: none;
+}
+.ide-divider:hover {
+  background: var(--accent);
+}
+.ide-right {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.ide-toolbar,
+.ide-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.ide-actions {
+  border-bottom: 0;
+  border-top: 1px solid var(--border);
+}
+.ide-editor {
+  flex: 1 1 55%;
+  min-height: 200px;
+  border-bottom: 1px solid var(--border);
+}
+.ide-console {
+  flex: 1 1 45%;
+  overflow-y: auto;
+  padding: 10px 12px;
+  background: var(--surface);
+}
+.ide-console > * + * {
+  margin-top: 8px;
+}
+.console-box {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+}
+.console-box pre.code {
+  max-height: 220px;
+}
+.sample {
+  margin-top: 14px;
+}
+.sample-io {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+.sample-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.verdict-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.v-AC {
+  background: var(--good-soft);
+  color: var(--good);
+}
+.v-WA,
+.v-RE {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+.v-TLE {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.tc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.tc-table th,
+.tc-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.tc-table th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ---------- problem list ---------- */
+.plist {
+  width: 100%;
+  border-collapse: collapse;
+}
+.plist td,
+.plist th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.plist th {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.plist tr:hover td {
+  background: var(--surface-2);
+}
+
+/* ---------- mock test ---------- */
+.mock {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: calc(100vh - 56px - 52px);
+}
+.mock-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.mock-timer {
+  font-family: var(--font-geist-mono), monospace;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.mock-timer.low {
+  color: var(--bad);
+}
+.mock-nav {
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  padding: 12px;
+}
+.mock-nav h4 {
+  margin: 12px 0 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.mock-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.mock-cell {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 6px 0;
+  font-size: 0.85rem;
+  position: relative;
+}
+.mock-cell.answered {
+  background: var(--good-soft);
+  border-color: var(--good);
+}
+.mock-cell.current {
+  outline: 2px solid var(--accent);
+}
+.mock-cell.flag::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--warn);
+}
+.mock-prob {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+}
+.mock-prob.current {
+  outline: 2px solid var(--accent);
+}
+.mock-main {
+  overflow-y: auto;
+  min-width: 0;
+}
+.mock-main .ide {
+  height: 100%;
+}
+
+@media (max-width: 860px) {
+  .ide {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .ide-divider {
+    display: none;
+  }
+  .ide-editor {
+    height: 60vh;
+  }
+  .sample-io {
+    grid-template-columns: 1fr;
+  }
+  .mock {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .mock-nav {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+}

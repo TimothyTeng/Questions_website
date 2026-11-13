@@ -1,0 +1,376 @@
+import type { ScDraft } from "@/lib/sc1001/types";
+
+export const composite: ScDraft[] = [
+  // ---------------- MCQ ----------------
+  {
+    kind: "mcq",
+    subtopic: "lists",
+    difficulty: "easy",
+    prompt: "What is printed by the following code?",
+    code: "lst = [10, 20, 30, 40, 50]\nprint(lst[1:4], lst[-1])",
+    options: ["[20, 30, 40, 50] 50", "[20, 30, 40] 50", "[10, 20, 30] 50", "[20, 30, 40] [50]"],
+    answer: 1,
+    verify: true,
+    solution:
+      "List slicing works like string slicing: `lst[1:4]` takes indices 1, 2, 3 → `[20, 30, 40]` (index 4 is excluded). Indexing with `-1` returns the last **element** itself, `50`, not a one-element list; only a slice such as `lst[-1:]` would give `[50]`.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "list methods",
+    difficulty: "easy",
+    prompt: "What is printed by the following code?",
+    code: "a = [1, 2]\na.append([3, 4])\nprint(len(a), a)",
+    options: ["4 [1, 2, 3, 4]", "3 [1, 2, 3, 4]", "4 [1, 2, [3, 4]]", "3 [1, 2, [3, 4]]"],
+    answer: 3,
+    verify: true,
+    solution:
+      "`append` adds its argument as **one** element, so the whole list `[3, 4]` becomes a single nested item: `[1, 2, [3, 4]]`, length **3**. `extend([3, 4])` is the method that would add 3 and 4 separately to give `[1, 2, 3, 4]`.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "aliasing & copying",
+    difficulty: "easy",
+    prompt: "What is printed by the following code?",
+    code: "a = [1, 2, 3]\nb = a\nb[0] = 99\nprint(a)",
+    options: ["[99, 2, 3]", "[1, 2, 3]", "[99, 1, 2, 3]", "None"],
+    answer: 0,
+    verify: true,
+    solution:
+      "`b = a` does **not** copy the list; it makes `b` another name (an alias) for the same list object. Changing `b[0]` therefore changes the list that `a` refers to as well → `[99, 2, 3]`. Index assignment replaces an element; it does not insert one.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "aliasing & copying",
+    difficulty: "hard",
+    prompt: "What is printed by the following code?",
+    code: "a = [1, [2, 3]]\nb = a[:]\nb[0] = 100\nb[1].append(4)\nprint(a)\nprint(b)",
+    options: [
+      "[1, [2, 3]]\n[100, [2, 3, 4]]",
+      "[100, [2, 3, 4]]\n[100, [2, 3, 4]]",
+      "[1, [2, 3, 4]]\n[100, [2, 3, 4]]",
+      "[1, [2, 3]]\n[100, [2, 3], 4]",
+    ],
+    answer: 2,
+    verify: true,
+    solution:
+      "`a[:]` makes a **shallow** copy: a new outer list whose elements are the same objects as in `a`. Replacing `b[0]` only affects the new outer list, so `a[0]` stays 1. But `b[1]` and `a[1]` are the **same** inner list, so `append(4)` is seen through both. Hence `a` is `[1, [2, 3, 4]]`.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "list methods",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "nums = [3, 1, 2]\nresult = nums.sort()\nprint(result, nums)",
+    options: ["[1, 2, 3] [1, 2, 3]", "[1, 2, 3] [3, 1, 2]", "None [3, 1, 2]", "None [1, 2, 3]"],
+    answer: 3,
+    verify: true,
+    solution:
+      "`sort()` sorts the list **in place** and returns `None` (most list methods modify the list and return nothing). So `result` is `None` and `nums` is now `[1, 2, 3]`. Writing `nums = nums.sort()` is a classic bug that loses the list.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "list methods",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "nums = [4, 1, 3]\ns = sorted(nums)\nnums.reverse()\nprint(s, nums)",
+    options: ["[1, 3, 4] [4, 3, 1]", "[1, 3, 4] [3, 1, 4]", "[4, 3, 1] [3, 1, 4]", "None [3, 1, 4]"],
+    answer: 1,
+    verify: true,
+    solution:
+      "`sorted(nums)` returns a **new** sorted list `[1, 3, 4]` and leaves `nums` unchanged. `reverse()` then flips the current order of `nums` (it does not sort descending): `[4, 1, 3]` → `[3, 1, 4]`.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "list methods",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "lst = ['a', 'b', 'c', 'b']\nlst.remove('b')\nx = lst.pop(0)\nlst.insert(1, x)\nprint(lst)",
+    options: ["['c', 'a', 'b']", "['c', 'a']", "['a', 'c', 'b']", "['c', 'b', 'a']"],
+    answer: 0,
+    verify: true,
+    solution:
+      "`remove('b')` deletes only the **first** `'b'` → `['a', 'c', 'b']`. `pop(0)` removes and returns the element at index 0, so `x = 'a'` and the list is `['c', 'b']`. `insert(1, x)` puts `'a'` at index 1 → `['c', 'a', 'b']`. `['c', 'a']` assumes `remove` deletes every `'b'`.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "tuples",
+    difficulty: "easy",
+    prompt: "What is printed by the following code?",
+    code: "t = (1, 2, 3)\nprint(t[0] + t[-1])\nt[0] = 10\nprint(t)",
+    options: [
+      "4\n(10, 2, 3)",
+      "4\nTypeError: 'tuple' object does not support item assignment",
+      "TypeError: 'tuple' object does not support item assignment",
+      "3\n(10, 2, 3)",
+    ],
+    answer: 1,
+    verify: true,
+    solution:
+      "Tuples can be indexed like lists, so the first `print` shows 1 + 3 = **4**. Tuples are **immutable**, so `t[0] = 10` raises a `TypeError` and the last `print` never runs. Reading a tuple is fine; only modifying it fails.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "tuples",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "a = (5)\nb = (5,)\nprint(a * 2, b * 2)",
+    options: ["(5, 5) (5, 5)", "10 (10,)", "10 (5, 5)", "(10,) (5, 5)"],
+    answer: 2,
+    verify: true,
+    solution:
+      "It is the **comma** that makes a tuple; round brackets alone only group. So `a = (5)` is just the integer 5 and `a * 2` is 10. `b = (5,)` is a one-element tuple, and `*` on a sequence **repeats** it: `(5, 5)`, not `(10,)`.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "tuples",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "a, b = 1, 2\na, b = b, a + b\nprint(a, b)",
+    options: ["2 4", "1 3", "2 2", "2 3"],
+    answer: 3,
+    verify: true,
+    solution:
+      "The right-hand side `b, a + b` is packed into a tuple **before** any assignment happens, using the old values: `(2, 1 + 2)` = `(2, 3)`. It is then unpacked into `a` and `b`. `2 4` is what you would get by assigning one at a time (`a = b` then `b = a + b`).",
+  },
+  {
+    kind: "mcq",
+    subtopic: "dictionaries",
+    difficulty: "easy",
+    prompt: "What is printed by the following code?",
+    code: "d = {'x': 1}\nprint(d.get('y'), d.get('y', 0), 'x' in d)",
+    options: ["None 0 True", "0 0 True", "KeyError: 'y'", "None 0 False"],
+    answer: 0,
+    verify: true,
+    solution:
+      "`get` never raises for a missing key: it returns `None` by default, or the second argument (here 0) if given. Only `d['y']` would raise `KeyError`. `in` on a dictionary checks the **keys**, and `'x'` is a key → True.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "dictionaries",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "d = {'b': 2, 'a': 1}\nd.update({'a': 5, 'c': 3})\nprint(list(d.keys()), sum(d.values()))",
+    options: ["['a', 'b', 'c'] 10", "['b', 'a', 'c'] 11", "['b', 'a', 'c'] 10", "['b', 'a', 'a', 'c'] 11"],
+    answer: 2,
+    verify: true,
+    solution:
+      "`update` overwrites the value of an existing key (`'a'` becomes 5, keeping its original position) and adds new keys at the end (`'c'`). Keys are unique, so there is no second `'a'`. Dictionaries keep insertion order, so keys are `['b', 'a', 'c']` (not sorted) and values sum to 2 + 5 + 3 = **10**.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "dictionaries",
+    difficulty: "easy",
+    prompt: "What is printed by the following code?",
+    code: "scores = {'Ann': 80, 'Ben': 65}\nprint(scores['Ben'])\nprint(scores['ann'])",
+    options: ["65\n80", "65\nKeyError: 'ann'", "65\nNone", "KeyError: 'Ben'"],
+    answer: 1,
+    verify: true,
+    solution:
+      "`scores['Ben']` prints 65. Keys are matched exactly, including case, so `'ann'` is not the key `'Ann'`. Square-bracket lookup of a missing key raises `KeyError: 'ann'` (it does not return `None`; that is what `get` does).",
+  },
+  {
+    kind: "mcq",
+    subtopic: "sets",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "a = {1, 2, 3, 4}\nb = {3, 4, 5}\nprint(a & b, a - b, len(a | b))",
+    options: ["{3, 4} {1, 2} 7", "{3, 4} {1, 2, 5} 5", "{1, 2, 3, 4, 5} {1, 2} 5", "{3, 4} {1, 2} 5"],
+    answer: 3,
+    verify: true,
+    solution:
+      "`&` is intersection (in both) → `{3, 4}`. `a - b` is difference: in `a` but not in `b` → `{1, 2}` (5 is not included; that would be the symmetric difference). `|` is union `{1, 2, 3, 4, 5}`; duplicates are stored once, so its length is **5**, not 7.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "nested lists",
+    difficulty: "hard",
+    prompt: "What is printed by the following code?",
+    code: "grid = [[0] * 2] * 3\ngrid[0][1] = 5\nprint(grid)",
+    options: ["[[0, 5], [0, 0], [0, 0]]", "[[5, 5], [0, 0], [0, 0]]", "[[0, 5], [0, 5], [0, 5]]", "[[0, 0, 0], [5, 0, 0]]"],
+    answer: 2,
+    verify: true,
+    solution:
+      "`[0] * 2` builds one inner list `[0, 0]`. Multiplying the outer list by 3 copies the **reference** three times, so all three rows are the same list object. Changing `grid[0][1]` is seen in every row. Use `[[0] * 2 for _ in range(3)]` to get three independent rows.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "dictionaries",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "d = {'a': 3, 'b': 7, 'c': 5}\nprint(max(d), max(d.values()), sum(d.values()) / len(d))",
+    options: ["c 7 5.0", "b 7 5.0", "7 7 5", "c 7 5"],
+    answer: 0,
+    verify: true,
+    solution:
+      "Iterating over a dictionary (which is what `max(d)` does) goes over its **keys**, so `max(d)` is the largest key, `'c'`, not the key with the largest value (`'b'`). `max(d.values())` is 7. `len(d)` is 3 pairs and `/` always gives a float: 15 / 3 = `5.0`.",
+  },
+  {
+    kind: "mcq",
+    subtopic: "comprehensions",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "words = ['hi', 'hello', 'hi', 'hey']\nlengths = {w: len(w) for w in words}\nprint(lengths)",
+    options: [
+      "{'hi': 2, 'hello': 5, 'hi': 2, 'hey': 3}",
+      "{'hi': 2, 'hello': 5, 'hey': 3}",
+      "[2, 5, 2, 3]",
+      "{2: 'hi', 5: 'hello', 3: 'hey'}",
+    ],
+    answer: 1,
+    verify: true,
+    solution:
+      "A dict comprehension builds `key: value` pairs. Dictionary keys are **unique**, so the second `'hi'` just sets the same key again; it does not add a duplicate. The key is the word and the value its length, in first-insertion order.",
+  },
+
+  // ---------------- short ----------------
+  {
+    kind: "short",
+    subtopic: "lists",
+    difficulty: "easy",
+    prompt: "What is printed by the following code?",
+    code: "print(list(range(10, 0, -3)))",
+    accept: ["[10, 7, 4, 1]"],
+    verify: true,
+    solution: "`range(10, 0, -3)` counts down from 10 in steps of 3 while the value is still **greater than** 0: 10, 7, 4, 1. `list(...)` turns the range into a list so it prints with brackets.",
+  },
+  {
+    kind: "short",
+    subtopic: "nested lists",
+    difficulty: "easy",
+    prompt: "What number is printed by the following code?",
+    code: "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\nprint(matrix[2][1] + matrix[-3][-1])",
+    accept: ["11"],
+    verify: true,
+    solution: "`matrix[2]` is the row `[7, 8, 9]` and `[1]` picks 8. `matrix[-3]` is the first row `[1, 2, 3]` and `[-1]` picks 3. 8 + 3 = **11**. Indices are applied left to right: row first, then column.",
+  },
+  {
+    kind: "short",
+    subtopic: "tuples",
+    difficulty: "easy",
+    prompt: "What is printed by the following code?",
+    code: "t = (3, 2, 6, 'a')\nprint(t[::-2])",
+    accept: ["('a', 2)"],
+    verify: true,
+    solution: "A step of -2 starts from the last element and moves left two at a time: index 3 (`'a'`), then index 1 (`2`). Slicing a tuple gives a **tuple** → `('a', 2)`.",
+  },
+  {
+    kind: "short",
+    subtopic: "nested lists",
+    difficulty: "medium",
+    prompt: "What number is printed by the following code?",
+    code: "data = ['x', [10, [20, 30], 40], 'y']\nprint(data[1][1][-1] + data[1][-1])",
+    accept: ["70"],
+    verify: true,
+    solution: "`data[1]` is `[10, [20, 30], 40]`. Then `[1]` gives `[20, 30]` and `[-1]` gives 30. Separately, `data[1][-1]` is the last element of the middle list, 40. 30 + 40 = **70**.",
+  },
+  {
+    kind: "short",
+    subtopic: "list methods",
+    difficulty: "medium",
+    prompt: "What number is printed by the following code?",
+    code: "a = [1, 2]\na.extend('hi')\na.append('hi')\nprint(len(a))",
+    accept: ["5"],
+    verify: true,
+    solution: "`extend` iterates over its argument and adds **each item**; a string is iterated character by character, so it adds `'h'` and `'i'` → `[1, 2, 'h', 'i']`. `append` adds the whole string as one element → `[1, 2, 'h', 'i', 'hi']`, length **5**.",
+  },
+  {
+    kind: "short",
+    subtopic: "dictionaries",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "counts = {}\nfor ch in 'banana':\n    counts[ch] = counts.get(ch, 0) + 1\nprint(counts)",
+    accept: ["{'b': 1, 'a': 3, 'n': 2}"],
+    verify: true,
+    solution: "This is the standard counting pattern: `get(ch, 0)` returns the current count (0 the first time a letter is seen) and 1 is added. Keys appear in the order they were first inserted: b, a, n → `{'b': 1, 'a': 3, 'n': 2}`.",
+  },
+  {
+    kind: "short",
+    subtopic: "aliasing & copying",
+    difficulty: "hard",
+    prompt: "What is printed by the following code?",
+    code: "a = [1, 2, 3]\nb = a\na = a + [4]\nb.append(5)\nprint(a, b)",
+    accept: ["[1, 2, 3, 4] [1, 2, 3, 5]"],
+    verify: true,
+    solution: "After `b = a` both names refer to the same list. But `a + [4]` creates a **new** list, and `a = ...` rebinds `a` to it; `b` still refers to the original `[1, 2, 3]`. `b.append(5)` changes only that original list. So `a` is `[1, 2, 3, 4]` and `b` is `[1, 2, 3, 5]`. (`a.append(4)` or `a += [4]` would have modified the shared list instead.)",
+  },
+  {
+    kind: "short",
+    subtopic: "sets",
+    difficulty: "medium",
+    prompt: "What is printed by the following code?",
+    code: "print(sorted({x % 4 for x in [3, 7, 8, 10, 11, 12]}))",
+    accept: ["[0, 2, 3]"],
+    verify: true,
+    solution: "The set comprehension computes the remainders 3, 3, 0, 2, 3, 0. A set keeps only **unique** values → `{0, 2, 3}`. `sorted` accepts any iterable and always returns a **list**, so the output is `[0, 2, 3]`.",
+  },
+
+  // ---------------- open ----------------
+  {
+    kind: "open",
+    subtopic: "comprehensions",
+    difficulty: "easy",
+    prompt:
+      "Using a **single list comprehension**, create a list `squares` of all square numbers `x**2` (where `1 <= x <= 100`) that are divisible by 3, and print it. State the first four elements of the list.",
+    modelAnswer:
+      "```\nsquares = [x ** 2 for x in range(1, 101) if x ** 2 % 3 == 0]\nprint(squares)\n```\nThe first four elements are `9, 36, 81, 144` (from x = 3, 6, 9, 12). Since 3 is prime, `x**2` is divisible by 3 exactly when `x` is, so `if x % 3 == 0` is an equivalent filter.",
+    rubric: [
+      { point: "Correct expression x ** 2 collected in a list comprehension", marks: 1 },
+      { point: "Correct range: range(1, 101) so that 100 is included", marks: 1 },
+      { point: "Correct filter (x ** 2 % 3 == 0 or x % 3 == 0)", marks: 1 },
+      { point: "First four elements 9, 36, 81, 144", marks: 1 },
+    ],
+    solution:
+      "Form: `[expression for x in iterable if condition]`. The common slip is `range(1, 100)`, which misses x = 100 (though 10000 is not divisible by 3, it is still the wrong range).",
+  },
+  {
+    kind: "open",
+    subtopic: "aliasing & copying",
+    difficulty: "medium",
+    prompt:
+      "Given `a = [1, 2, 3]`, explain the difference between `b = a` and `c = a[:]`. Then state what `print(a, b, c)` shows after running `b.append(4)` and `c.append(5)`, and explain why.",
+    modelAnswer:
+      "`b = a` copies only the **reference**: `a` and `b` are two names for the same list object (aliasing). `c = a[:]` uses slicing to create a **new** list containing the same elements (a shallow copy), so `c` is a separate object.\nBecause lists are **mutable**, `b.append(4)` changes the shared object, so the change is visible through `a` too. `c.append(5)` changes only the copy.\nOutput: `[1, 2, 3, 4] [1, 2, 3, 4] [1, 2, 3, 5]`.\n(`list(a)` or `a.copy()` also make a copy. With nested lists a shallow copy still shares the inner lists.)",
+    rubric: [
+      { point: "b = a makes an alias: both names refer to the same list object", marks: 1 },
+      { point: "a[:] creates a new list (copy) with the same elements", marks: 1 },
+      { point: "Correct output [1, 2, 3, 4] [1, 2, 3, 4] [1, 2, 3, 5]", marks: 1 },
+      { point: "Explanation links the result to lists being mutable / shared object", marks: 1 },
+    ],
+    solution:
+      "Assignment never copies a list in Python; it only binds another name. To get an independent list you must copy explicitly (`a[:]`, `list(a)`, `a.copy()`).",
+  },
+  {
+    kind: "open",
+    subtopic: "tuples",
+    difficulty: "easy",
+    prompt:
+      "Compare **lists**, **tuples** and **dictionaries** in Python: for each, state whether it is ordered/indexed by position and whether it is mutable. Then explain why a tuple can be used as a dictionary key but a list cannot.",
+    modelAnswer:
+      "- **List** `[1, 2]`: an ordered sequence indexed by position (0, 1, ...); **mutable** (append, remove, index assignment).\n- **Tuple** `(1, 2)`: an ordered sequence indexed by position; **immutable** (no append/remove, no item assignment).\n- **Dictionary** `{'a': 1}`: a collection of key:value pairs accessed by **key**, not by position; **mutable** (add, change or delete pairs).\nDictionary keys must be **immutable** so a key cannot change after it is stored (the dictionary looks it up by its value/hash). A tuple of immutable items cannot change, so it is a valid key; a list can be modified, so using it as a key raises `TypeError: unhashable type: 'list'`.",
+    rubric: [
+      { point: "List: ordered/indexed and mutable", marks: 1 },
+      { point: "Tuple: ordered/indexed and immutable", marks: 1 },
+      { point: "Dictionary: key:value pairs accessed by key, mutable", marks: 1 },
+      { point: "Keys must be immutable; tuple OK, list not (TypeError: unhashable)", marks: 1 },
+    ],
+    solution:
+      "Lecture summary: keys must be immutable (strings, integers, tuples); values can be anything. Tuples are \"immutable lists\" chosen for integrity, e.g. coordinates used as keys.",
+  },
+  {
+    kind: "open",
+    subtopic: "dictionaries",
+    difficulty: "hard",
+    prompt:
+      "Write a function `word_count(sentence)` that returns a dictionary mapping each word (converted to lower case) to the number of times it appears. Then write code that uses it to print, in **alphabetical order**, only the words that appear more than once, as `word count`. For `'The cat and the hat and THE bat'` the output is:\n```\nand 2\nthe 3\n```",
+    modelAnswer:
+      "```\ndef word_count(sentence):\n    counts = {}\n    for word in sentence.lower().split():\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\ncounts = word_count('The cat and the hat and THE bat')\nfor word in sorted(counts):\n    if counts[word] > 1:\n        print(word, counts[word])\n```\n`sorted(counts)` sorts the keys; an equivalent filter is `{w: c for w, c in counts.items() if c > 1}` followed by sorting its keys.",
+    rubric: [
+      { point: "Splits the sentence into words and lower-cases them", marks: 1 },
+      { point: "Correct counting with a dictionary (get(word, 0) + 1 or an if/else on 'in')", marks: 2 },
+      { point: "Returns the dictionary from the function", marks: 1 },
+      { point: "Prints only counts > 1, in alphabetical order (e.g. sorted keys)", marks: 1 },
+    ],
+    solution:
+      "Using `counts[word] += 1` without first checking the key raises `KeyError` on a new word; `get(word, 0)` avoids this. Dictionaries keep insertion order, so you must sort the keys explicitly for alphabetical output.",
+  },
+];

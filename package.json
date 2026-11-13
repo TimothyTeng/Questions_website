@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check": "tsx --tsconfig tsconfig.json scripts/check-bank.ts"
+    "check": "tsx --tsconfig tsconfig.json scripts/check-bank.ts",
+    "check:sc1001": "tsx --tsconfig tsconfig.json scripts/check-sc1001.ts"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "katex": "^0.19.1",
     "next": "16.4.5",
     "react": "19.3.0",
@@ -22,6 +24,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.5",
+    "pyodide": "^314.0.7",
     "tsx": "^4.23.15",
     "typescript": "^5"
   }

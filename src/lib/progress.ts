@@ -13,55 +13,60 @@ export interface QStat {
 }
 export type Progress = Record<string, QStat>;
 
-const KEY = "la-ca2-progress-v1";
 const listeners = new Set<() => void>();
-let snapshot: Progress | null = null;
 const EMPTY: Progress = {};
 
-function read(): Progress {
-  if (snapshot) return snapshot;
-  try {
-    snapshot = JSON.parse(localStorage.getItem(KEY) ?? "{}") as Progress;
-  } catch {
-    snapshot = {};
+/** A localStorage-backed attempt history under its own key (one per course). */
+export function makeProgressStore(key: string) {
+  let snapshot: Progress | null = null;
+
+  function read(): Progress {
+    if (snapshot) return snapshot;
+    try {
+      snapshot = JSON.parse(localStorage.getItem(key) ?? "{}") as Progress;
+    } catch {
+      snapshot = {};
+    }
+    return snapshot;
   }
-  return snapshot;
-}
 
-function write(p: Progress) {
-  snapshot = p;
-  try {
-    localStorage.setItem(KEY, JSON.stringify(p));
-  } catch {
-    /* storage unavailable: keep in memory only */
+  function write(p: Progress) {
+    snapshot = p;
+    try {
+      localStorage.setItem(key, JSON.stringify(p));
+    } catch {
+      /* storage unavailable: keep in memory only */
+    }
+    listeners.forEach((l) => l());
   }
-  listeners.forEach((l) => l());
-}
 
-export function recordAnswers(results: { id: string; correct: boolean }[]) {
-  const p = { ...read() };
-  const now = Date.now();
-  for (const r of results) {
-    const s = p[r.id] ?? { attempts: 0, correct: 0, last: false, ts: 0 };
-    p[r.id] = { attempts: s.attempts + 1, correct: s.correct + (r.correct ? 1 : 0), last: r.correct, ts: now };
-  }
-  write(p);
-}
-
-export function resetProgress() {
-  write({});
-}
-
-export function useProgress(): Progress {
-  return useSyncExternalStore(
-    (cb) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
+  return {
+    recordAnswers(results: { id: string; correct: boolean }[]) {
+      const p = { ...read() };
+      const now = Date.now();
+      for (const r of results) {
+        const s = p[r.id] ?? { attempts: 0, correct: 0, last: false, ts: 0 };
+        p[r.id] = { attempts: s.attempts + 1, correct: s.correct + (r.correct ? 1 : 0), last: r.correct, ts: now };
+      }
+      write(p);
     },
-    read,
-    () => EMPTY,
-  );
+    resetProgress() {
+      write({});
+    },
+    useProgress(): Progress {
+      return useSyncExternalStore(
+        (cb) => {
+          listeners.add(cb);
+          return () => listeners.delete(cb);
+        },
+        read,
+        () => EMPTY,
+      );
+    },
+  };
 }
+
+export const { recordAnswers, resetProgress, useProgress } = makeProgressStore("la-ca2-progress-v1");
 
 /** Small per-viewer flags (e.g. lesson sections marked as understood). */
 export function useFlag(key: string): [boolean, (v: boolean) => void] {
