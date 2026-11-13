@@ -238,20 +238,18 @@ export function CodingWorkspace({
                 <strong>Hint from your current code</strong>
                 <span className="muted">Gemini reads your code and your last run, and won’t write the solution for you.</span>
               </div>
-              {ai.ready ? (
-                <div className="row" style={{ flexWrap: "nowrap", alignItems: "flex-start" }}>
-                  <textarea
-                    className="answer-input"
-                    rows={2}
-                    placeholder="Optional: what are you stuck on? e.g. “how do I read the numbers?”, “why is test 3 wrong?”"
-                    value={stuck}
-                    onChange={(e) => setStuck(e.target.value)}
-                  />
-                  <button className="btn sm primary" disabled={hintBusy} onClick={askHint} style={{ flex: "none" }}>
-                    {hintBusy ? "Thinking…" : hints.length ? "Another hint" : "Get hint"}
-                  </button>
-                </div>
-              ) : null}
+              <div className="row" style={{ flexWrap: "nowrap", alignItems: "flex-start" }}>
+                <textarea
+                  className="answer-input"
+                  rows={2}
+                  placeholder="Optional: what are you stuck on? e.g. “how do I read the numbers?”, “why is test 3 wrong?”"
+                  value={stuck}
+                  onChange={(e) => setStuck(e.target.value)}
+                />
+                <button className="btn sm primary" disabled={hintBusy} onClick={askHint} style={{ flex: "none" }}>
+                  {hintBusy ? "Thinking…" : hints.length ? "Another hint" : "Get hint"}
+                </button>
+              </div>
               <AiBar ai={ai} />
               {hintErr && <div className="small" style={{ color: "var(--bad)" }}>{hintErr}</div>}
               {hints.map((h, i) => (
@@ -277,7 +275,7 @@ export function CodingWorkspace({
                 <button className="btn sm" onClick={() => setShowRef((v) => !v)}>
                   {showRef ? "Hide" : "Show"} reference solution
                 </button>
-                <button className="btn sm" disabled={!ai.ready || review === "loading"} onClick={askReview}>
+                <button className="btn sm" disabled={review === "loading"} onClick={askReview}>
                   {review === "loading" ? "Reviewing…" : "AI review"}
                 </button>
               </div>

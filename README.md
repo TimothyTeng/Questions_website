@@ -39,4 +39,4 @@ npm run check:sc1001 -- strings # only topics/problems matching "strings"
 - `src/data/sc1001/questions/<topic>.ts`: questions (`verify: true` means the answer is the snippet's real output)
 - `src/data/sc1001/problems/*.ts`: coding problems with samples, hidden tests, starter and reference code
 - `src/lib/sc1001/harness.ts`: the Python runner shared by the browser worker (`public/sc1001/py-worker.js`) and the check script
-- `src/lib/sc1001/ai.ts`: Gemini hints, open-answer marking and code review. Each user pastes their own free Google AI Studio key (https://aistudio.google.com/apikey). It's kept in their browser's localStorage and sent only to Google. Test-case marks never depend on AI.
+- `src/lib/sc1001/ai-server.ts` + `src/app/api/sc1001/ai/route.ts`: Gemini hints, optional open-answer marking and code review. The browser sends only question/problem ids and the student's answer or code; the server builds the prompts. Set `GEMINI_API_KEY` (free from https://aistudio.google.com/apikey) in `.env.local` locally or in Vercel's Environment Variables — see `.env.example`. Test-case marks never depend on AI.

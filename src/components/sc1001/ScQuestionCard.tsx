@@ -5,7 +5,7 @@ import { gradeOpen, questionHint } from "@/lib/sc1001/ai";
 import { scoreOf, shortCorrect, type OpenMark, type Response } from "@/lib/sc1001/grading";
 import { scTopicById } from "@/lib/sc1001/topics";
 import type { OpenQ, ScQuestion } from "@/lib/sc1001/types";
-import { AiBar, useAi } from "./AiBar";
+import { useAi } from "./AiBar";
 import { Code, Md, MdInline } from "./Md";
 
 const LETTERS = ["A", "B", "C", "D"];
@@ -138,10 +138,9 @@ export function ScQuestionCard({
   );
 }
 
-function OpenMarking({ q, answer, mark, onMark }: { q: OpenQ; answer: string; mark?: OpenMark; onMark?: (m: OpenMark) => void }) {
+function OpenMarking({ q, answer, mark, onMark }: { q: OpenQ & { id: string }; answer: string; mark?: OpenMark; onMark?: (m: OpenMark) => void }) {
   const ai = useAi();
   const [busy, setBusy] = useState(false);
-  const [wantAi, setWantAi] = useState(false);
   const [err, setErr] = useState("");
   const scores = mark?.scores ?? q.rubric.map(() => 0);
   const total = scores.reduce((s, x) => s + x, 0);
@@ -196,15 +195,11 @@ function OpenMarking({ q, answer, mark, onMark }: { q: OpenQ; answer: string; ma
         <button
           className="btn sm"
           disabled={busy || !answer.trim()}
-          onClick={() => {
-            if (ai.ready) markWithAi();
-            else setWantAi(true);
-          }}
+          onClick={markWithAi}
         >
           {busy ? "Marking…" : mark?.by === "ai" ? "Re-check with AI" : "Check with AI"}
         </button>
       </div>
-      {(wantAi || ai.ready) && <AiBar ai={ai} />}
       {err && <div className="small" style={{ color: "var(--bad)" }}>{err}</div>}
     </div>
   );
@@ -215,11 +210,8 @@ function HintBox({ q, response }: { q: ScQuestion; response: Response }) {
   const [hints, setHints] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const [open, setOpen] = useState(false);
 
   const ask = async () => {
-    setOpen(true);
-    if (!ai.ready) return;
     setBusy(true);
     setErr("");
     const attempt = typeof response === "number" && q.kind === "mcq" ? `picked option ${LETTERS[response]}` : typeof response === "string" ? response : "";
@@ -245,7 +237,6 @@ function HintBox({ q, response }: { q: ScQuestion; response: Response }) {
           <Md text={h} />
         </div>
       ))}
-      {open && !ai.ready && <AiBar ai={ai} />}
       {err && <div className="small" style={{ color: "var(--bad)" }}>{err}</div>}
     </div>
   );
