@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { gradeOpen } from "@/lib/sc1001/ai";
+import { gradeOpen, questionHint } from "@/lib/sc1001/ai";
 import { scoreOf, shortCorrect, type OpenMark, type Response } from "@/lib/sc1001/grading";
 import { scTopicById } from "@/lib/sc1001/topics";
 import type { OpenQ, ScQuestion } from "@/lib/sc1001/types";
@@ -20,6 +20,7 @@ export function ScQuestionCard({
   mark,
   onMark,
   showMeta = true,
+  allowHints = false,
 }: {
   q: ScQuestion;
   num: number;
@@ -30,6 +31,8 @@ export function ScQuestionCard({
   onMark?: (m: OpenMark) => void;
   /** Hide topic/id (e.g. during a mock test). */
   showMeta?: boolean;
+  /** Offer AI hints before the answer is revealed (practice only, not mock tests). */
+  allowHints?: boolean;
 }) {
   const topic = scTopicById(q.topic);
   const { got, max } = scoreOf(q, response, mark);
@@ -112,6 +115,8 @@ export function ScQuestionCard({
         />
       )}
 
+      {!revealed && allowHints && <HintBox q={q} response={response} />}
+
       {revealed && (
         <div className="solution">
           {q.kind === "mcq" && (
@@ -136,6 +141,7 @@ export function ScQuestionCard({
 function OpenMarking({ q, answer, mark, onMark }: { q: OpenQ; answer: string; mark?: OpenMark; onMark?: (m: OpenMark) => void }) {
   const ai = useAi();
   const [busy, setBusy] = useState(false);
+  const [wantAi, setWantAi] = useState(false);
   const [err, setErr] = useState("");
   const scores = mark?.scores ?? q.rubric.map(() => 0);
   const total = scores.reduce((s, x) => s + x, 0);
@@ -145,7 +151,7 @@ function OpenMarking({ q, answer, mark, onMark }: { q: OpenQ; answer: string; ma
     setBusy(true);
     setErr("");
     try {
-      const g = await gradeOpen(q, answer, ai.model);
+      const g = await gradeOpen(ai.cfg, q, answer);
       onMark?.({ ...g, by: "ai" });
     } catch (e) {
       setErr(String((e as Error)?.message ?? e));
@@ -180,17 +186,66 @@ function OpenMarking({ q, answer, mark, onMark }: { q: OpenQ; answer: string; ma
         ))}
       </div>
       {mark?.feedback && <div className="callout intuition small">{mark.feedback}</div>}
+      {/* Self-marking against the rubric is the default; Gemini is an optional second opinion. */}
       <div className="row">
-        <button className="btn sm primary" disabled={!ai.signedIn || busy || !answer.trim()} onClick={markWithAi}>
-          {busy ? "Marking…" : mark?.by === "ai" ? "Re-mark with AI" : "Mark with AI"}
-        </button>
         {!mark && (
-          <button className="btn sm" onClick={() => onMark?.({ scores, by: "self" })}>
+          <button className="btn sm primary" onClick={() => onMark?.({ scores, by: "self" })}>
             Save self-mark
           </button>
         )}
+        <button
+          className="btn sm"
+          disabled={busy || !answer.trim()}
+          onClick={() => {
+            if (ai.ready) markWithAi();
+            else setWantAi(true);
+          }}
+        >
+          {busy ? "Marking…" : mark?.by === "ai" ? "Re-check with AI" : "Check with AI"}
+        </button>
       </div>
-      <AiBar ai={ai} />
+      {(wantAi || ai.ready) && <AiBar ai={ai} />}
+      {err && <div className="small" style={{ color: "var(--bad)" }}>{err}</div>}
+    </div>
+  );
+}
+
+function HintBox({ q, response }: { q: ScQuestion; response: Response }) {
+  const ai = useAi();
+  const [hints, setHints] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const ask = async () => {
+    setOpen(true);
+    if (!ai.ready) return;
+    setBusy(true);
+    setErr("");
+    const attempt = typeof response === "number" && q.kind === "mcq" ? `picked option ${LETTERS[response]}` : typeof response === "string" ? response : "";
+    try {
+      const h = await questionHint(ai.cfg, q, attempt, hints);
+      setHints((p) => [...p, h]);
+    } catch (e) {
+      setErr(String((e as Error)?.message ?? e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="stack" style={{ marginTop: 10 }}>
+      <div className="row">
+        <button className="btn sm" disabled={busy} onClick={ask}>
+          {busy ? "Thinking…" : hints.length ? "💡 Another hint" : "💡 Hint"}
+        </button>
+      </div>
+      {hints.map((h, i) => (
+        <div key={i} className="callout intuition small">
+          <Md text={h} />
+        </div>
+      ))}
+      {open && !ai.ready && <AiBar ai={ai} />}
       {err && <div className="small" style={{ color: "var(--bad)" }}>{err}</div>}
     </div>
   );

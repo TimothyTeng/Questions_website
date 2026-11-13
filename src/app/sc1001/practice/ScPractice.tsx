@@ -308,6 +308,7 @@ function ScPractice({ initialTopic }: { initialTopic?: ScTopicId }) {
           revealed={revealed}
           mark={marks[start + i]}
           onMark={(m) => setMark(start + i, m)}
+          allowHints
         />
       ))}
       <div className="row">

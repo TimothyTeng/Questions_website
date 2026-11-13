@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { reviewCode, type CodeReview } from "@/lib/sc1001/ai";
+import { codeHint, reviewCode, type CodeReview } from "@/lib/sc1001/ai";
 import type { RunResult } from "@/lib/sc1001/harness";
 import { normalizeOutput, verdictOf, VERDICT_LABEL, type Verdict } from "@/lib/sc1001/judge";
 import { preloadPython, runPython, usePyStatus } from "@/lib/sc1001/python";
@@ -67,6 +67,11 @@ export function CodingWorkspace({
   const [showRef, setShowRef] = useState(false);
   const [revealFail, setRevealFail] = useState(false);
   const [review, setReview] = useState<CodeReview | { error: string } | "loading" | null>(null);
+  const [hintOpen, setHintOpen] = useState(false);
+  const [stuck, setStuck] = useState("");
+  const [hints, setHints] = useState<string[]>([]);
+  const [hintBusy, setHintBusy] = useState(false);
+  const [hintErr, setHintErr] = useState("");
   const wrap = useRef<HTMLDivElement>(null);
   const limit = p.timeLimitMs ?? 3000;
   const busy = out.kind === "running";
@@ -111,11 +116,23 @@ export function CodingWorkspace({
     if (out.kind !== "submit") return;
     setReview("loading");
     const fail = out.cases.find((c) => c.verdict !== "AC");
-    const failText = fail ? `input:\n${fail.input}\nexpected:\n${fail.expected}\ngot:\n${fail.r.timedOut ? "(time limit exceeded)" : fail.r.error || fail.r.stdout}` : null;
     try {
-      setReview(await reviewCode(p, code, out.passed, out.cases.length, failText, ai.model));
+      setReview(await reviewCode(ai.cfg, p, code, out.passed, out.cases.length, fail ? caseText(fail) : null));
     } catch (e) {
       setReview({ error: String((e as Error)?.message ?? e) });
+    }
+  };
+
+  const askHint = async () => {
+    setHintBusy(true);
+    setHintErr("");
+    try {
+      const h = await codeHint(ai.cfg, p, code, lastRunText(out), stuck);
+      setHints((x) => [h, ...x]);
+    } catch (e) {
+      setHintErr(String((e as Error)?.message ?? e));
+    } finally {
+      setHintBusy(false);
     }
   };
 
@@ -188,6 +205,11 @@ export function CodingWorkspace({
             {py.state === "ready" ? `Python ${py.version}` : py.state === "error" ? "Python failed to load" : `Python 3 · loading…`}
           </span>
           <span className="spacer" />
+          {mode === "practice" && (
+            <button className={`btn sm ${hintOpen ? "primary" : ""}`} onClick={() => setHintOpen((v) => !v)}>
+              💡 Hint
+            </button>
+          )}
           <button className="btn sm" onClick={() => setFontSize(String(Math.max(11, fontSize - 1)))} aria-label="Smaller font">
             A−
           </button>
@@ -210,6 +232,35 @@ export function CodingWorkspace({
           <CodeEditor value={code} onChange={setCode} dark={dark} fontSize={fontSize} />
         </div>
         <div className="ide-console">
+          {hintOpen && mode === "practice" && (
+            <div className="console-box stack">
+              <div className="row small">
+                <strong>Hint from your current code</strong>
+                <span className="muted">Gemini reads your code and your last run, and won’t write the solution for you.</span>
+              </div>
+              {ai.ready ? (
+                <div className="row" style={{ flexWrap: "nowrap", alignItems: "flex-start" }}>
+                  <textarea
+                    className="answer-input"
+                    rows={2}
+                    placeholder="Optional: what are you stuck on? e.g. “how do I read the numbers?”, “why is test 3 wrong?”"
+                    value={stuck}
+                    onChange={(e) => setStuck(e.target.value)}
+                  />
+                  <button className="btn sm primary" disabled={hintBusy} onClick={askHint} style={{ flex: "none" }}>
+                    {hintBusy ? "Thinking…" : hints.length ? "Another hint" : "Get hint"}
+                  </button>
+                </div>
+              ) : null}
+              <AiBar ai={ai} />
+              {hintErr && <div className="small" style={{ color: "var(--bad)" }}>{hintErr}</div>}
+              {hints.map((h, i) => (
+                <div key={hints.length - i} className={`callout intuition small ${i ? "muted" : ""}`}>
+                  <Md text={h} />
+                </div>
+              ))}
+            </div>
+          )}
           <label className="row small" style={{ gap: 6 }}>
             <input type="checkbox" checked={useCustom} onChange={(e) => setUseCustom(e.target.checked)} /> Provide custom input
           </label>
@@ -226,7 +277,7 @@ export function CodingWorkspace({
                 <button className="btn sm" onClick={() => setShowRef((v) => !v)}>
                   {showRef ? "Hide" : "Show"} reference solution
                 </button>
-                <button className="btn sm" disabled={!ai.signedIn || review === "loading"} onClick={askReview}>
+                <button className="btn sm" disabled={!ai.ready || review === "loading"} onClick={askReview}>
                   {review === "loading" ? "Reviewing…" : "AI review"}
                 </button>
               </div>
@@ -249,6 +300,23 @@ export function CodingWorkspace({
       </section>
     </div>
   );
+}
+
+const clip = (s: string, n = 600) => (s.length > n ? s.slice(0, n) + "\n…" : s);
+
+function caseText(c: CaseResult): string {
+  const got = c.r.timedOut ? "(time limit exceeded)" : c.r.error ? `${clip(c.r.stdout)}\n${c.r.error}` : clip(c.r.stdout) || "(no output)";
+  return `input:\n${clip(c.input)}\n${c.expected !== undefined ? `expected:\n${clip(c.expected)}\n` : ""}got:\n${got}`;
+}
+
+/** What the student last saw in the console, for code hints. */
+function lastRunText(out: Console): string | null {
+  if (out.kind === "run") return out.cases.map((c, i) => `${out.custom ? "Custom input" : `Sample ${i + 1}`}${c.verdict ? ` — ${VERDICT_LABEL[c.verdict]}` : ""}\n${caseText(c)}`).join("\n\n");
+  if (out.kind === "submit") {
+    const fail = out.cases.find((c) => c.verdict !== "AC");
+    return `Submitted: passed ${out.passed}/${out.cases.length} hidden tests.${fail ? `\nFirst failing hidden test (${VERDICT_LABEL[fail.verdict!]}):\n${caseText(fail)}` : ""}`;
+  }
+  return null;
 }
 
 function ConsoleView({ out, mode, revealFail }: { out: Console; mode: string; revealFail: boolean }) {
