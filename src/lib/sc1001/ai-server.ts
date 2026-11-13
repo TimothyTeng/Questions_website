@@ -8,15 +8,26 @@ import type { CodingProblem, OpenQ, ScQuestion } from "./types";
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
 /** Google's alias for its current Flash model, available on the free tier. */
 export const DEFAULT_MODEL = "gemini-flash-latest";
+/**
+ * Tried in order after the chosen model when it is overloaded, rate-limited or missing. Free-tier
+ * quotas are per model, so another model often answers when one is busy. Unknown names are skipped.
+ */
+const FALLBACK_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite"];
+/** Give up on fallbacks after this long, to stay inside serverless time limits. */
+const TOTAL_BUDGET_MS = 25_000;
 
 export class AiError extends Error {
   constructor(
     message: string,
     public status = 500,
+    /** "busy": overloaded, retry the same model; "skip": rate-limited or unknown, try the next model. */
+    public retry?: "busy" | "skip",
   ) {
     super(message);
   }
 }
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function apiKey(): string {
   const key = process.env.GEMINI_API_KEY;
@@ -29,8 +40,10 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg: string = body?.error?.message ?? `Gemini request failed (${res.status})`;
-    if (res.status === 429) throw new AiError("Gemini free-tier limit reached — wait a minute and retry, or pick another model.", 429);
     if (/API key/i.test(msg)) throw new AiError("Gemini rejected GEMINI_API_KEY. Check the key at aistudio.google.com/apikey.", 502);
+    if (res.status === 429) throw new AiError("Gemini free-tier limit reached — wait a minute and retry.", 429, "skip");
+    if (res.status === 404) throw new AiError(msg, 502, "skip");
+    if (res.status === 503 || res.status === 500) throw new AiError("Gemini is busy right now — try again in a minute.", 503, "busy");
     throw new AiError(msg, 502);
   }
   return body as T;
@@ -52,12 +65,33 @@ interface GenResponse {
   promptFeedback?: { blockReason?: string };
 }
 
+/** Calls the chosen model, retrying a busy model once and then falling back to other free models. */
 async function generate(model: string, prompt: string, json: boolean): Promise<string> {
+  const start = Date.now();
+  let last: unknown;
+  for (const m of [...new Set([model, ...FALLBACK_MODELS])]) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (Date.now() - start > TOTAL_BUDGET_MS) throw last;
+      try {
+        return await generateOnce(m, prompt, json);
+      } catch (e) {
+        last = e;
+        if (!(e instanceof AiError) || !e.retry) throw e;
+        if (e.retry === "skip") break;
+        await sleep(1000);
+      }
+    }
+  }
+  throw last;
+}
+
+async function generateOnce(model: string, prompt: string, json: boolean): Promise<string> {
   const r = await call<GenResponse>(`models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: 1024, ...(json ? { responseMimeType: "application/json" } : {}) },
+      // Thinking models count their reasoning towards this limit, so leave plenty of room.
+      generationConfig: { temperature: 0.3, maxOutputTokens: 4096, ...(json ? { responseMimeType: "application/json" } : {}) },
     }),
   });
   const text = r.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
