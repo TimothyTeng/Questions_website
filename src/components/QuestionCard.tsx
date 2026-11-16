@@ -32,6 +32,7 @@ export function QuestionCard({
           {topic.name} · {q.subtopic}
         </span>
         <span className="spacer" />
+        {q.source === "exam" && <span className="badge">Past-paper style</span>}
         <span className="badge">{q.kind === "tfn" ? "True / False / NEI" : "MCQ"}</span>
         <span className="badge">{q.id}</span>
       </div>

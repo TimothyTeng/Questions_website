@@ -1,9 +1,14 @@
-# LA CA2 Mastery
+# NTU Course Prep
 
-Revision site for SC1004 Linear Algebra CA2: Orthogonality, Least Squares, Eigenvalues & Eigenvectors, Complex Numbers and the DFT.
+Revision site for two NTU courses. The home page (`/`) picks the course; each course is one tab.
 
-- **Learn** (`/learn`): each topic taught as intuition → key ideas → formulas → step-by-step worked example → exam traps → recall cards, plus an "if you see X, do Y" playbook.
-- **Practice** (`/practice`): 500 CA2-style questions (100 per topic). Choose random or specific topics/subtopics, number of questions, and when answers are revealed (each question, every 5/10, or at the end). Progress is stored in the browser.
+# SC1004 Linear Algebra for Computing (`/sc1004`)
+
+All 12 topics: vectors, matrices, linear systems, linear transformations, matrix algebra, determinants and vector spaces (first half), then orthogonality, least squares, eigenvalues, complex numbers and the DFT (second half).
+
+- **Learn** (`/sc1004/learn`): each topic taught as intuition → key ideas → formulas → step-by-step worked example → exam traps → recall cards, plus an "if you see X, do Y" playbook and interactive figures.
+- **Practice** (`/sc1004/practice`): 100 concept + generated questions per topic plus past-paper-style questions written to the difficulty of the final. Choose random, a half of the semester, or specific topics/subtopics; filter to past-paper style; choose when answers are revealed. Progress is stored in the browser.
+- **Mock final** (`/sc1004/mock`): the real format — 20 five-option MCQs (10 per half), 5 marks each, 2 hours.
 
 ## Run
 
@@ -18,7 +23,8 @@ npm run build
 
 - `src/data/concepts/*.ts` – hand-written conceptual questions (True/False/NEI and MCQ)
 - `src/lib/gen/*.ts` – seeded generators for the computational questions; answers are computed with exact fractions (`src/lib/math`)
-- `src/lib/bank.ts` – assembles the 500-question bank
+- `src/data/exam/*.ts` – past-paper-style questions calibrated to the SC1004 final
+- `src/lib/bank.ts` – assembles the question bank
 - `src/data/lessons/*.ts` – Learn tab content
 
 # SC1001 Prep (`/sc1001`)

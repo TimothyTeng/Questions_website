@@ -6,8 +6,9 @@ import type { TopicId } from "@/lib/types";
 
 // Which interactive figures appear in which lesson section (by section index), and lazy
 // loaders for each topic's figure module so a lesson only downloads its own figures.
+// Newer lessons list their figures on the section itself (LessonSection.visuals) instead.
 
-export const SECTION_VISUALS: Record<TopicId, Record<number, string[]>> = {
+export const SECTION_VISUALS: Partial<Record<TopicId, Record<number, string[]>>> = {
   orthogonality: {
     0: ["dot-product"],
     1: ["complement-3d"],
@@ -47,6 +48,13 @@ type TopicVisual = ComponentType<{ id: string }>;
 const loading = () => <div className="viz" style={{ height: 320, display: "grid", placeItems: "center" }}><span className="muted small">Loading figure…</span></div>;
 
 const MODULES: Record<TopicId, TopicVisual> = {
+  vectors: dynamic(() => import("./topics/vectors"), { ssr: false, loading }),
+  matrices: dynamic(() => import("./topics/matrices"), { ssr: false, loading }),
+  systems: dynamic(() => import("./topics/systems"), { ssr: false, loading }),
+  transformations: dynamic(() => import("./topics/transformations"), { ssr: false, loading }),
+  "matrix-algebra": dynamic(() => import("./topics/matrix-algebra"), { ssr: false, loading }),
+  determinants: dynamic(() => import("./topics/determinants"), { ssr: false, loading }),
+  "vector-spaces": dynamic(() => import("./topics/vector-spaces"), { ssr: false, loading }),
   orthogonality: dynamic(() => import("./topics/orthogonality"), { ssr: false, loading }),
   "least-squares": dynamic(() => import("./topics/least-squares"), { ssr: false, loading }),
   eigen: dynamic(() => import("./topics/eigen"), { ssr: false, loading }),
@@ -54,8 +62,8 @@ const MODULES: Record<TopicId, TopicVisual> = {
   dft: dynamic(() => import("./topics/dft"), { ssr: false, loading }),
 };
 
-export function SectionVisuals({ topic, section }: { topic: TopicId; section: number }) {
-  const ids = SECTION_VISUALS[topic]?.[section];
+export function SectionVisuals({ topic, section, ids: own }: { topic: TopicId; section: number; ids?: string[] }) {
+  const ids = own ?? SECTION_VISUALS[topic]?.[section];
   if (!ids?.length) return null;
   const M = MODULES[topic];
   return (

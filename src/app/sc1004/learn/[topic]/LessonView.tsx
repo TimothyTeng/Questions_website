@@ -26,7 +26,7 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
         ))}
         <a href="#playbook">Exam playbook</a>
         <div style={{ padding: "10px" }}>
-          <Link className="btn primary" href={`/practice?topic=${lesson.topic}`} style={{ width: "100%", justifyContent: "center" }}>
+          <Link className="btn primary" href={`/sc1004/practice?topic=${lesson.topic}`} style={{ width: "100%", justifyContent: "center" }}>
             Practise this topic
           </Link>
         </div>
@@ -35,7 +35,7 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
       <main className="stack">
         <div>
           <div className="row small muted">
-            <Link href="/learn">Learn</Link> / {meta.name}
+            <Link href="/sc1004/learn">Learn</Link> / {meta.name}
           </div>
           <h1 style={{ color: meta.color }}>{meta.name}</h1>
         </div>
@@ -61,11 +61,11 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
         </section>
 
         <div className="row">
-          <Link className="btn primary" href={`/practice?topic=${lesson.topic}`}>
+          <Link className="btn primary" href={`/sc1004/practice?topic=${lesson.topic}`}>
             Practise {meta.name} →
           </Link>
           {nextTopic && (
-            <Link className="btn" href={`/learn/${nextTopic.id}`}>
+            <Link className="btn" href={`/sc1004/learn/${nextTopic.id}`}>
               Next topic: {nextTopic.name}
             </Link>
           )}
@@ -94,7 +94,7 @@ function SectionCard({ s, n, topic }: { s: LessonSection; n: number; topic: Topi
         <Rich text={s.intuition} />
       </div>
 
-      <SectionVisuals topic={topic} section={n - 1} />
+      <SectionVisuals topic={topic} section={n - 1} ids={s.visuals} />
 
       <h3>Key ideas</h3>
       <ul className="rich" style={{ paddingLeft: 20 }}>

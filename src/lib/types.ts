@@ -7,7 +7,21 @@
 //   a newline starts a new paragraph; a line starting with "- " is a bullet.
 // Complex numbers use j (engineering notation), as in the course notes.
 
-export type TopicId = "orthogonality" | "least-squares" | "eigen" | "complex" | "dft";
+export type TopicId =
+  // first half
+  | "vectors"
+  | "matrices"
+  | "systems"
+  | "transformations"
+  | "matrix-algebra"
+  | "determinants"
+  | "vector-spaces"
+  // second half
+  | "orthogonality"
+  | "least-squares"
+  | "eigen"
+  | "complex"
+  | "dft";
 
 export type QuestionKind = "mcq" | "tfn";
 
@@ -23,7 +37,8 @@ export interface Question {
   answer: number;
   /** Worked solution / explanation shown after answering. */
   solution: string;
-  source: "generated" | "concept";
+  /** "exam": hand-written in the style and difficulty of the SC1004 final (past-paper style). */
+  source: "generated" | "concept" | "exam";
 }
 
 /** A hand-written conceptual question (id/topic/source are filled in when the bank is built). */
@@ -55,6 +70,8 @@ export interface LessonSection {
   pitfalls?: string[];
   /** Active-recall prompts (answer hidden until clicked). */
   recall: RecallCard[];
+  /** Interactive figure ids (from the topic's module in components/viz/topics) shown after the intuition. */
+  visuals?: string[];
 }
 
 export interface Lesson {

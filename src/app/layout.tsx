@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LA CA2 Mastery",
-  description: "Learn, practise and revise Orthogonality, Least Squares, Eigenvalues, Complex Numbers and the DFT.",
+  title: "NTU Course Prep",
+  description: "Learn, practise and revise SC1004 Linear Algebra for Computing and SC1001 Python.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

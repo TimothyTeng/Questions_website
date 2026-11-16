@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PracticeEntry } from "./Practice";
 
-export const metadata: Metadata = { title: "Practice · LA CA2 Mastery" };
+export const metadata: Metadata = { title: "Practice · SC1004 Prep" };
 
 export default function PracticePage() {
   return (

@@ -18,6 +18,13 @@
   --t-eig: #c2410c;
   --t-cx: #9333ea;
   --t-dft: #be185d;
+  --t-vec: #2563eb;
+  --t-mat: #0891b2;
+  --t-sys: #059669;
+  --t-ltr: #65a30d;
+  --t-alg: #d97706;
+  --t-det: #dc2626;
+  --t-vsp: #7c3aed;
   --radius: 12px;
   --shadow: 0 1px 2px rgba(20, 24, 40, 0.06), 0 4px 16px rgba(20, 24, 40, 0.05);
 }
@@ -43,6 +50,13 @@
     --t-eig: #fb923c;
     --t-cx: #c084fc;
     --t-dft: #f472b6;
+    --t-vec: #60a5fa;
+    --t-mat: #22d3ee;
+    --t-sys: #34d399;
+    --t-ltr: #a3e635;
+    --t-alg: #fbbf24;
+    --t-det: #f87171;
+    --t-vsp: #a78bfa;
     --shadow: none;
   }
 }
@@ -118,6 +132,22 @@ button {
 .tab:hover {
   background: var(--surface-2);
   color: var(--text);
+}
+.tab-sep {
+  flex: none;
+  width: 1px;
+  margin: 6px 6px;
+  background: var(--border);
+}
+.tab.sub {
+  padding: 6px 12px;
+  font-size: 0.92rem;
+}
+.tab.sub.active {
+  background: transparent;
+  color: var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
+  border-radius: 0;
 }
 .tab.active {
   background: var(--accent-soft);

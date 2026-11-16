@@ -1,26 +1,38 @@
 import Link from "next/link";
-import { Dashboard } from "./Dashboard";
+
+const COURSES = [
+  {
+    href: "/sc1004",
+    code: "SC1004",
+    title: "Linear Algebra for Computing",
+    blurb: "All 12 topics from vectors to the DFT: lessons with interactive figures, 1,200+ exam-style questions and a timed 20-question mock final.",
+    color: "var(--t-orth)",
+  },
+  {
+    href: "/sc1001",
+    code: "SC1001",
+    title: "Intro to Computational Thinking & Programming",
+    blurb: "400+ MCQ / short-answer questions, HackerEarth-style Python coding in the browser and a 90-minute mock quiz.",
+    color: "var(--t-ls)",
+  },
+];
 
 export default function Home() {
   return (
     <div className="page">
-      <h1>Master CA2: Orthogonality → DFT</h1>
-      <p className="lead">Learn each idea, then drill 500 exam-style questions until it sticks.</p>
-      <div className="grid" style={{ marginBottom: 28, gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
-        <Link href="/learn" className="card" style={{ color: "inherit" }}>
-          <h2>📘 Learn</h2>
-          <p className="muted small" style={{ margin: 0 }}>
-            Intuition → key ideas → step-by-step worked examples → exam traps → recall cards, for all five topics.
-          </p>
-        </Link>
-        <Link href="/practice" className="card" style={{ color: "inherit" }}>
-          <h2>✍️ Practice</h2>
-          <p className="muted small" style={{ margin: 0 }}>
-            500 CA2-difficulty questions. Random or by topic, any length, answers after each question, every 5/10, or at the end.
-          </p>
-        </Link>
+      <h1>Course prep</h1>
+      <p className="lead">Pick a course. Progress is saved in this browser.</p>
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
+        {COURSES.map((c) => (
+          <Link key={c.href} href={c.href} className="card" style={{ color: "inherit", borderTop: `4px solid ${c.color}` }}>
+            <div className="small muted">{c.code}</div>
+            <h2>{c.title}</h2>
+            <p className="muted small" style={{ margin: 0 }}>
+              {c.blurb}
+            </p>
+          </Link>
+        ))}
       </div>
-      <Dashboard />
     </div>
   );
 }

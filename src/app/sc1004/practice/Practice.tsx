@@ -5,12 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import { QuestionCard } from "@/components/QuestionCard";
 import { getBank } from "@/lib/bank";
 import { recordAnswers, useProgress } from "@/lib/progress";
-import { TOPICS } from "@/lib/topics";
+import { HALVES, TOPICS } from "@/lib/topics";
 import type { Question, TopicId } from "@/lib/types";
 
 type Scope = "random" | "topics";
 type Pool = "all" | "unseen" | "wrong";
 type Kind = "all" | "mcq" | "tfn";
+type Src = "all" | "exam";
 
 interface Settings {
   scope: Scope;
@@ -18,12 +19,14 @@ interface Settings {
   subtopic: string;
   pool: Pool;
   kind: Kind;
+  /** "exam" keeps only questions written in the style of the final. */
+  src: Src;
   count: number;
   /** Reveal answers after this many questions; 0 = only at the end. */
   batch: number;
 }
 
-const DEFAULTS: Settings = { scope: "random", topics: [], subtopic: "all", pool: "all", kind: "all", count: 10, batch: 0 };
+const DEFAULTS: Settings = { scope: "random", topics: [], subtopic: "all", pool: "all", kind: "all", src: "all", count: 10, batch: 0 };
 const COUNTS = [5, 10, 20, 30, 50];
 const BATCHES = [
   { v: 1, label: "After each question" },
@@ -51,7 +54,7 @@ export function PracticeEntry() {
 export function Practice({ initialTopic }: { initialTopic?: TopicId }) {
   const bank = useMemo(() => getBank(), []);
   const progress = useProgress();
-  // Deep link: /practice?topic=eigen
+  // Deep link: /sc1004/practice?topic=eigen
   const [s, setS] = useState<Settings>(initialTopic ? { ...DEFAULTS, scope: "topics", topics: [initialTopic] } : DEFAULTS);
   const [phase, setPhase] = useState<"setup" | "quiz" | "done">("setup");
   const [qs, setQs] = useState<Question[]>([]);
@@ -78,6 +81,7 @@ export function Practice({ initialTopic }: { initialTopic?: TopicId }) {
         if (s.scope === "topics" && !s.topics.includes(q.topic)) return false;
         if (subtopics.length && s.subtopic !== "all" && q.subtopic !== s.subtopic) return false;
         if (s.kind !== "all" && q.kind !== s.kind) return false;
+        if (s.src === "exam" && q.source !== "exam") return false;
         const st = progress[q.id];
         if (s.pool === "unseen" && st) return false;
         if (s.pool === "wrong" && (!st || st.last)) return false;
@@ -137,7 +141,9 @@ export function Practice({ initialTopic }: { initialTopic?: TopicId }) {
     return (
       <div className="page narrow">
         <h1>Practice</h1>
-        <p className="lead">500 CA2-style questions: 5-option MCQs (with “None of the above”) and True / False / Not-enough-information statements, each with a worked solution.</p>
+        <p className="lead">
+          {bank.length} questions over {TOPICS.length} topics: 5-option MCQs (as in the final) and True / False / Not-enough-information statements, each with a worked solution.
+        </p>
         <div className="card">
           <div className="field">
             <span className="field-label">Questions from</span>
@@ -145,13 +151,26 @@ export function Practice({ initialTopic }: { initialTopic?: TopicId }) {
               <button className={`chip ${s.scope === "random" ? "on" : ""}`} onClick={() => setS((p) => ({ ...p, scope: "random", topics: [], subtopic: "all" }))}>
                 🎲 Random — all topics
               </button>
-              {TOPICS.map((t) => (
-                <button key={t.id} className={`chip ${s.scope === "topics" && s.topics.includes(t.id) ? "on" : ""}`} onClick={() => toggleTopic(t.id)}>
-                  <span className="dot" style={{ background: t.color, marginRight: 6 }} />
-                  {t.name}
-                </button>
-              ))}
+              {HALVES.map((h) => {
+                const ids = TOPICS.filter((t) => t.half === h.half).map((t) => t.id);
+                const on = s.scope === "topics" && s.topics.length === ids.length && ids.every((id) => s.topics.includes(id));
+                return (
+                  <button key={h.half} className={`chip ${on ? "on" : ""}`} onClick={() => setS((p) => ({ ...p, scope: "topics", subtopic: "all", topics: ids }))}>
+                    {h.name} <span className="muted small">({h.note})</span>
+                  </button>
+                );
+              })}
             </div>
+            {HALVES.map((h) => (
+              <div key={h.half} className="row" style={{ marginTop: 8 }}>
+                {TOPICS.filter((t) => t.half === h.half).map((t) => (
+                  <button key={t.id} className={`chip ${s.scope === "topics" && s.topics.includes(t.id) ? "on" : ""}`} onClick={() => toggleTopic(t.id)}>
+                    <span className="dot" style={{ background: t.color, marginRight: 6 }} />
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            ))}
             {s.scope === "topics" && s.topics.length === 0 && <p className="small muted">Pick one or more topics.</p>}
           </div>
 
@@ -180,10 +199,10 @@ export function Practice({ initialTopic }: { initialTopic?: TopicId }) {
               <input
                 type="number"
                 min={1}
-                max={500}
+                max={bank.length}
                 value={s.count}
                 aria-label="Custom number of questions"
-                onChange={(e) => setS((p) => ({ ...p, count: Math.max(1, Math.min(500, Number(e.target.value) || 1)) }))}
+                onChange={(e) => setS((p) => ({ ...p, count: Math.max(1, Math.min(bank.length, Number(e.target.value) || 1)) }))}
                 style={{ width: 90 }}
               />
             </div>
@@ -200,13 +219,23 @@ export function Practice({ initialTopic }: { initialTopic?: TopicId }) {
             </div>
           </div>
 
-          <div className="grid cols-3" style={{ gap: 20 }}>
+          <div className="grid" style={{ gap: 20, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
             <div className="field">
               <span className="field-label">Question type</span>
               <div className="row">
                 {(["all", "mcq", "tfn"] as Kind[]).map((k) => (
                   <button key={k} className={`chip ${s.kind === k ? "on" : ""}`} onClick={() => setS((p) => ({ ...p, kind: k }))}>
                     {k === "all" ? "Both" : k === "mcq" ? "MCQ" : "T / F / NEI"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <span className="field-label">Style</span>
+              <div className="row">
+                {(["all", "exam"] as Src[]).map((k) => (
+                  <button key={k} className={`chip ${s.src === k ? "on" : ""}`} onClick={() => setS((p) => ({ ...p, src: k }))}>
+                    {k === "all" ? "All" : "Past-paper style"}
                   </button>
                 ))}
               </div>
