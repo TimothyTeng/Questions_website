@@ -15,6 +15,13 @@ const COURSES = [
     blurb: "400+ MCQ / short-answer questions, HackerEarth-style Python coding in the browser and a 90-minute mock quiz.",
     color: "var(--t-ls)",
   },
+  {
+    href: "/sc1005",
+    code: "SC1005",
+    title: "Digital Logic",
+    blurb: "13 chapters from number systems to FSMs in Verilog, taught with live circuit, K-map, timing and state-machine visualisations, plus 400 past-paper-style questions.",
+    color: "var(--t-eig)",
+  },
 ];
 
 export default function Home() {

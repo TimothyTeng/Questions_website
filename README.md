@@ -1,6 +1,6 @@
 # NTU Course Prep
 
-Revision site for two NTU courses. The home page (`/`) picks the course; each course is one tab.
+Revision site for three NTU courses. The home page (`/`) picks the course; each course is one tab.
 
 # SC1004 Linear Algebra for Computing (`/sc1004`)
 
@@ -46,3 +46,23 @@ npm run check:sc1001 -- strings # only topics/problems matching "strings"
 - `src/data/sc1001/problems/*.ts`: coding problems with samples, hidden tests, starter and reference code
 - `src/lib/sc1001/harness.ts`: the Python runner shared by the browser worker (`public/sc1001/py-worker.js`) and the check script
 - `src/lib/sc1001/ai-server.ts` + `src/app/api/sc1001/ai/route.ts`: Gemini hints, optional open-answer marking and code review. The browser sends only question/problem ids and the student's answer or code; the server builds the prompts. Set `GEMINI_API_KEY` (free from https://aistudio.google.com/apikey) in `.env.local` locally or in Vercel's Environment Variables — see `.env.example`. Test-case marks never depend on AI.
+
+# SC1005 Digital Logic (`/sc1005`)
+
+13 chapters: introduction, number systems & codes, logic gates & Boolean algebra, digital arithmetic, K-maps, digital ICs/PLAs/floating point (Part 1), then combinational building blocks, Verilog for combinational circuits, sequential circuits, sequential Verilog, FSMs, FSMs in Verilog and a Verilog recap (Part 2).
+
+- **Learn** (`/sc1005/learn`): each chapter as intuition → interactive figure → key ideas → diagrams → worked example → exam traps → recall cards, plus an exam playbook. The figures are live simulations: click gate inputs and watch wires change, minimise K-maps, clock flip-flops, step FSMs.
+- **Practice** (`/sc1005/practice`): 400 questions at past-paper difficulty, from the lectures, tutorials and past papers: five-option OMR-style MCQs, short answers (numbers, codes, and Boolean expressions marked by truth-table equivalence, optionally requiring a minimal form) and structured design / Verilog questions marked against a rubric.
+
+```bash
+npm run check:sc1005            # validate questions, figures, KaTeX and lesson visual ids
+npm run check:sc1005 -- kmaps   # only chapters whose id contains "kmaps"
+```
+
+## Where things live
+
+- `src/lib/sc1005/types.ts`: question, figure and lesson types (the text markup is described at the top)
+- `src/lib/sc1005/logic.ts`: Boolean expression parser, truth tables, Quine–McCluskey minimisation, gate/flip-flop simulation
+- `src/components/sc1005/figures/*`: SVG renderers for circuits (auto-laid-out from a netlist), K-maps, timing diagrams and state diagrams
+- `src/components/sc1005/viz/kit.tsx` + `viz/topics/<chapter>.tsx`: interactive Learn figures
+- `src/data/sc1005/lessons/*.ts`, `src/data/sc1005/questions/*.ts`: chapter content

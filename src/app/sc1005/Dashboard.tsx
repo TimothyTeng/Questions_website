@@ -1,0 +1,78 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo } from "react";
+import { getBank } from "@/lib/sc1005/bank";
+import { resetProgress, useProgress } from "@/lib/sc1005/store";
+import { PARTS, TOPICS } from "@/lib/sc1005/topics";
+
+export function Dashboard() {
+  const bank = useMemo(() => getBank(), []);
+  const progress = useProgress();
+  const stats = TOPICS.map((t) => {
+    const qs = bank.filter((q) => q.topic === t.id);
+    const seen = qs.filter((q) => progress[q.id]);
+    const mastered = seen.filter((q) => progress[q.id].last);
+    return { t, total: qs.length, seen: seen.length, mastered: mastered.length, wrong: seen.length - mastered.length };
+  });
+  const totalSeen = stats.reduce((s, x) => s + x.seen, 0);
+  const totalWrong = stats.reduce((s, x) => s + x.wrong, 0);
+  const totalMastered = stats.reduce((s, x) => s + x.mastered, 0);
+
+  return (
+    <section className="card">
+      <div className="row" style={{ marginBottom: 14 }}>
+        <h2 style={{ margin: 0 }}>Your progress</h2>
+        <span className="spacer" />
+        <span className="small muted">
+          {totalMastered} mastered · {totalSeen} attempted · {bank.length - totalSeen} unseen
+        </span>
+        {totalSeen > 0 && (
+          <button className="btn small" onClick={() => confirm("Reset all SC1005 progress on this device?") && resetProgress()}>
+            Reset
+          </button>
+        )}
+      </div>
+      {PARTS.map((p) => (
+        <div key={p.part} style={{ marginBottom: 18 }}>
+          <h3 style={{ margin: "0 0 10px" }}>
+            {p.name} <span className="small muted">· {p.note}</span>
+          </h3>
+          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
+            {stats
+              .filter((s) => s.t.part === p.part)
+              .map(({ t, total, seen, mastered, wrong }) => (
+                <div key={t.id}>
+                  <div className="row small" style={{ marginBottom: 4, flexWrap: "nowrap" }}>
+                    <span className="dot" style={{ background: t.color }} />
+                    <strong>
+                      {t.ch}. {t.name}
+                    </strong>
+                  </div>
+                  <div className="bar" title={`${mastered} of ${total} correct on last attempt`}>
+                    <div style={{ width: `${(100 * mastered) / Math.max(1, total)}%`, background: t.color }} />
+                  </div>
+                  <div className="small muted" style={{ marginTop: 4 }}>
+                    {mastered}/{total} mastered{wrong ? ` · ${wrong} to fix` : ""}
+                    {seen === 0 ? " · not started" : ""}
+                  </div>
+                  <div className="row small" style={{ marginTop: 4, gap: 12 }}>
+                    <Link href={`/sc1005/learn/${t.id}`}>Learn</Link>
+                    <Link href={`/sc1005/practice?topic=${t.id}`}>Practise</Link>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      ))}
+      {totalWrong > 0 && (
+        <p className="small" style={{ marginBottom: 0 }}>
+          You have <strong>{totalWrong}</strong> question{totalWrong === 1 ? "" : "s"} whose last attempt was wrong — in Practice choose <em>Pool: Got wrong</em> to redo them.
+        </p>
+      )}
+      <p className="small muted" style={{ marginBottom: 0 }}>
+        Progress is saved in this browser only.
+      </p>
+    </section>
+  );
+}

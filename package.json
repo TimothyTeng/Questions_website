@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "check": "tsx --tsconfig tsconfig.json scripts/check-bank.ts",
-    "check:sc1001": "tsx --tsconfig tsconfig.json scripts/check-sc1001.ts"
+    "check:sc1001": "tsx --tsconfig tsconfig.json scripts/check-sc1001.ts",
+    "check:sc1005": "tsx --tsconfig tsconfig.json scripts/check-sc1005.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

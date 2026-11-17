@@ -1,0 +1,273 @@
+/* SC1005 section: code, figures (circuits, K-maps, waveforms, state diagrams, tables) and answer inputs. */
+
+.md code,
+.sc5 .small code {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0 4px;
+}
+pre.code {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 6px 0 10px;
+  overflow-x: auto;
+  white-space: pre;
+  tab-size: 4;
+}
+.opt pre.code {
+  margin: 0;
+  padding: 2px 8px;
+  background: transparent;
+  border: 0;
+  border-left: 2px solid var(--border);
+  border-radius: 0;
+}
+.sample-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 8px 0 2px;
+}
+.btn.sm {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+input.answer-input,
+textarea.answer-input {
+  width: 100%;
+  font: inherit;
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.diff-easy {
+  color: var(--good);
+}
+.diff-medium {
+  color: var(--warn);
+}
+.diff-hard {
+  color: var(--bad);
+}
+
+/* ---- figures ---- */
+.sc5-figs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 10px 0;
+}
+.sc5-fig {
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.sc5-fig-body {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 10px;
+  overflow-x: auto;
+}
+.sc5-fig figcaption {
+  margin-top: 4px;
+  text-align: center;
+}
+.sc5-fig-body > svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+.sc5-raw-svg svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  color: var(--text);
+}
+.cir-svg,
+.kmap-svg,
+.wave-svg,
+.fsm-svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.viz-fig .cir-svg,
+.viz-fig .kmap-svg,
+.viz-fig .wave-svg,
+.viz-fig .fsm-svg {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 6px;
+}
+.cir-label {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--text);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+}
+.cir-tag {
+  font-size: 11px;
+  paint-order: stroke;
+  stroke: var(--surface-2);
+  stroke-width: 3px;
+}
+.cir-pin {
+  font-size: 10px;
+  fill: var(--muted);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+}
+.cir-bit {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-geist-mono), Consolas, monospace;
+}
+.cir-input.live {
+  cursor: pointer;
+}
+.cir-input.live:hover rect {
+  stroke-width: 2.5;
+}
+.kmap-var,
+.kmap-head {
+  font-size: 12px;
+  fill: var(--muted);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+}
+.kmap-var {
+  font-weight: 700;
+  fill: var(--text);
+}
+.kmap-val {
+  font-size: 16px;
+  font-weight: 600;
+  fill: var(--text);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+}
+.kmap-idx {
+  font-size: 9px;
+  fill: var(--muted);
+}
+.kmap-cell.live {
+  cursor: pointer;
+}
+.kmap-cell.live:hover rect {
+  fill: var(--accent-soft);
+}
+.wave-name {
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--text);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+}
+.wave-data {
+  font-size: 11px;
+  fill: var(--text);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+}
+.wave-tick {
+  font-size: 10px;
+  fill: var(--muted);
+}
+.fsm-state {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--text);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+}
+.fsm-label {
+  font-size: 12px;
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  paint-order: stroke;
+  stroke: var(--surface-2);
+  stroke-width: 4px;
+}
+.sc5-table {
+  border-collapse: collapse;
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 0.86rem;
+  margin: 0 auto;
+}
+.sc5-table th,
+.sc5-table td {
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  text-align: center;
+}
+.sc5-table th {
+  background: var(--surface);
+}
+.sc5-table tr.hl td {
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+.viz-readout .sc5-table {
+  margin: 6px 0 0;
+}
+
+/* ---- interactive kit ---- */
+.bitrow {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.bit {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+.bit.on {
+  background: var(--good);
+  border-color: var(--good);
+  color: var(--surface);
+}
+.bit:disabled {
+  cursor: default;
+}
+.bit-label {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* ---- question extras ---- */
+.q .src {
+  font-size: 0.75rem;
+}
+.expr-note {
+  font-size: 0.85rem;
+  color: var(--warn);
+  margin-top: 4px;
+}
+.part-chip {
+  font-size: 0.78rem;
+}
