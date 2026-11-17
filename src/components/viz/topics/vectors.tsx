@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Choice, Read, Slider, Toggle, VecInput, VizFrame } from "../Frame";
-import { Arrow2, Handle2, Line2, Plane2D, Poly2, Seg2, cssColor, type VizColor } from "../Plane2D";
-import { Arrow3, Dot3, Handle3, Line3, Plane3, Scene3D, Seg3, useScene } from "../Scene3D";
+import { Arrow2, Handle2, Line2, Plane2D, Poly2, Seg2 } from "../Plane2D";
+import { Arrow3, Dot3, Line3, Plane3, Scene3D, Seg3 } from "../Scene3D";
 import { add, cross, dot, fmt, fmtV, norm, scale, sub, unit, type V2, type V3 } from "../vec";
 
 // Interactive figures for the vectors lesson, chosen by id.
@@ -15,8 +15,6 @@ export default function Visual({ id }: { id: string }) {
       return <VectorArith initialMode="law" />;
     case "lin-comb":
       return <LinComb />;
-    case "cross-product-3d":
-      return <CrossProduct3D />;
     case "line-plane-3d":
       return <LinePlane3D />;
     default:
@@ -112,8 +110,8 @@ function VectorArith({ initialMode }: { initialMode: Mode }) {
             <>
               <Read tex={`$\\|\\mathbf{u}+\\mathbf{v}\\|^2 + \\|\\mathbf{u}-\\mathbf{v}\\|^2 = ${fmt(dot(s, s))} + ${fmt(dot(d, d))} = ${fmt(lhs)}$`} />
               <Read tone="good" tex={`$2\\|\\mathbf{u}\\|^2 + 2\\|\\mathbf{v}\\|^2 = 2(${fmt(nu * nu)}) + 2(${fmt(nv * nv)}) = ${fmt(rhs)}$`} />
-              <Read tex={`polarization: $\\tfrac14(${fmt(dot(s, s))} - ${fmt(dot(d, d))}) = ${fmt((dot(s, s) - dot(d, d)) / 4)} = \\mathbf{u}\\cdot\\mathbf{v}$`} />
-              <Read tone={Math.abs(dot(u, v)) < 1e-9 ? "good" : undefined} tex={Math.abs(dot(u, v)) < 1e-9 ? "equal diagonals: a **rectangle**, $\\mathbf{u}\\perp\\mathbf{v}$" : `diagonal lengths ${fmt(norm(s))} and ${fmt(norm(d))}`} />
+              <Read tex={`$\\|\\mathbf{u}\\pm\\mathbf{v}\\|^2 = \\|\\mathbf{u}\\|^2 \\pm 2\\,\\mathbf{u}\\cdot\\mathbf{v} + \\|\\mathbf{v}\\|^2$, here $\\mathbf{u}\\cdot\\mathbf{v} = ${fmt(dot(u, v))}$`} />
+              <Read tex={`diagonal lengths ${fmt(norm(s))} and ${fmt(norm(d))}`} />
             </>
           )}
         </>
@@ -121,9 +119,9 @@ function VectorArith({ initialMode }: { initialMode: Mode }) {
       tasks={
         mode === "law"
           ? [
-              "Predict: can you make the two diagonals equal without making $\\mathbf{u}\\perp\\mathbf{v}$? Try it.",
+              "Make $\\mathbf{u}\\cdot\\mathbf{v} = 0$. What happens to the two diagonal lengths? Explain it with the expansion.",
               "Make $\\mathbf{v}$ a multiple of $\\mathbf{u}$. The parallelogram collapses; does the law still hold?",
-              "Read off $\\|\\mathbf{u}+\\mathbf{v}\\|^2$ and $\\|\\mathbf{u}-\\mathbf{v}\\|^2$ only, and recover $\\mathbf{u}\\cdot\\mathbf{v}$ with polarization.",
+              "Read off $\\|\\mathbf{u}+\\mathbf{v}\\|^2$ and $\\|\\mathbf{u}-\\mathbf{v}\\|^2$ only, and recover $\\mathbf{u}\\cdot\\mathbf{v}$ by subtracting the two expansions.",
             ]
           : [
               "Switch on the triangle rule. Does the green arrow change? (It shouldn't: both rules give the same sum.)",
@@ -178,10 +176,10 @@ function LinComb() {
             <Read tex={`Solve $a${fmtV(u)} + b${fmtV(v)} = ${fmtV(w)}$ componentwise:`} />
             <Read tex={`$${linEq([u[0], v[0]], "ab")} = ${fmt(w[0])},\\quad ${linEq([u[1], v[1]], "ab")} = ${fmt(w[1])}$`} />
             <Read tone="good" tex={`$a = ${fmt(a)},\\ b = ${fmt(b)}$`} />
-            <Read tex="In $\mathbb{R}^2$ two non-parallel vectors reach **every** $\mathbf{w}$. In $\mathbb{R}^3$ there is a third equation, which may fail." />
+            <Read tex="In $R^3$ there would be a third equation to check, and it may fail." />
           </>
         ) : (
-          <Read tone="bad" tex="$\mathbf{u}\parallel\mathbf{v}$: their combinations only fill a line, so most $\mathbf{w}$ cannot be reached." />
+          <Read tone="bad" tex="$\mathbf{u}$ and $\mathbf{v}$ are parallel: every $a\mathbf{u}+b\mathbf{v}$ is a multiple of $\mathbf{u}$, so this $\mathbf{w}$ may not be reachable." />
         )
       }
       tasks={[
@@ -195,75 +193,6 @@ function LinComb() {
 
 function GridLine({ p, d }: { p: V2; d: V2 }) {
   return <Line2 p={p} d={d} color="muted" dashed={false} />;
-}
-
-// ---------------------------------------------------------------- cross product (3D)
-
-function Poly3({ pts, color = "accent", opacity = 0.18 }: { pts: V3[]; color?: VizColor; opacity?: number }) {
-  const { project } = useScene();
-  const c = cssColor(color);
-  return (
-    <polygon
-      pointerEvents="none"
-      points={pts.map((p) => project(p)).map((q) => `${q[0]},${q[1]}`).join(" ")}
-      fill={c}
-      fillOpacity={opacity}
-      stroke={c}
-      strokeOpacity={0.6}
-    />
-  );
-}
-
-function CrossProduct3D() {
-  const init = { u: [2, 0, 0.5] as V3, v: [0.5, 2, 0] as V3 };
-  const [u, setU] = useState<V3>(init.u);
-  const [v, setV] = useState<V3>(init.v);
-  const [swap, setSwap] = useState(false);
-  const c = swap ? cross(v, u) : cross(u, v);
-  const area = norm(c);
-  const nu = norm(u), nv = norm(v);
-  const cosT = nu && nv ? dot(u, v) / (nu * nv) : 0;
-  const sinT = Math.sqrt(Math.max(0, 1 - cosT * cosT));
-  const shown = area > 2.4 ? scale(c, 2.4 / area) : c;
-  return (
-    <VizFrame
-      title="Cross product: a normal whose length is an area"
-      hint="Drag the tips of u and v (they move parallel to the screen; rotate the view to move them in depth)."
-      onReset={() => { setU(init.u); setV(init.v); setSwap(false); }}
-      figure={
-        <Scene3D extent={3}>
-          <Poly3 pts={[[0, 0, 0], u, add(u, v), v]} color="warn" />
-          <Arrow3 to={u} color="accent" label="u" />
-          <Arrow3 to={v} color="eig" label="v" />
-          {area > 1e-6 && <Arrow3 to={shown} color="good" width={3.5} label={swap ? "v×u" : "u×v"} />}
-          <Handle3 at={u} onChange={setU} />
-          <Handle3 at={v} onChange={setV} color="eig" />
-        </Scene3D>
-      }
-      controls={
-        <>
-          <VecInput label="$\mathbf{u}$" value={u} onChange={(x) => setU(x as V3)} />
-          <VecInput label="$\mathbf{v}$" value={v} onChange={(x) => setV(x as V3)} />
-          <Toggle label="Show $\mathbf{v}\times\mathbf{u}$ instead" value={swap} onChange={setSwap} />
-        </>
-      }
-      readout={
-        <>
-          <Read tex={`$${swap ? "\\mathbf{v}\\times\\mathbf{u}" : "\\mathbf{u}\\times\\mathbf{v}"} = ${fmtV(c)}$${area > 2.4 ? " (arrow drawn shortened)" : ""}`} />
-          <Read tone="good" tex={`$(\\cdot)\\cdot\\mathbf{u} = ${fmt(dot(c, u))},\\ (\\cdot)\\cdot\\mathbf{v} = ${fmt(dot(c, v))}$: orthogonal to both`} />
-          <Read tex={`area of the orange parallelogram $= \\|\\mathbf{u}\\times\\mathbf{v}\\| = ${fmt(area)}$`} />
-          <Read tex={`$\\|\\mathbf{u}\\|\\|\\mathbf{v}\\|\\sin\\theta = ${fmt(nu)}\\cdot${fmt(nv)}\\cdot${fmt(sinT, 3)} = ${fmt(nu * nv * sinT)}$`} />
-          {area < 1e-6 && <Read tone="bad" tex="$\mathbf{u}\times\mathbf{v} = \mathbf{0}$: the vectors are parallel, so the parallelogram is flat." />}
-        </>
-      }
-      tasks={[
-        "Toggle $\\mathbf{v}\\times\\mathbf{u}$. What changes, and what stays the same?",
-        "Type $\\mathbf{u} = (1,0,0)$, $\\mathbf{v} = (0,1,0)$. Which standard vector is $\\mathbf{u}\\times\\mathbf{v}$?",
-        "Predict: if you double $\\mathbf{v}$, what happens to the area and to the direction of the normal?",
-        "Make $\\mathbf{v}$ parallel to $\\mathbf{u}$. Why must $\\mathbf{u}\\times\\mathbf{v}$ vanish?",
-      ]}
-    />
-  );
 }
 
 // ---------------------------------------------------------------- line meets plane (3D)
@@ -313,7 +242,6 @@ function LinePlane3D() {
   const center = valid ? scale(n, d / nn) : ([0, 0, 0] as V3);
   const [ba, bb] = valid ? inPlaneBasis(n) : ([[1, 0, 0], [0, 1, 0]] as [V3, V3]);
   const moving = add(p, scale(dir, t));
-  const dist = valid ? Math.abs(np - d) / Math.sqrt(nn) : 0;
   return (
     <VizFrame
       title="Where a line meets a plane"
@@ -346,10 +274,9 @@ function LinePlane3D() {
           <>
             <Read tex={`plane: $${linEq(n)} = ${fmt(d)}$`} />
             <Read tex={`substitute $P_0 + t\\mathbf{d}$: $\\ ${fmt(np)} + (${fmt(nd)})\\,t = ${fmt(d)}$`} />
-            {!parallel && <Read tone="bad" tex={`$\\mathbf{n}\\cdot\\mathbf{d} \\ne 0$: one point, $t = ${fmt(tStar!)}$, $X = ${fmtV(X!)}$`} />}
-            {parallel && !inPlane && <Read tone="warn" tex={`$\\mathbf{n}\\cdot\\mathbf{d} = 0$ and $${fmt(np)} \\ne ${fmt(d)}$: parallel, **no** intersection`} />}
-            {inPlane && <Read tone="good" tex={`$\\mathbf{n}\\cdot\\mathbf{d} = 0$ and $${fmt(np)} = ${fmt(d)}$: every $t$ works, the line **lies in** the plane`} />}
-            <Read tex={`distance from $P_0$ to the plane $= \\dfrac{|${fmt(np)} - ${fmt(d)}|}{\\|\\mathbf{n}\\|} = ${fmt(dist)}$`} />
+            {!parallel && <Read tone="bad" tex={`coefficient of $t$ is $\\mathbf{n}\\cdot\\mathbf{d} \\ne 0$: one solution $t = ${fmt(tStar!)}$, $X = ${fmtV(X!)}$`} />}
+            {parallel && !inPlane && <Read tone="warn" tex={`coefficient of $t$ is $0$ and $${fmt(np)} \\ne ${fmt(d)}$: no $t$ works, **no** intersection`} />}
+            {inPlane && <Read tone="good" tex={`coefficient of $t$ is $0$ and $${fmt(np)} = ${fmt(d)}$: every $t$ works, the line **lies on** the plane`} />}
           </>
         ) : (
           <Read tone="bad" tex="Both $\mathbf{n}$ and $\mathbf{d}$ must be nonzero." />
@@ -358,8 +285,8 @@ function LinePlane3D() {
       tasks={[
         "On **Crosses**, slide $t$ until the white point lands on the red $X$. Does it match the formula's $t$?",
         "On **Parallel**, change only $d$ (the slider) until the line lies in the plane. Which value works, and why?",
-        "Predict: if you change the direction to be a multiple of $\\mathbf{n}$, how does the line sit relative to the plane?",
-        "Set the plane to $z = 0$ (normal $(0,0,1)$, $d = 0$): this is the $xy$-plane. Where does the Crosses line meet it?",
+        "On **Lies in**, move $P_0$ off the plane. Which of the three outcomes do you get now?",
+        "Set the plane to $z = 0$ (normal $(0,0,1)$, $d = 0$): this is the $x$–$y$ plane. Where does the Crosses line meet it?",
       ]}
     />
   );

@@ -37,6 +37,11 @@ export interface Question {
   answer: number;
   /** Worked solution / explanation shown after answering. */
   solution: string;
+  /**
+   * Where in the course materials this question's method and facts come from, e.g.
+   * "Slides 4.2 (p12); Tutorial 4 Q1" or "PYP AY25/26 S1 Q5". Required for first-half topics.
+   */
+  ref?: string;
   /** "exam": hand-written in the style and difficulty of the SC1004 final (past-paper style). */
   source: "generated" | "concept" | "exam";
 }
@@ -72,6 +77,8 @@ export interface LessonSection {
   recall: RecallCard[];
   /** Interactive figure ids (from the topic's module in components/viz/topics) shown after the intuition. */
   visuals?: string[];
+  /** Course materials this section is taken from (slide pages, tutorial / past-paper questions). */
+  refs?: string[];
 }
 
 export interface Lesson {

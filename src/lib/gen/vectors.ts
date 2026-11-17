@@ -2,6 +2,9 @@ import { cross, dot, F, Frac, isZeroVec, primitive, rowTex, rowTexPlain, sqrtTex
 import { mcq, retry, tfn, type Draft, type Rng } from "./common";
 import { maxAbs, orthPair, parallel, pythVec, randVec } from "./shared";
 
+// Every generator carries a ref to the course materials it is built on (slides Ch 0A, Tutorial 0A, past papers).
+const cite = (ref: string, g: (rng: Rng) => Draft) => (rng: Rng): Draft => ({ ...g(rng), ref });
+
 // ---------- local formatting helpers ----------
 
 /** Point as (a, b, c). */
@@ -34,6 +37,21 @@ function affine(p: Frac, c: Frac, t = "t"): string {
 }
 const lineParam = (p: Vec, d: Vec, t = "t") => p.map((x, i) => `${XYZ[i]} = ${affine(x, d[i], t)}`).join(",\\ ");
 
+/** "p + a t1 + b t2" with tidy signs. */
+function affine2(p: Frac, a: Frac, b: Frac): string {
+  const terms: string[] = [];
+  if (!p.isZero()) terms.push(p.tex());
+  for (const [c, t] of [[a, "t_1"], [b, "t_2"]] as [Frac, string][]) {
+    if (c.isZero()) continue;
+    const abs = c.abs();
+    const ct = `${abs.eq(1) ? "" : abs.tex()}${t}`;
+    terms.push(terms.length ? `${c.n < 0 ? "-" : "+"} ${ct}` : `${c.n < 0 ? "-" : ""}${ct}`);
+  }
+  return terms.join(" ") || "0";
+}
+const planeParam = (p: Vec, a: Vec, b: Vec) => p.map((x, i) => `${XYZ[i]} = ${affine2(x, a[i], b[i])}`).join(",\\ ");
+const planeVecTex = (p: Vec, a: Vec, b: Vec) => `\\mathbf{x} = ${isZeroVec(p) ? "" : `${V(p)} + `}t_1${V(a)} + t_2${V(b)}`;
+
 /** coef * sqrt(rad), simplified, as LaTeX. */
 function surdTex(coef: Frac, rad: number): string {
   if (coef.isZero() || rad === 0) return "0";
@@ -54,8 +72,11 @@ function samePlane(n1: Vec, d1: Frac, n2: Vec, d2: Frac): boolean {
   const k = n2[i].div(n1[i]);
   return d1.mul(k).eq(d2);
 }
-
-const abs = (x: Frac) => x.abs();
+/** Equation n.x = d of the plane x0 + t1 a + t2 b (internal check only; a, b noncollinear). */
+const eqOf = (x0: Vec, a: Vec, b: Vec): [Vec, Frac] => {
+  const n = cross(a, b);
+  return [n, dot(n, x0)];
+};
 
 // ---------- generators ----------
 
@@ -79,7 +100,7 @@ function linComb(rng: Rng): Draft {
       solution: `Equate components:\n$$${sys}$$\nSolving gives $a = ${a.tex()}$, $b = ${b.tex()}$, and all three equations hold (always check the equation you did not use).\nCheck: $${a.eq(1) ? "" : a.eq(-1) ? "-" : a.tex()}${V(u)} ${b.n < 0 ? "-" : "+"} ${b.abs().eq(1) ? "" : b.abs().tex()}${V(v)} = ${V(w)}$.`,
     });
   }
-  // unknown last component h
+  // unknown component h
   const i = rng.int(0, 2);
   const h = w[i];
   const wTex = `[${w.map((x, j) => (j === i ? "h" : x.tex())).join(",\\ ")}]^T`;
@@ -94,7 +115,7 @@ function linComb(rng: Rng): Draft {
       `h = ${a.mul(u[i]).sub(b.mul(v[i])).tex()}`,
       `h = ${h.add(rng.pick([1, -1, 2])).tex()}`,
     ],
-    solution: `The components without $h$ give ${others.map((j) => `$${lin([u[j], v[j]], ["a", "b"])} = ${w[j].tex()}$`).join(" and ")}, so $a = ${a.tex()}$, $b = ${b.tex()}$.\nThe remaining component must then match: $h = ${a.tex()}(${u[i].tex()}) + (${b.tex()})(${v[i].tex()}) = ${h.tex()}$. For any other $h$ the system is inconsistent.`,
+    solution: `The components without $h$ give ${others.map((j) => `$${lin([u[j], v[j]], ["a", "b"])} = ${w[j].tex()}$`).join(" and ")}, so $a = ${a.tex()}$, $b = ${b.tex()}$.\nThe remaining component must then match: $h = ${a.tex()}(${u[i].tex()}) + (${b.tex()})(${v[i].tex()}) = ${h.tex()}$. For any other $h$ the equations are inconsistent.`,
   });
 }
 
@@ -111,7 +132,7 @@ function initialPoint(rng: Rng): Draft {
     prompt: `A vector $\\mathbf{u}$ of length $${k * norm}$ has terminal point $Q${P(Q)}$ and is ${opp ? "oppositely directed to" : "in the same direction as"} $\\mathbf{v} = ${V(v)}$. Find the initial point of $\\mathbf{u}$.`,
     correct: P(Pp),
     distractors: [P(vadd(Q, u)), P(vsub(u, Q)), P(vadd(Q, vscale(v, opp ? 1 : -1))), P(vadd(Q, vscale(v, opp ? -1 : 1))), P(vscale(Pp, -1))],
-    solution: `$\\|\\mathbf{v}\\| = ${norm}$, so $\\mathbf{u} = ${s < 0 ? "-" : ""}\\dfrac{${k * norm}}{${norm}}\\mathbf{v} = ${V(u)}$.\nSince $\\mathbf{u} = Q - P$ (terminal minus initial), $P = Q - \\mathbf{u} = ${P(Pp)}$. ($Q + \\mathbf{u}$ is the usual sign slip.)`,
+    solution: `$\\|\\mathbf{v}\\| = ${norm}$, so $\\mathbf{u} = ${s < 0 ? "-" : ""}\\dfrac{${k * norm}}{${norm}}\\mathbf{v} = ${V(u)}$ (a scalar multiple has length $|k|$ times the length of $\\mathbf{v}$).\nSince $\\mathbf{u} = \\overrightarrow{PQ} = Q - P$ (terminal minus initial), $P = Q - \\mathbf{u} = ${P(Pp)}$. ($Q + \\mathbf{u}$ is the usual sign slip.)`,
   });
 }
 
@@ -133,7 +154,66 @@ function unitVec(rng: Rng): Draft {
       rowTex(vscale(v.map((x) => x.abs()), F(s, norm))),
       rowTex(vscale(v, F(s, norm + 1))),
     ],
-    solution: `$\\|\\mathbf{v}\\| = \\sqrt{${v.map((x) => x.mul(x).tex()).join("+")}} = ${norm}$.\nThe answer is $${s < 0 ? "-" : ""}${L === 1 ? "" : L}\\dfrac{\\mathbf{v}}{\\|\\mathbf{v}\\|} = ${rowTex(ans)}$ (divide by $\\|\\mathbf{v}\\|$, not $\\|\\mathbf{v}\\|^2$${opp ? ", and flip the sign for the opposite direction" : ""}).`,
+    solution: `$\\|\\mathbf{v}\\| = \\sqrt{${v.map((x) => x.mul(x).tex()).join("+")}} = ${norm}$.\nNormalizing: the answer is $${s < 0 ? "-" : ""}${L === 1 ? "" : L}\\dfrac{1}{\\|\\mathbf{v}\\|}\\mathbf{v} = ${rowTex(ans)}$ (divide by $\\|\\mathbf{v}\\|$, not $\\|\\mathbf{v}\\|^2$${opp ? ", and flip the sign for the opposite direction" : ""}).`,
+  });
+}
+
+/** Tutorial 0A Q3/Q4: norm of a combination, or the distance between two vectors. */
+function normCombo(rng: Rng): Draft {
+  const n = rng.pick([3, 4]);
+  if (rng.chance(0.4)) {
+    const u = randVec(rng, n, -4, 5);
+    const v = randVec(rng, n, -4, 5);
+    const d = vsub(u, v);
+    if (isZeroVec(d)) retry();
+    const dd = dot(d, d);
+    const sumAbs = d.reduce((s, x) => s.add(x.abs()), F(0));
+    const plus = vadd(u, v);
+    return mcq(rng, {
+      subtopic: "Norm & unit vectors",
+      prompt: `Find the distance $d(\\mathbf{u},\\mathbf{v})$ between $\\mathbf{u} = ${V(u)}$ and $\\mathbf{v} = ${V(v)}$.`,
+      correct: sqrtTex(dd),
+      distractors: [dd.tex(), sumAbs.tex(), sqrtTex(dot(plus, plus)), sqrtTex(dd.add(1)), sqrtTex(dot(u, u).add(dot(v, v)))],
+      solution: `$d(\\mathbf{u},\\mathbf{v}) = \\|\\mathbf{u}-\\mathbf{v}\\|$ with $\\mathbf{u}-\\mathbf{v} = ${V(d)}$.\n$$d(\\mathbf{u},\\mathbf{v}) = \\sqrt{${d.map((x) => x.mul(x).tex()).join(" + ")}} = ${sqrtTex(dd)}$$`,
+    });
+  }
+  const u = randVec(rng, n, -3, 3);
+  const v = randVec(rng, n, -3, 3);
+  const w = randVec(rng, n, -3, 3);
+  const [a, b, c] = [rng.pick([2, 3, -2]), rng.pick([-1, -2, 2, 3]), rng.pick([1, -1])];
+  const s = vadd(vadd(vscale(u, a), vscale(v, b)), vscale(w, c));
+  if (isZeroVec(s)) retry();
+  const ss = dot(s, s);
+  const slip = vadd(vadd(vscale(u, a), vscale(v, -b)), vscale(w, c));
+  const slip2 = vadd(vadd(vscale(u, a), vscale(v, b)), vscale(w, -c));
+  const combo = `${a === -1 ? "-" : a}\\mathbf{u} ${b < 0 ? "-" : "+"} ${Math.abs(b) === 1 ? "" : Math.abs(b)}\\mathbf{v} ${c < 0 ? "-" : "+"} \\mathbf{w}`;
+  return mcq(rng, {
+    subtopic: "Norm & unit vectors",
+    prompt: `For $\\mathbf{u} = ${V(u)}$, $\\mathbf{v} = ${V(v)}$ and $\\mathbf{w} = ${V(w)}$, evaluate $\\|${combo}\\|$.`,
+    correct: sqrtTex(ss),
+    distractors: [ss.tex(), sqrtTex(dot(slip, slip)), sqrtTex(dot(slip2, slip2)), sqrtTex(ss.add(2)), sqrtTex(ss.sub(2).abs())],
+    solution: `Compute the vector first (componentwise): $${combo} = ${V(s)}$.\nThen $\\|${combo}\\| = \\sqrt{${s.map((x) => x.mul(x).tex()).join(" + ")}} = ${sqrtTex(ss)}$.\n(This is not $\\|${a}\\mathbf{u}\\| ${b < 0 ? "-" : "+"} \\|${Math.abs(b)}\\mathbf{v}\\| ${c < 0 ? "-" : "+"} \\|\\mathbf{w}\\|$, which is a different quantity.)`,
+  });
+}
+
+/** Find k making two vectors orthogonal. */
+function orthK(rng: Rng): Draft {
+  const n = rng.pick([3, 4]);
+  const u = randVec(rng, n, -4, 4);
+  const v = randVec(rng, n, -4, 4);
+  const i = rng.int(0, n - 1);
+  if (v[i].isZero()) retry();
+  const rest = dot(u, v).sub(u[i].mul(v[i])); // contribution of the other components
+  const k = rest.neg().div(v[i]);
+  if (k.isZero()) retry();
+  const uTex = `[${u.map((x, j) => (j === i ? "k" : x.tex())).join(",\\ ")}]^T`;
+  const restSlip = rest.sub(u[(i + 1) % n].mul(v[(i + 1) % n]).mul(2)); // sign slip on one product
+  return mcq(rng, {
+    subtopic: "Dot product & angle",
+    prompt: `Find $k$ such that $\\mathbf{u} = ${uTex}$ and $\\mathbf{v} = ${V(v)}$ are orthogonal.`,
+    correct: `k = ${k.tex()}`,
+    distractors: [`k = ${k.neg().tex()}`, `k = ${restSlip.neg().div(v[i]).tex()}`, `k = ${rest.neg().mul(v[i]).tex()}`, `k = ${k.add(1).tex()}`, `k = ${rest.neg().tex()}`],
+    solution: `Orthogonal means $\\mathbf{u}\\cdot\\mathbf{v} = 0$:\n$$\\mathbf{u}\\cdot\\mathbf{v} = ${v[i].eq(1) ? "" : v[i].eq(-1) ? "-" : v[i].tex()}k ${rest.n < 0 ? "-" : "+"} ${rest.abs().tex()} = 0 \\Rightarrow k = ${k.tex()}$$`,
   });
 }
 
@@ -166,7 +246,7 @@ function triangleAngle(rng: Rng): Draft {
       `\\cos\\theta = ${d.tex()}`,
       `\\cos\\theta = ${d.div(m).tex()}`,
     ],
-    solution: `Use the two edge vectors **leaving** $${names[vi]}$: $\\overrightarrow{${names[vi]}${names[o1]}} = ${V(a)}$ and $\\overrightarrow{${names[vi]}${names[o2]}} = ${V(b)}$.\nDot product $= ${d.tex()}$; norms $\\sqrt{${dot(a, a).tex()}}$ and $\\sqrt{${dot(b, b).tex()}}$.\n$$\\cos\\theta = \\frac{${d.tex()}}{\\sqrt{${dot(a, a).tex()}}\\sqrt{${dot(b, b).tex()}}} = ${cos}$$\n(${d.n > 0 ? "acute" : "obtuse"}). Using $\\overrightarrow{${names[o1]}${names[vi]}}$ with $\\overrightarrow{${names[vi]}${names[o2]}}$ flips the sign (the exterior angle).`,
+    solution: `Use the two vectors **leaving** $${names[vi]}$: $\\overrightarrow{${names[vi]}${names[o1]}} = ${V(a)}$ and $\\overrightarrow{${names[vi]}${names[o2]}} = ${V(b)}$.\nDot product $= ${d.tex()}$; norms $\\sqrt{${dot(a, a).tex()}}$ and $\\sqrt{${dot(b, b).tex()}}$.\n$$\\cos\\theta = \\frac{${d.tex()}}{\\sqrt{${dot(a, a).tex()}}\\sqrt{${dot(b, b).tex()}}} = ${cos}$$\n(${d.n > 0 ? "acute" : "obtuse"}, since the dot product is ${d.n > 0 ? "positive" : "negative"}). Using $\\overrightarrow{${names[o1]}${names[vi]}}$ with $\\overrightarrow{${names[vi]}${names[o2]}}$ flips the sign of the dot product.`,
   });
 }
 
@@ -202,7 +282,7 @@ function rightTriangle(rng: Rng): Draft {
     prompt: `Consider the triangle with vertices $A${P(pts[0])}$, $B${P(pts[1])}$ and $C${P(pts[2])}$. Which statement is correct?`,
     options: [...RT_OPTS],
     answer,
-    solution: `Dot the two edge vectors leaving each vertex:\n- ${lines.join("\n- ")}\n${right >= 0 ? `The dot product at $${names[right]}$ is zero, so the right angle is at $${names[right]}$.` : "No dot product is zero, so the triangle has no right angle."}`,
+    solution: `Dot the two edge vectors leaving each vertex:\n- ${lines.join("\n- ")}\n${right >= 0 ? `The dot product at $${names[right]}$ is zero, so the edges there are orthogonal and the right angle is at $${names[right]}$.` : "No dot product is zero, so the triangle has no right angle."}`,
   };
 }
 
@@ -234,10 +314,10 @@ function work(rng: Rng): Draft {
   if (raw) ds.push(dot(raw, r));
   return mcq(rng, {
     subtopic: "Dot product & angle",
-    prompt: `A constant force ${fDesc} moves a particle from $P${P(p)}$ to $Q${P(q)}$. Find the work done, $W = \\mathbf{F}\\cdot\\mathbf{r}$, where $\\mathbf{r}$ is the displacement.`,
+    prompt: `A constant force ${fDesc} moves a particle from $P${P(p)}$ to $Q${P(q)}$. Find the work done, Work $= \\mathbf{F}\\cdot\\mathbf{r}$, where $\\mathbf{r}$ is the displacement.`,
     correct: W.tex(),
     distractors: ds.map((x) => x.tex()),
-    solution: `${fSol}$\\mathbf{r} = \\overrightarrow{PQ} = Q - P = ${V(r)}$.\n$W = \\mathbf{F}\\cdot\\mathbf{r} = ${f.map((x, i) => `(${x.tex()})(${r[i].tex()})`).join(" + ")} = ${W.tex()}$.\nUse the displacement $Q - P$, not the position vectors.`,
+    solution: `${fSol}$\\mathbf{r} = \\overrightarrow{PQ} = Q - P = ${V(r)}$.\nWork $= \\mathbf{F}\\cdot\\mathbf{r} = ${f.map((x, i) => `(${x.tex()})(${r[i].tex()})`).join(" + ")} = ${W.tex()}$.\nUse the displacement $Q - P$, not the position vectors.`,
   });
 }
 
@@ -252,6 +332,7 @@ function normIdentities(rng: Rng): Draft {
   const nr = (x: number) => sqrtTex(F(x));
   const mode = rng.pick(["v", "dot", "cos"]);
   const head = `Let $\\mathbf{u}, \\mathbf{v}\\in\\mathbb{R}^n$ with`;
+  const expand = "Expand with the dot product: $\\|\\mathbf{u}\\pm\\mathbf{v}\\|^2 = (\\mathbf{u}\\pm\\mathbf{v})\\cdot(\\mathbf{u}\\pm\\mathbf{v}) = \\|\\mathbf{u}\\|^2 \\pm 2\\,\\mathbf{u}\\cdot\\mathbf{v} + \\|\\mathbf{v}\\|^2$.";
   if (mode === "v") {
     return mcq(rng, {
       subtopic: "Norm identities & inequalities",
@@ -264,7 +345,7 @@ function normIdentities(rng: Rng): Draft {
         `\\|\\mathbf{v}\\| = ${nr(b + a)}`,
         `\\|\\mathbf{v}\\| = ${nr(b * 2)}`,
       ].filter((s) => !s.endsWith("= 0")),
-      solution: `Parallelogram law: $\\|\\mathbf{u}+\\mathbf{v}\\|^2 + \\|\\mathbf{u}-\\mathbf{v}\\|^2 = 2\\|\\mathbf{u}\\|^2 + 2\\|\\mathbf{v}\\|^2$.\n$${p} + ${m} = 2(${a}) + 2\\|\\mathbf{v}\\|^2 \\Rightarrow \\|\\mathbf{v}\\|^2 = ${b}$, so $\\|\\mathbf{v}\\| = ${nr(b)}$. (Forgetting the factor 2 on $\\|\\mathbf{v}\\|^2$ is the usual slip.)`,
+      solution: `${expand}\nAdding the two gives the parallelogram law $\\|\\mathbf{u}+\\mathbf{v}\\|^2 + \\|\\mathbf{u}-\\mathbf{v}\\|^2 = 2\\|\\mathbf{u}\\|^2 + 2\\|\\mathbf{v}\\|^2$.\n$${p} + ${m} = 2(${a}) + 2\\|\\mathbf{v}\\|^2 \\Rightarrow \\|\\mathbf{v}\\|^2 = ${b}$, so $\\|\\mathbf{v}\\| = ${nr(b)}$. (Forgetting the factor 2 on $\\|\\mathbf{v}\\|^2$ is the usual slip.)`,
     });
   }
   if (mode === "dot") {
@@ -274,7 +355,7 @@ function normIdentities(rng: Rng): Draft {
       prompt: `${head} $\\|\\mathbf{u}+\\mathbf{v}\\| = ${nr(p)}$ and $\\|\\mathbf{u}-\\mathbf{v}\\| = ${nr(m)}$. Find $\\mathbf{u}\\cdot\\mathbf{v}$.`,
       correct: opt(F(c)),
       distractors: [opt(F(p - m)), opt(F(p - m, 2)), opt(F(m - p, 4)), opt(F(p + m, 4)), opt(F(p - m, 8))],
-      solution: `Polarization identity: $\\mathbf{u}\\cdot\\mathbf{v} = \\tfrac14\\|\\mathbf{u}+\\mathbf{v}\\|^2 - \\tfrac14\\|\\mathbf{u}-\\mathbf{v}\\|^2 = \\tfrac14(${p} - ${m}) = ${c}$.\n(It comes from subtracting $\\|\\mathbf{u}\\pm\\mathbf{v}\\|^2 = \\|\\mathbf{u}\\|^2 \\pm 2\\,\\mathbf{u}\\cdot\\mathbf{v} + \\|\\mathbf{v}\\|^2$.)`,
+      solution: `${expand}\nSubtracting the two: $\\|\\mathbf{u}+\\mathbf{v}\\|^2 - \\|\\mathbf{u}-\\mathbf{v}\\|^2 = 4\\,\\mathbf{u}\\cdot\\mathbf{v}$, so $\\mathbf{u}\\cdot\\mathbf{v} = \\tfrac14(${p} - ${m}) = ${c}$.`,
     });
   }
   // cos theta given ||u||, ||u+v||, ||u-v||
@@ -284,7 +365,7 @@ function normIdentities(rng: Rng): Draft {
     prompt: `${head} $\\|\\mathbf{u}\\| = ${nr(a)}$, $\\|\\mathbf{u}+\\mathbf{v}\\| = ${nr(p)}$ and $\\|\\mathbf{u}-\\mathbf{v}\\| = ${nr(m)}$. If $\\theta$ is the angle between $\\mathbf{u}$ and $\\mathbf{v}$, find $\\cos\\theta$.`,
     correct: opt(c, a * b),
     distractors: [opt(-c, a * b), opt(2 * c, a * b), opt(c, a * (p + m - a)), opt(4 * c, a * b), opt(c, a + b)],
-    solution: `Polarization: $\\mathbf{u}\\cdot\\mathbf{v} = \\tfrac14(${p} - ${m}) = ${c}$.\nParallelogram law: $${p} + ${m} = 2(${a}) + 2\\|\\mathbf{v}\\|^2$, so $\\|\\mathbf{v}\\|^2 = ${b}$.\n$$\\cos\\theta = \\frac{${c}}{\\sqrt{${a}}\\sqrt{${b}}} = ${surdTex(F(c, a * b), a * b)}$$`,
+    solution: `${expand}\nSubtracting: $${p} - ${m} = 4\\,\\mathbf{u}\\cdot\\mathbf{v}$, so $\\mathbf{u}\\cdot\\mathbf{v} = ${c}$.\nAdding (parallelogram law): $${p} + ${m} = 2(${a}) + 2\\|\\mathbf{v}\\|^2$, so $\\|\\mathbf{v}\\|^2 = ${b}$.\n$$\\cos\\theta = \\frac{\\mathbf{u}\\cdot\\mathbf{v}}{\\|\\mathbf{u}\\|\\|\\mathbf{v}\\|} = \\frac{${c}}{\\sqrt{${a}}\\sqrt{${b}}} = ${surdTex(F(c, a * b), a * b)}$$`,
   });
 }
 
@@ -304,77 +385,92 @@ function csMax(rng: Rng): Draft {
     prompt: `Let $\\mathbf{x} = ${V(x)}$, $\\mathbf{y} = ${V(y)}$ and $\\mathbf{z} = ${V(z)}$. Find the maximum of $|\\mathbf{v}^T(${combo})|$ over all $\\mathbf{v}\\in\\mathbb{R}^3$ with $\\|\\mathbf{v}\\| \\le ${r}$.`,
     correct: val(r, ww),
     distractors: [val(1, ww), F(r).mul(ww).tex(), ww.tex(), val(r * r, ww), val(r, ww.add(1))],
-    solution: `Let $\\mathbf{w} = ${combo} = ${V(w)}$, so $\\|\\mathbf{w}\\| = ${sqrtTex(ww)}$.\nCauchy–Schwarz: $|\\mathbf{v}^T\\mathbf{w}| \\le \\|\\mathbf{v}\\|\\|\\mathbf{w}\\| \\le ${r}\\|\\mathbf{w}\\| = ${val(r, ww)}$, with equality at $\\mathbf{v} = ${r}\\,\\mathbf{w}/\\|\\mathbf{w}\\|$ (parallel to $\\mathbf{w}$).`,
+    solution: `Let $\\mathbf{w} = ${combo} = ${V(w)}$, so $\\|\\mathbf{w}\\| = ${sqrtTex(ww)}$.\nCauchy–Schwarz: $|\\mathbf{v}^T\\mathbf{w}| = |\\mathbf{v}\\cdot\\mathbf{w}| \\le \\|\\mathbf{v}\\|\\|\\mathbf{w}\\| \\le ${r}\\|\\mathbf{w}\\| = ${val(r, ww)}$.\nThe bound is reached by $\\mathbf{v} = \\dfrac{${r}}{\\|\\mathbf{w}\\|}\\mathbf{w}$ (norm $${r}$), since then $\\mathbf{v}\\cdot\\mathbf{w} = \\dfrac{${r}}{\\|\\mathbf{w}\\|}\\|\\mathbf{w}\\|^2 = ${r}\\|\\mathbf{w}\\|$.`,
   });
 }
 
-function crossArea(rng: Rng): Draft {
-  if (rng.chance(0.45)) {
-    const u = randVec(rng, 3, -4, 4);
-    const v = randVec(rng, 3, -4, 4);
-    if (parallel(u, v)) retry();
-    const c = cross(u, v);
-    const slip: Vec = [c[0], c[1].neg(), c[2]];
-    const plus: Vec = [u[1].mul(v[2]).add(u[2].mul(v[1])), u[2].mul(v[0]).add(u[0].mul(v[2])), u[0].mul(v[1]).add(u[1].mul(v[0]))];
+/** Tutorial 0A Q9 / slides p29: vector or parametric equations of a plane. */
+function planeVector(rng: Rng): Draft {
+  if (rng.chance(0.5)) {
+    // through three points: x = A + t1 AB + t2 AC
+    const A = randVec(rng, 3, -3, 3);
+    const B = randVec(rng, 3, -3, 3);
+    const C = randVec(rng, 3, -3, 3);
+    const ab = vsub(B, A), ac = vsub(C, A);
+    if (isZeroVec(ab) || isZeroVec(ac) || parallel(ab, ac)) retry();
+    const [n, d] = eqOf(A, ab, ac);
+    const cands: [Vec, Vec, Vec][] = [
+      [A, B, C],
+      [vec([0, 0, 0]), ab, ac],
+      [A, ab, vscale(ab, rng.pick([-2, 2, 3]))],
+      [A, vsub(A, B), vadd(A, C)],
+      [A, ab, vadd(ac, vec([1, 0, 0]))],
+    ];
+    const ds = cands
+      .filter(([x0, a, b]) => parallel(a, b) || isZeroVec(a) || isZeroVec(b) || !samePlane(n, d, ...eqOf(x0, a, b)))
+      .map(([x0, a, b]) => planeVecTex(x0, a, b));
     return mcq(rng, {
-      subtopic: "Cross product",
-      prompt: `Compute $\\mathbf{u}\\times\\mathbf{v}$ for $\\mathbf{u} = ${V(u)}$ and $\\mathbf{v} = ${V(v)}$.`,
-      correct: V(c),
-      distractors: [V(vscale(c, -1)), V(slip), V(plus), V([c[1], c[0], c[2]]), V([c[0], c[1], c[2].neg()])],
-      solution: `$\\mathbf{u}\\times\\mathbf{v} = (u_2v_3-u_3v_2,\\ u_3v_1-u_1v_3,\\ u_1v_2-u_2v_1) = ${V(c)}$.\nCheck: $(\\mathbf{u}\\times\\mathbf{v})\\cdot\\mathbf{u} = ${dot(c, u).tex()}$ and $(\\mathbf{u}\\times\\mathbf{v})\\cdot\\mathbf{v} = ${dot(c, v).tex()}$. ($\\mathbf{v}\\times\\mathbf{u}$ is the negative.)`,
+      subtopic: "Lines & planes",
+      prompt: `Which of the following is a vector equation of the plane through $A${P(A)}$, $B${P(B)}$ and $C${P(C)}$?`,
+      correct: planeVecTex(A, ab, ac),
+      distractors: ds,
+      solution: `Use the point $A$ and two vectors in the plane: $\\overrightarrow{AB} = B - A = ${V(ab)}$ and $\\overrightarrow{AC} = C - A = ${V(ac)}$. They are not scalar multiples of each other, so they are noncollinear and\n$$${planeVecTex(A, ab, ac)}$$\nCheck: $t_1 = 1, t_2 = 0$ gives $B$ and $t_1 = 0, t_2 = 1$ gives $C$. (Using the position vectors of $B$ and $C$ instead of $\\overrightarrow{AB}, \\overrightarrow{AC}$, or two collinear vectors, does not give this plane.)`,
     });
   }
-  const A = randVec(rng, 3, -3, 3);
-  const B = randVec(rng, 3, -3, 3);
-  const C = randVec(rng, 3, -3, 3);
-  const ab = vsub(B, A), ac = vsub(C, A);
-  if (isZeroVec(ab) || isZeroVec(ac) || parallel(ab, ac)) retry();
-  const c = cross(ab, ac);
-  const cc = dot(c, c).n;
-  const tri = rng.chance(0.6);
-  const half = F(1, 2);
-  const correct = tri ? surdTex(half, cc) : surdTex(F(1), cc);
+  // parametric equations from a point and two vectors
+  const x0 = randVec(rng, 3, -4, 4);
+  const a = randVec(rng, 3, -3, 3);
+  const b = randVec(rng, 3, -3, 3);
+  if (parallel(a, b) || a.filter((x) => x.isZero()).length > 1 || b.filter((x) => x.isZero()).length > 1) retry();
+  const [n, d] = eqOf(x0, a, b);
+  const i = rng.int(0, 2);
+  const swapI = (u: Vec, w: Vec) => u.map((x, j) => (j === i ? w[j] : x));
+  const cands: [Vec, Vec, Vec][] = [
+    [a, x0, b], // point and first vector swapped
+    [x0, swapI(a, b), swapI(b, a)], // parameters mixed up in one component
+    [vec([0, 0, 0]), a, b], // point forgotten
+    [x0.map((x, j) => (j === i ? x.neg() : x)), a, b], // sign slip in the point
+  ];
+  const ds = cands
+    .filter(([p, u, w]) => parallel(u, w) || isZeroVec(u) || isZeroVec(w) || !samePlane(n, d, ...eqOf(p, u, w)))
+    .map(([p, u, w]) => planeParam(p, u, w));
   return mcq(rng, {
-    subtopic: "Cross product",
-    prompt: tri
-      ? `Find the area of the triangle with vertices $A${P(A)}$, $B${P(B)}$ and $C${P(C)}$.`
-      : `Find the area of the parallelogram with adjacent sides $\\overrightarrow{AB}$ and $\\overrightarrow{AC}$, where $A${P(A)}$, $B${P(B)}$, $C${P(C)}$.`,
-    correct,
-    distractors: [
-      tri ? surdTex(F(1), cc) : surdTex(half, cc),
-      F(cc).mul(tri ? half : F(1)).tex(),
-      surdTex(tri ? half : F(1), dot(ab, ab).mul(dot(ac, ac)).n),
-      abs(dot(ab, ac)).mul(tri ? half : F(1)).tex(),
-      surdTex(tri ? F(1, 4) : F(1, 2), cc),
-    ],
-    solution: `$\\overrightarrow{AB} = ${V(ab)}$, $\\overrightarrow{AC} = ${V(ac)}$, and $\\overrightarrow{AB}\\times\\overrightarrow{AC} = ${V(c)}$ with norm $\\sqrt{${cc}}$.\n${tri ? `Triangle area $= \\tfrac12\\|\\overrightarrow{AB}\\times\\overrightarrow{AC}\\| = ${correct}$ (the parallelogram would be twice this).` : `Parallelogram area $= \\|\\overrightarrow{AB}\\times\\overrightarrow{AC}\\| = ${correct}$ (no $\\tfrac12$; that is for the triangle).`}`,
+    subtopic: "Lines & planes",
+    prompt: `Find parametric equations of the plane that contains the point $${P(x0)}$ and is parallel to $\\mathbf{v}_1 = ${V(a)}$ and $\\mathbf{v}_2 = ${V(b)}$.`,
+    correct: planeParam(x0, a, b),
+    distractors: ds,
+    solution: `Vector form: $${planeVecTex(x0, a, b)}$ (the vectors are noncollinear).\nParametric equations are the components of this: $${planeParam(x0, a, b)}$.`,
   });
 }
 
-function planeThrough3(rng: Rng): Draft {
-  const A = randVec(rng, 3, -3, 3);
-  const B = randVec(rng, 3, -3, 3);
-  const C = randVec(rng, 3, -3, 3);
-  const ab = vsub(B, A), ac = vsub(C, A);
-  if (isZeroVec(ab) || isZeroVec(ac) || parallel(ab, ac)) retry();
-  const raw = cross(ab, ac);
-  const n = primitive(raw);
-  if (maxAbs(n) > 9 || n.filter((x) => !x.isZero()).length < 2) retry();
-  const d = dot(n, A);
+/** PYP AY25/26 S2 Q1: plane through a point with a normal, multiplied out. */
+function planePointNormal(rng: Rng): Draft {
+  const n = randVec(rng, 3, -4, 4);
+  if (n.filter((x) => !x.isZero()).length < 3) retry();
+  const P0 = randVec(rng, 3, -4, 4);
+  const d = dot(n, P0);
+  const j = rng.int(0, 2);
+  const slipP = P0.map((x, k) => (k === j ? x.neg() : x));
   const cands: [Vec, Frac][] = [
     [n, d.neg()],
-    [[n[0], n[1].neg(), n[2]], dot([n[0], n[1].neg(), n[2]], A)],
-    [ab, dot(ab, A)],
-    [n, dot(n, B).add(1)],
-    [n, dot(n, vadd(A, B))],
+    [P0, dot(P0, n).add(rng.pick([1, -1]))],
+    [n, dot(n, slipP)],
+    [n, F(0)],
+    [n, d.add(rng.pick([2, -2]))],
   ];
   const ds = cands.filter(([m, e]) => !isZeroVec(m) && !samePlane(n, d, m, e)).map(([m, e]) => planeTex(m, e));
+  const pn = n
+    .map((c, i) => {
+      const inner = P0[i].isZero() ? XYZ[i] : `(${XYZ[i]} ${P0[i].n < 0 ? "+" : "-"} ${P0[i].abs().tex()})`;
+      return `${i === 0 ? (c.n < 0 ? "-" : "") : c.n < 0 ? " - " : " + "}${c.abs().eq(1) ? "" : c.abs().tex()}${inner}`;
+    })
+    .join("");
   return mcq(rng, {
     subtopic: "Lines & planes",
-    prompt: `Find an equation of the plane passing through $A${P(A)}$, $B${P(B)}$ and $C${P(C)}$.`,
+    prompt: `Find the equation of the plane passing through $${P(P0)}$ with normal vector $\\mathbf{n} = ${V(n)}$.`,
     correct: planeTex(n, d),
     distractors: ds,
-    solution: `$\\overrightarrow{AB} = ${V(ab)}$, $\\overrightarrow{AC} = ${V(ac)}$.\nNormal: $\\overrightarrow{AB}\\times\\overrightarrow{AC} = ${V(raw)}$${n.every((x, i) => x.eq(raw[i])) ? "" : `, or more simply $\\mathbf{n} = ${V(n)}$`}.\n$d = \\mathbf{n}\\cdot A = ${d.tex()}$, so the plane is $${planeTex(n, d)}$.\nCheck: $B$ gives $${dot(n, B).tex()}$ and $C$ gives $${dot(n, C).tex()}$ ✓.`,
+    solution: `Point-normal form: $${pn} = 0$.\nMultiplying out: $${lin(n)} = ${n.map((c, i) => `(${c.tex()})(${P0[i].tex()})`).join(" + ")} = ${d.tex()}$.\nCheck: the point $${P(P0)}$ satisfies $${planeTex(n, d)}$ ✓.`,
   });
 }
 
@@ -383,7 +479,7 @@ function pointOnPlane(rng: Rng): Draft {
   if (n.filter((x) => !x.isZero()).length < 2) retry();
   const P0 = randVec(rng, 3, -4, 4);
   const d = dot(n, P0);
-  // in-plane directions
+  // two vectors orthogonal to n (internal construction only)
   const w1 = primitive(cross(n, rng.pick([vec([1, 0, 0]), vec([0, 1, 0]), vec([0, 0, 1])])));
   const w2 = primitive(cross(n, w1));
   if (isZeroVec(w1) || isZeroVec(w2) || maxAbs(w2) > 9) retry();
@@ -395,20 +491,18 @@ function pointOnPlane(rng: Rng): Draft {
     const val = dot(n, q);
     if (!val.eq(d) && maxAbs(q) <= 9) offs.push(q);
   }
-  // the sign-slip point: satisfies n.x = -d
   const asked = rng.chance(0.5);
   const planeDesc = asked
     ? `the plane $${planeTex(n, d)}$`
     : `the plane passing through $${P(P0)}$ with normal vector $\\mathbf{n} = ${V(n)}$`;
   const evals = (q: Vec) => `$${P(q)}$: $${dot(n, q).tex()}$`;
-  const draft = mcq(rng, {
+  return mcq(rng, {
     subtopic: "Lines & planes",
     prompt: `Which of the following points lies on ${planeDesc}?`,
     correct: P(on),
     distractors: offs.map(P),
-    solution: `${asked ? "" : `Point-normal form $\\mathbf{n}\\cdot(\\mathbf{x} - P_0) = 0$ gives $${lin(n)} = \\mathbf{n}\\cdot P_0 = ${d.tex()}$.\n`}Substitute each point into $${lin(n)}$ and compare with $${d.tex()}$: ${[on, ...offs].map(evals).join("; ")}.\nOnly $${P(on)}$ gives $${d.tex()}$, so it is the only point on the plane.`,
+    solution: `${asked ? "" : `Point-normal form $\\mathbf{n}\\cdot\\overrightarrow{P_0P} = 0$ multiplied out gives $${lin(n)} = ${d.tex()}$.\n`}Substitute each point into $${lin(n)}$ and compare with $${d.tex()}$: ${[on, ...offs].map(evals).join("; ")}.\nOnly $${P(on)}$ gives $${d.tex()}$, so it is the only point on the plane.`,
   });
-  return draft;
 }
 
 function linePlaneIntersect(rng: Rng): Draft {
@@ -427,14 +521,36 @@ function linePlaneIntersect(rng: Rng): Draft {
     prompt: `Find the point where the line $${lineParam(P0, dir)}$ meets the plane $${planeTex(n, c)}$.`,
     correct: P(X),
     distractors: ds.filter((q) => !dot(n, q).eq(c)).map(P),
-    solution: `Substitute the line into the plane: $\\mathbf{n}\\cdot P_0 + t\\,(\\mathbf{n}\\cdot\\mathbf{d}) = ${dot(n, P0).tex()} ${nd.n < 0 ? "-" : "+"} ${nd.abs().eq(1) ? "" : nd.abs().tex()}t = ${c.tex()}$, so $t = ${t.tex()}$.\nPoint: $${P(X)}$. Check: $${lin(n)}$ at this point is $${c.tex()}$ ✓.`,
+    solution: `Substitute the parametric equations into the plane: the left side becomes $${dot(n, P0).tex()} ${nd.n < 0 ? "-" : "+"} ${nd.abs().eq(1) ? "" : nd.abs().tex()}t$, so $${dot(n, P0).tex()} ${nd.n < 0 ? "-" : "+"} ${nd.abs().eq(1) ? "" : nd.abs().tex()}t = ${c.tex()}$ and $t = ${t.tex()}$.\nPoint: $${P(X)}$. Check: $${lin(n)}$ at this point is $${c.tex()}$ ✓.`,
+  });
+}
+
+/** PYP AY24/25 S2 Q2: plane and line both in vector form. */
+function linePlaneVector(rng: Rng): Draft {
+  const A = randVec(rng, 3, -3, 3);
+  const a = randVec(rng, 3, -2, 3);
+  const b = randVec(rng, 3, -2, 3);
+  const d = randVec(rng, 3, -2, 3);
+  if (dot(cross(a, b), d).isZero()) retry(); // unique intersection
+  const [l0, m0, b0] = [rng.nz(-3, 3), rng.nz(-3, 3), rng.nz(-3, 3)];
+  const X = vadd(vadd(A, vscale(a, l0)), vscale(b, m0));
+  const B = vsub(X, vscale(d, b0));
+  if (maxAbs(B) > 12 || maxAbs(X) > 12) retry();
+  const opt = (x: number, y: number) => `\\beta = ${x},\\ \\mu = ${y}`;
+  const eqs = [0, 1, 2].map((i) => `${affine2(A[i], a[i], b[i]).replace("t_1", "\\lambda").replace("t_2", "\\mu")} = ${affine(B[i], d[i], "\\beta")}`).join(",\\quad ");
+  return mcq(rng, {
+    subtopic: "Line–plane intersection",
+    prompt: `A plane is given by $\\mathbf{r} = ${V(A)} + \\lambda${V(a)} + \\mu${V(b)}$ and a line by $\\mathbf{s} = ${V(B)} + \\beta${V(d)}$, where $\\lambda, \\mu, \\beta\\in\\mathbb{R}$. At the point where the line meets the plane, the values of $\\beta$ and $\\mu$ are`,
+    correct: opt(b0, m0),
+    distractors: [opt(-b0, m0), opt(b0, -m0), opt(m0, b0), opt(b0, l0), opt(-b0, -m0)],
+    solution: `Set $\\mathbf{r} = \\mathbf{s}$ and equate components:\n$$${eqs}$$\nSolving this $3\\times3$ system gives $\\lambda = ${l0}$, $\\mu = ${m0}$, $\\beta = ${b0}$.\nCheck: both sides give the point $${P(X)}$ ✓.`,
   });
 }
 
 const COORD = [
-  { name: "$yz$-plane", eq: "x = 0" },
-  { name: "$xz$-plane", eq: "y = 0" },
-  { name: "$xy$-plane", eq: "z = 0" },
+  { name: "$y$–$z$ plane", eq: "x = 0" },
+  { name: "$x$–$z$ plane", eq: "y = 0" },
+  { name: "$x$–$y$ plane", eq: "z = 0" },
 ];
 
 function lineCoordPlane(rng: Rng): Draft {
@@ -458,39 +574,7 @@ function lineCoordPlane(rng: Rng): Draft {
     prompt: `The line through $A${P(A)}$ and $B${P(B)}$ intersects the ${COORD[i].name} at which point?`,
     correct: P(X),
     distractors: ds.map(P),
-    solution: `$\\mathbf{d} = \\overrightarrow{AB} = ${V(d)}$, so the line is $${lineParam(A, d)}$.\nThe ${COORD[i].name} is $${COORD[i].eq}$: $${affine(A[i], d[i])} = 0 \\Rightarrow t = ${t.tex()}$.\nPoint: $${P(X)}$. (Read the plane carefully: the $xy$-plane is $z = 0$, etc.)`,
-  });
-}
-
-function distPointPlane(rng: Rng): Draft {
-  const { v: n, norm } = pythVec(rng, 3);
-  if (rng.chance(0.6)) {
-    const p = randVec(rng, 3, -4, 4);
-    const d = F(rng.int(-9, 9));
-    const num = dot(n, p).sub(d);
-    if (num.isZero()) retry();
-    const D = num.abs().div(norm);
-    return mcq(rng, {
-      subtopic: "Distance to a plane",
-      prompt: `Find the distance from the point $${P(p)}$ to the plane $${planeTex(n, d)}$.`,
-      correct: D.tex(),
-      distractors: [num.abs().div(norm * norm).tex(), num.abs().tex(), dot(n, p).add(d).abs().div(norm).tex(), dot(n, p).abs().div(norm).tex(), D.mul(2).tex()],
-      solution: `$$D = \\frac{|ax_0+by_0+cz_0-d|}{\\sqrt{a^2+b^2+c^2}} = \\frac{|${dot(n, p).tex()} - (${d.tex()})|}{\\sqrt{${norm * norm}}} = \\frac{${num.abs().tex()}}{${norm}}${D.d === norm ? "" : ` = ${D.tex()}`}$$\nDivide by $\\|\\mathbf{n}\\|$ (not $\\|\\mathbf{n}\\|^2$) and remember to subtract $d$.`,
-    });
-  }
-  // parallel planes, the second written with a scaled normal
-  const k = rng.pick([2, 3, -2, -1]);
-  const d1 = F(rng.int(-8, 8));
-  const d2 = F(rng.int(-8, 8));
-  if (d1.eq(d2)) retry();
-  const D = d1.sub(d2).abs().div(norm);
-  const kd2 = d2.mul(k);
-  return mcq(rng, {
-    subtopic: "Distance to a plane",
-    prompt: `Find the distance between the parallel planes $${planeTex(n, d1)}$ and $${planeTex(vscale(n, k), kd2)}$.`,
-    correct: D.tex(),
-    distractors: [d1.sub(kd2).abs().div(norm).tex(), d1.sub(kd2).abs().div(norm * Math.abs(k)).tex(), d1.add(d2).abs().div(norm).tex(), d1.sub(d2).abs().div(norm * norm).tex(), d1.sub(d2).abs().tex()],
-    solution: `Divide the second equation by $${k}$ so both planes share the normal $${V(n)}$: $${planeTex(n, d2)}$.\nDistance $= \\dfrac{|${d1.tex()} - (${d2.tex()})|}{\\sqrt{${norm * norm}}} = ${D.tex()}$. Comparing $${d1.tex()}$ with $${kd2.tex()}$ directly is the classic trap.`,
+    solution: `$\\overrightarrow{AB} = ${V(d)}$, so the line is $\\mathbf{x} = ${V(A)} + t${V(d)}$, i.e. $${lineParam(A, d)}$.\nThe ${COORD[i].name} is $${COORD[i].eq}$: $${affine(A[i], d[i])} = 0 \\Rightarrow t = ${t.tex()}$.\nPoint: $${P(X)}$. (Read the plane carefully: the $x$–$y$ plane is $z = 0$, etc.)`,
   });
 }
 
@@ -504,7 +588,7 @@ function lineInPlane(rng: Rng): Draft {
     d = randVec(rng, 3, -3, 3);
     if (dot(n, d).isZero()) retry();
   } else {
-    d = primitive(cross(n, randVec(rng, 3, -2, 2)));
+    d = primitive(cross(n, randVec(rng, 3, -2, 2))); // a direction orthogonal to n
     if (isZeroVec(d) || maxAbs(d) > 8) retry();
   }
   const c = kind === "par" ? dot(n, P0).add(rng.nz(-4, 4)) : dot(n, P0);
@@ -514,25 +598,24 @@ function lineInPlane(rng: Rng): Draft {
   let lineDesc = `the line $\\mathbf{x} = ${V(P0)} + t${V(d)}$`;
   let dirSol = "";
   if (viaNormals) {
-    // describe the direction as perpendicular to two vectors whose cross product is d
+    // PYP AY24/25 S2 Q11: the line is given by a point and two vectors orthogonal to its direction
     const a = primitive(cross(d, randVec(rng, 3, -2, 2)));
     if (isZeroVec(a) || maxAbs(a) > 6) retry();
     const bb = primitive(cross(d, a));
-    const dd = cross(a, bb);
-    if (maxAbs(bb) > 9 || !parallel(dd, d)) retry();
-    lineDesc = `the line through $${P(P0)}$ perpendicular to both $${V(a)}$ and $${V(bb)}$`;
-    dirSol = `The direction is $${V(a)}\\times${V(bb)} = ${V(dd)}$, a multiple of $${V(d)}$.\n`;
+    if (maxAbs(bb) > 9 || isZeroVec(bb)) retry();
+    lineDesc = `the line through $${P(P0)}$ with normal vectors $${V(a)}$ and $${V(bb)}$ (both orthogonal to its direction)`;
+    dirSol = `The direction $\\mathbf{v}$ satisfies $\\mathbf{v}\\cdot${V(a)} = 0$ and $\\mathbf{v}\\cdot${V(bb)} = 0$. Solving these two equations gives $\\mathbf{v} = s${V(d)}$; check: $${V(d)}\\cdot${V(a)} = ${dot(d, a).tex()}$ and $${V(d)}\\cdot${V(bb)} = ${dot(d, bb).tex()}$.\n`;
   }
   const truth = kind === "in";
   return tfn({
     subtopic: "Line–plane intersection",
-    prompt: `${lineDesc.charAt(0).toUpperCase()}${lineDesc.slice(1)} lies in the plane $${planeTex(n, c)}$.`,
+    prompt: `${lineDesc.charAt(0).toUpperCase()}${lineDesc.slice(1)} lies on the plane $${planeTex(n, c)}$ (every point of the line is on the plane).`,
     answer: truth ? 0 : 1,
-    solution: `${dirSol}A line lies in a plane iff its direction is orthogonal to the normal **and** one of its points satisfies the equation.\n$\\mathbf{n}\\cdot\\mathbf{d} = ${V(n)}\\cdot${V(d)} = ${nd.tex()}$${nd.isZero() ? " (parallel to the plane)" : ", nonzero, so the line crosses the plane in exactly one point"}.\n${nd.isZero() ? `The point $${P(P0)}$ gives $${lin(n)} = ${nP.tex()}$, ${nP.eq(c) ? "which matches, so the whole line lies in the plane. **True**." : `but the plane needs $${c.tex()}$. The line is parallel to the plane and never meets it. **False**.`}` : "**False**."}`,
+    solution: `${dirSol}Substitute $\\mathbf{x} = ${V(P0)} + t${V(d)}$ into $${lin(n)}$: it becomes $${nP.tex()} ${nd.n < 0 ? "-" : "+"} ${nd.abs().eq(1) ? "" : nd.abs().tex()}t$ (the coefficient of $t$ is $\\mathbf{n}\\cdot\\mathbf{v} = ${nd.tex()}$).\n${nd.isZero() ? (nP.eq(c) ? `This equals $${c.tex()}$ for every $t$, so every point of the line is on the plane. **True**.` : `This is $${nP.tex()} \\ne ${c.tex()}$ for every $t$, so the line never meets the plane. **False**.`) : `Setting it equal to $${c.tex()}$ gives exactly one $t$, so only one point of the line is on the plane. **False**.`}`,
   });
 }
 
-/** Unit vector making a given angle with one axis, plus a norm condition. */
+/** PYP AY25/26 S1 Q1: unit vector making a given angle with one axis, plus a norm condition. */
 const ANG = [
   { tex: "\\pi/3", c: "\\tfrac12", sq: F(1, 4) },
   { tex: "2\\pi/3", c: "-\\tfrac12", sq: F(1, 4) },
@@ -564,16 +647,32 @@ function unitAtAngle(rng: Rng): Draft {
   const correct = build(ang.c, xj, xk);
   const ds = [build(ang.c, neg(xj), xk), build(neg(ang.c), xj, xk), build(ang.c, xj, neg(xk)), build(xj, ang.c, xk), build(neg(ang.c), neg(xj), neg(xk))];
   return mcq(rng, {
-    subtopic: "Direction angles",
+    subtopic: "Unit vectors & angles",
     prompt: `A unit vector $\\mathbf{x}\\in\\mathbb{R}^3$ makes an angle of $${ang.tex}$ with the $${AX[i]}$-axis, and $\\mathbf{x} ${s > 0 ? "+" : "-"} ${E[j]}$ is also a unit vector. If the $${AX[k]}$-component of $\\mathbf{x}$ is ${kPos ? "positive" : "negative"}, find $\\mathbf{x}$.`,
     correct,
     distractors: ds,
     noneRate: 0.1,
-    solution: `The angle with the $${AX[i]}$-axis gives $x_${i + 1} = \\mathbf{x}\\cdot${E[i]} = \\cos(${ang.tex}) = ${ang.c}$.\n$\\|\\mathbf{x} ${s > 0 ? "+" : "-"} ${E[j]}\\|^2 = \\|\\mathbf{x}\\|^2 ${s > 0 ? "+" : "-"} 2x_${j + 1} + 1 = 2 ${s > 0 ? "+" : "-"} 2x_${j + 1} = 1$, so $x_${j + 1} = ${xj}$.\nThen $x_${k + 1}^2 = 1 - ${ang.sq.tex()} - \\tfrac14 = ${rest.tex()}$ and the sign condition gives $x_${k + 1} = ${xk}$.\nSo $\\mathbf{x} = ${correct}$.`,
+    solution: `The angle with the $${AX[i]}$-axis: $\\mathbf{x}\\cdot${E[i]} = \\|\\mathbf{x}\\|\\|${E[i]}\\|\\cos(${ang.tex})$, so $x_${i + 1} = ${ang.c}$.\n$\\|\\mathbf{x} ${s > 0 ? "+" : "-"} ${E[j]}\\|^2 = \\mathbf{x}\\cdot\\mathbf{x} ${s > 0 ? "+" : "-"} 2\\,\\mathbf{x}\\cdot${E[j]} + ${E[j]}\\cdot${E[j]} = 2 ${s > 0 ? "+" : "-"} 2x_${j + 1} = 1$, so $x_${j + 1} = ${xj}$.\nThen $\\|\\mathbf{x}\\| = 1$ gives $x_${k + 1}^2 = 1 - ${ang.sq.tex()} - \\tfrac14 = ${rest.tex()}$, and the sign condition gives $x_${k + 1} = ${xk}$.\nSo $\\mathbf{x} = ${correct}$.`,
   });
 }
 
 export const vectorsGens: ((rng: Rng) => Draft)[] = [
-  linComb, initialPoint, unitVec, triangleAngle, rightTriangle, work, normIdentities, csMax,
-  crossArea, planeThrough3, pointOnPlane, linePlaneIntersect, lineCoordPlane, distPointPlane, lineInPlane, unitAtAngle,
+  cite("Slides 0A Linear combination (vec p16); Tutorial 0A Q1", linComb),
+  cite("Slides 0A (vec p8, p12, p18); Tutorial 0A Q2", initialPoint),
+  cite("Slides 0A Unit vector (vec p18); Tutorial 0A Q5", unitVec),
+  cite("Slides 0A Norm, distance (vec p17, p19); Tutorial 0A Q3, Q4", normCombo),
+  cite("Slides 0A Orthogonality (vec p21, p26)", orthK),
+  cite("Slides 0A Dot product, angles (vec p20, p24); Tutorial 0A Q4", triangleAngle),
+  cite("Tutorial 0A Q6; Slides 0A Orthogonality (vec p26)", rightTriangle),
+  cite("Tutorial 0A Q7", work),
+  cite("Slides 0A (vec p22); PYP AY24/25 S2 Q13; PYP AY23/24 S1 Q3(b)", normIdentities),
+  cite("Slides 0A Cauchy–Schwarz inequality (vec p24); PYP AY25/26 S2 Q13", csMax),
+  cite("Slides 0A Vector and parametric equations of planes (vec p29); Tutorial 0A Q9", planeVector),
+  cite("Slides 0A (vec p27); Tutorial 0A Q8; PYP AY25/26 S2 Q1", planePointNormal),
+  cite("Slides 0A (vec p27); PYP AY24/25 S2 Q1", pointOnPlane),
+  cite("Slides 0A Parametric equations of lines (vec p28); Tutorial 0A Q10", linePlaneIntersect),
+  cite("PYP AY24/25 S2 Q2", linePlaneVector),
+  cite("Tutorial 0A Q10", lineCoordPlane),
+  cite("PYP AY24/25 S2 Q11; Slides 0A (vec p27–p28)", lineInPlane),
+  cite("PYP AY25/26 S1 Q1; Slides 0A (vec p19–p22)", unitAtAngle),
 ];

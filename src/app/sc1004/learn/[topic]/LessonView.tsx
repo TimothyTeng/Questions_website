@@ -131,6 +131,8 @@ function SectionCard({ s, n, topic }: { s: LessonSection; n: number; topic: Topi
         </div>
       )}
 
+      {s.refs && s.refs.length > 0 && <p className="small muted">From your notes: {s.refs.join(" · ")}</p>}
+
       <h3>Check yourself</h3>
       <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
         {s.recall.map((r, i) => (

@@ -1,9 +1,13 @@
-// Randomised final-exam-style questions on matrix algebra: inverses, matrix equations, elementary
-// matrices, Gauss–Jordan, LU, A = PDP^{-1}, nilpotent matrices and block matrices.
+// Randomised final-exam-style questions on matrix algebra (Ch 2 slides, Tutorial 2, past papers): inverses,
+// matrix equations, elementary matrices, inverse by row reduction (Thm 2.3), LU, A = PDP^{-1} (Tutorial 2 Q8)
+// and nilpotent matrices (past paper).
 import {
   colTex, F, Frac, identity, inverse, madd, mat, Mat, matEq, matmul, matTex, matvec, mscale, msub, rowTex, rowTexPlain, transpose, vec,
 } from "@/lib/math/frac";
-import { mcq, retry, tfn, type Draft, type Rng } from "./common";
+import { mcq, retry, type Draft, type Rng } from "./common";
+
+/** Attach the course-material reference to every question a generator makes. */
+const cite = (ref: string, g: (rng: Rng) => Draft) => (rng: Rng): Draft => ({ ...g(rng), ref });
 
 // ---------------------------------------------------------------- local helpers
 
@@ -58,33 +62,7 @@ function unitM(n: number, i: number, j: number, k: Frac | number): Mat {
 }
 const addE = (n: number, i: number, j: number, k: Frac | number) => madd(I(n), unitM(n, i, j, k));
 
-function matPow(A: Mat, k: number): Mat {
-  let R = I(A.length);
-  for (let i = 0; i < k; i++) R = matmul(R, A);
-  return R;
-}
-
 const diag = (xs: (Frac | number)[]) => xs.map((x, i) => xs.map((_, j) => (i === j ? Frac.of(x) : F(0))));
-
-/** Coefficient times a bracket, e.g. "-\frac{1}{3}(A + 2I)". */
-function coefTex(c: Frac, body: string): string {
-  if (c.eq(1)) return body;
-  if (c.eq(-1)) return `-${body}`;
-  return `${c.tex()}${body}`;
-}
-
-/** "A + 3I", "A - 2I", "A" for a linear polynomial in A. */
-function linTex(p: number): string {
-  if (p === 0) return "A";
-  return p > 0 ? `A + ${p === 1 ? "" : p}I` : `A - ${p === -1 ? "" : -p}I`;
-}
-
-function quadTex(p: number, q: number): string {
-  let s = "A^2";
-  if (p) s += p > 0 ? ` + ${p === 1 ? "" : p}A` : ` - ${p === -1 ? "" : -p}A`;
-  if (q) s += q > 0 ? ` + ${q === 1 ? "" : q}I` : ` - ${q === -1 ? "" : -q}I`;
-  return s;
-}
 
 /** k^2 + p k + q as LaTeX. */
 function polyK(p: number, q: number): string {
@@ -94,7 +72,7 @@ function polyK(p: number, q: number): string {
   return s;
 }
 
-const R = ["R_1", "R_2", "R_3", "R_4"];
+const R = ["r1", "r2", "r3", "r4"];
 
 // ---------------------------------------------------------------- generators
 
@@ -119,7 +97,7 @@ function inverse2(rng: Rng): Draft {
       matTex(mat([[dv, -bv], [-cv, av]])),
       matTex(mscale(inv, -1)),
     ],
-    solution: `$\\det A = ad - bc = (${a.tex()})(${d.tex()}) - (${b.tex()})(${c.tex()}) = ${D.tex()} \\ne 0$, so $A$ is invertible and\n$$A^{-1} = \\frac{1}{ad-bc}\\begin{bmatrix} d & -b \\\\ -c & a \\end{bmatrix} = ${rec}${rec === matTex(inv) ? "" : ` = ${matTex(inv)}`}.$$\nRecipe: **swap** the diagonal, **negate** the off-diagonal, **divide** by the determinant. Check: $AA^{-1} = I$.`,
+    solution: `$\\det A = ad - bc = (${a.tex()})(${d.tex()}) - (${b.tex()})(${c.tex()}) = ${D.tex()} \\ne 0$, so $A$ is invertible and\n$$A^{-1} = \\frac{1}{ad-bc}\\begin{bmatrix} d & -b \\\\ -c & a \\end{bmatrix} = ${rec}${rec === matTex(inv) ? "" : ` = ${matTex(inv)}`}.$$\nSwap $a$ and $d$, negate $b$ and $c$, divide by $ad - bc$. Check: $AA^{-1} = I$.`,
   });
 }
 
@@ -142,23 +120,23 @@ function solveWithInverse(rng: Rng): Draft {
     correct: rowTex(x),
     distractors: [rowTex(other), rowTex(Ab), rowTex(x.map((v) => v.neg())), rowTex(matvec(inverse(Mt)!, b)), rowTex(x.map((v, i) => (i === 1 ? v.add(1) : v)))],
     solution: useT
-      ? `$A^T$ is invertible with $(A^T)^{-1} = (A^{-1})^T$. So $\\mathbf{y} = (A^{-1})^T\\mathbf{b} = ${matTex(Mt)}${colTex(b)} =${rowTex(x)}$.\nTrap: $A^{-1}\\mathbf{b} = ${rowTex(other)}$ solves $A\\mathbf{x} = \\mathbf{b}$, not $A^T\\mathbf{y} = \\mathbf{b}$.`
-      : `Multiply $A\\mathbf{x} = \\mathbf{b}$ on the left by $A^{-1}$: $\\mathbf{x} = A^{-1}\\mathbf{b} = ${rowTex(x)}$.\nNo row reduction is needed when $A^{-1}$ is given. Trap: $A\\mathbf{b}$ (multiplying by $A$ instead of $A^{-1}$) gives $${rowTex(Ab)}$.`,
+      ? `By Theorem 2.2.3, $A^T$ is invertible with $(A^T)^{-1} = (A^{-1})^T$, so by Theorem 2.1 $\\mathbf{y} = (A^{-1})^T\\mathbf{b} = ${matTex(Mt)}${colTex(b)} =${rowTex(x)}$.\nTrap: $A^{-1}\\mathbf{b} = ${rowTex(other)}$ solves $A\\mathbf{x} = \\mathbf{b}$, not $A^T\\mathbf{y} = \\mathbf{b}$.`
+      : `Theorem 2.1: multiply $A\\mathbf{x} = \\mathbf{b}$ on the left by $A^{-1}$: $\\mathbf{x} = A^{-1}\\mathbf{b} = ${rowTex(x)}$.\nNo row reduction is needed when $A^{-1}$ is given. Trap: $A\\mathbf{b}$ (multiplying by $A$ instead of $A^{-1}$) gives $${rowTex(Ab)}$.`,
   });
 }
 
-/** Full 3x3 inverse by Gauss–Jordan. */
-function gaussJordan3(rng: Rng): Draft {
+/** Full 3x3 inverse by row reducing [A I] (Theorem 2.3). */
+function rowReduceInverse3(rng: Rng): Draft {
   const A = uni3(rng, 7);
   const inv = inverse(A)!;
   const flipped = inv.map((r, i) => r.map((x, j) => (i === 0 && j === 2 ? x.neg() : x)));
   const ds = [matTex(transpose(inv)), matTex(neg(inv)), matTex(transpose(A)), matTex(flipped), matTex(inv.map((r) => r.map((x, j) => (j === 1 ? x.neg() : x))))];
   return mcq(rng, {
-    subtopic: "Gauss–Jordan",
-    prompt: `Use Gauss–Jordan elimination on $[A \\mid I]$ to find $A^{-1}$ for $A = ${matTex(A)}$.`,
+    subtopic: "Inverse by row reduction",
+    prompt: `Use elementary row operations on $[A \\;\\; I]$ to find $A^{-1}$ for $A = ${matTex(A)}$.`,
     correct: matTex(inv),
     distractors: ds,
-    solution: `Row reduce $[A \\mid I]$ until the left block is $I$; the right block is then $A^{-1}$:\n$$[A \\mid I] \\sim [I \\mid A^{-1}],\\qquad A^{-1} = ${matTex(inv)}.$$\nCheck one product, e.g. row 1 of $A$ times column 1 of $A^{-1}$ gives $1$ and times column 2 gives $0$. The transpose of $A^{-1}$ is a common slip (reading columns as rows).`,
+    solution: `Theorem 2.3: the row operations that reduce $A$ to $I$ also transform $I$ to $A^{-1}$. Row reduce $[A \\;\\; I]$ until the left block is $I$; the right block is then $A^{-1}$:\n$$\\begin{bmatrix} A & I \\end{bmatrix} \\sim \\begin{bmatrix} I & A^{-1} \\end{bmatrix},\\qquad A^{-1} = ${matTex(inv)}.$$\nCheck one product, e.g. row 1 of $A$ times column 1 of $A^{-1}$ gives $1$ and times column 2 gives $0$. The transpose of $A^{-1}$ is a common slip (reading columns as rows).`,
   });
 }
 
@@ -174,17 +152,17 @@ function productInverse(rng: Rng): Draft {
     what = "(AB)^{-1}";
     correct = matmul(Bi, Ai);
     ds = [matmul(Ai, Bi), matmul(inverse(Ai)!, inverse(Bi)!), transpose(correct), madd(Ai, Bi)];
-    sol = `Socks and shoes: $(AB)^{-1} = B^{-1}A^{-1}$ (reverse order), because $(AB)(B^{-1}A^{-1}) = A(BB^{-1})A^{-1} = I$.\n$$B^{-1}A^{-1} = ${matTex(Bi)}${matTex(Ai)} = ${matTex(correct)}.$$\nThe same-order product $A^{-1}B^{-1} = ${matTex(ds[0])}$ is different because these matrices do not commute.`;
+    sol = `Theorem 2.2.2: $(AB)^{-1} = B^{-1}A^{-1}$ (reverse order), because $(AB)(B^{-1}A^{-1}) = A(BB^{-1})A^{-1} = I$.\n$$B^{-1}A^{-1} = ${matTex(Bi)}${matTex(Ai)} = ${matTex(correct)}.$$\nThe same-order product $A^{-1}B^{-1} = ${matTex(ds[0])}$ is different because these matrices do not commute.`;
   } else if (mode === "ATB") {
     what = "(A^TB)^{-1}";
     correct = matmul(Bi, AiT);
     ds = [matmul(Bi, Ai), matmul(AiT, Bi), transpose(correct), matmul(Ai, Bi)];
-    sol = `$(A^TB)^{-1} = B^{-1}(A^T)^{-1} = B^{-1}(A^{-1})^T$.\n$$B^{-1}(A^{-1})^T = ${matTex(Bi)}${matTex(AiT)} = ${matTex(correct)}.$$\nTwo traps: keeping the original order, and forgetting that $(A^T)^{-1} = (A^{-1})^T$ (not $A^{-1}$).`;
+    sol = `Theorems 2.2.2 and 2.2.3: $(A^TB)^{-1} = B^{-1}(A^T)^{-1} = B^{-1}(A^{-1})^T$.\n$$B^{-1}(A^{-1})^T = ${matTex(Bi)}${matTex(AiT)} = ${matTex(correct)}.$$\nTwo traps: keeping the original order, and forgetting that $(A^T)^{-1} = (A^{-1})^T$ (not $A^{-1}$).`;
   } else {
     what = "(BA^2)^{-1}";
     correct = matmul(matmul(Ai, Ai), Bi);
     ds = [matmul(Bi, matmul(Ai, Ai)), matmul(matmul(Ai, Bi), Ai), mscale(matmul(Ai, Bi), 2), transpose(correct)];
-    sol = `$(BA^2)^{-1} = (A^2)^{-1}B^{-1} = (A^{-1})^2B^{-1}$.\n$$(A^{-1})^2 = ${matTex(matmul(Ai, Ai))},\\qquad (A^{-1})^2B^{-1} = ${matTex(correct)}.$$`;
+    sol = `Theorem 2.2.2 (twice): $(BA^2)^{-1} = (A^2)^{-1}B^{-1} = (A^{-1})^2B^{-1}$.\n$$(A^{-1})^2 = ${matTex(matmul(Ai, Ai))},\\qquad (A^{-1})^2B^{-1} = ${matTex(correct)}.$$`;
   }
   if (ds.some((d) => matEq(d, correct)) && mode !== "BA2") retry();
   return mcq(rng, {
@@ -213,12 +191,12 @@ function elementaryPower(rng: Rng): Draft {
     const ds = [addE(n, i, j, kp), addE(n, j, i, k * m), addE(n, i, j, -k * m), addE(n, i, j, k + m), E];
     return mcq(rng, {
       subtopic: "Elementary matrices",
-      prompt: `$E$ is the $${n}\\times${n}$ elementary matrix obtained from $I_${n}$ by the row operation $${R[i]} \\to ${R[i]} ${k > 0 ? "+" : "-"} ${Math.abs(k) === 1 ? "" : Math.abs(k)}${R[j]}$. Find $${what}$.`,
+      prompt: `$E$ is the $${n}\\times${n}$ elementary matrix obtained from $I_${n}$ by the row operation $${R[i]} \\leftarrow ${R[i]} ${k > 0 ? "+" : "-"} ${Math.abs(k) === 1 ? "" : Math.abs(k)}${R[j]}$. Find $${what}$.`,
       correct: matTex(correct),
       distractors: ds.map((d) => matTex(d)),
       solution:
         m === -1
-          ? `$E$ adds $${k}$ times row ${j + 1} to row ${i + 1}. The inverse operation **subtracts** it again: $E^{-1}$ adds $${-k}$ times row ${j + 1} to row ${i + 1}, so the off-diagonal entry changes sign:\n$$E^{-1} = ${matTex(correct)}.$$`
+          ? `$E$ adds $${k}$ times row ${j + 1} to row ${i + 1}. The inverse is the elementary matrix of the same type that transforms $E$ back into $I$: $E^{-1}$ adds $${-k}$ times row ${j + 1} to row ${i + 1}, so the off-diagonal entry changes sign:\n$$E^{-1} = ${matTex(correct)}.$$`
           : `Applying $E$ ${m} times adds $${k}\\times\\text{row } ${j + 1}$ to row ${i + 1} ${m} times, i.e. $${k * m}$ times row ${j + 1} in total (row ${j + 1} itself never changes). So $E^{${m}}$ has $${k * m}$ in position $(${i + 1},${j + 1})$:\n$$E^{${m}} = ${matTex(correct)}.$$\nTrap: the entry is $${m}\\cdot(${k})$, not $(${k})^{${m}}$.`,
     });
   }
@@ -233,10 +211,10 @@ function elementaryPower(rng: Rng): Draft {
   ];
   return mcq(rng, {
     subtopic: "Elementary matrices",
-    prompt: `$E$ is the $${n}\\times${n}$ elementary matrix obtained from $I_${n}$ by the row operation $${R[i]} \\to ${c}${R[i]}$. Find $E^{-1}$.`,
+    prompt: `$E$ is the $${n}\\times${n}$ elementary matrix obtained from $I_${n}$ by the row operation $${R[i]} \\leftarrow ${c}${R[i]}$. Find $E^{-1}$.`,
     correct: matTex(correct),
     distractors: ds.map((d) => matTex(d)),
-    solution: `$E$ multiplies row ${i + 1} by $${c}$; the inverse operation multiplies row ${i + 1} by $${F(1, c).tex()}$. So $E^{-1}$ is the identity with $${F(1, c).tex()}$ in position $(${i + 1},${i + 1})$:\n$$E^{-1} = ${matTex(correct)}.$$`,
+    solution: `$E$ multiplies row ${i + 1} by $${c}$; the elementary matrix of the same type that transforms $E$ back into $I$ multiplies row ${i + 1} by $${F(1, c).tex()}$. So $E^{-1}$ is the identity with $${F(1, c).tex()}$ in position $(${i + 1},${i + 1})$:\n$$E^{-1} = ${matTex(correct)}.$$`,
   });
 }
 
@@ -256,7 +234,7 @@ function elementaryFromRows(rng: Rng): Draft {
     prompt: `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$. Find the elementary matrix $E$ such that $EA = B$.`,
     correct: matTex(E),
     distractors: ds.map((d) => matTex(d)),
-    solution: `Compare rows: only row ${i + 1} changed, and (row ${i + 1} of $B$) $-$ (row ${i + 1} of $A$) $= ${k}\\times$ (row ${j + 1} of $A$). So $B$ comes from $A$ by $${R[i]} \\to ${R[i]} ${k > 0 ? "+" : "-"} ${Math.abs(k) === 1 ? "" : Math.abs(k)}${R[j]}$.\n$E$ is $I_3$ after the **same** row operation: entry $(${i + 1},${j + 1})$ is $${k}$.\n$$E = ${matTex(E)}$$\nTrap: putting $${k}$ in position $(${j + 1},${i + 1})$ gives the transpose, which would act on columns when multiplied on the right.`,
+    solution: `Compare rows: only row ${i + 1} changed, and (row ${i + 1} of $B$) $-$ (row ${i + 1} of $A$) $= ${k}\\times$ (row ${j + 1} of $A$). So $B$ comes from $A$ by $${R[i]} \\leftarrow ${R[i]} ${k > 0 ? "+" : "-"} ${Math.abs(k) === 1 ? "" : Math.abs(k)}${R[j]}$.\n$E$ is $I_3$ after the **same** row operation (alg p8): entry $(${i + 1},${j + 1})$ is $${k}$.\n$$E = ${matTex(E)}$$\nTrap: putting $${k}$ in position $(${j + 1},${i + 1})$ adds a multiple of row ${i + 1} to row ${j + 1} instead.`,
   });
 }
 
@@ -289,7 +267,7 @@ function matrixEquation(rng: Rng): Draft {
     correct = matmul(Mi, B);
     ds = [matmul(B, Mi), matmul(Ai, B), matmul(inverse(madd(A, I(2))) ?? Ai, B), msub(matmul(Ai, B), I(2))];
     prompt = `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$. Find the matrix $X$ with $AX = B + X$.`;
-    sol = `Collect $X$ on one side: $AX - X = B$, i.e. $(A - I)X = B$ (write $X = IX$; "$A - 1$" is meaningless).\n$A - I = ${matTex(M)}$ is invertible with inverse $${matTex(Mi)}$, so $X = (A-I)^{-1}B = ${matTex(correct)}$.`;
+    sol = `Collect $X$ on one side: $AX - X = B$, i.e. $(A - I)X = B$ (write $X = IX$; a number cannot be subtracted from a matrix).\n$A - I = ${matTex(M)}$ has $ad - bc \\ne 0$, so it is invertible with inverse $${matTex(Mi)}$, so $X = (A-I)^{-1}B = ${matTex(correct)}$.`;
   }
   return mcq(rng, { subtopic: "Matrix equations", prompt, correct: matTex(correct), distractors: ds.map((d) => matTex(d)), solution: sol });
 }
@@ -323,7 +301,7 @@ function luSolve(rng: Rng): Draft {
     prompt: `$A = LU$ with $L = ${matTex(L)}$ and $U = ${matTex(U)}$. To solve $A\\mathbf{x} = \\mathbf{b}$ with $\\mathbf{b} = ${rowTexPlain(b)}$ one first solves $L\\mathbf{y} = \\mathbf{b}$ and then $U\\mathbf{x} = \\mathbf{y}$. ${askY ? "Find $\\mathbf{y}$." : "Find $\\mathbf{x}$."}`,
     correct: rowTex(correct),
     distractors: ds.map((d) => rowTex(d)),
-    solution: `**Forward substitution** in $L\\mathbf{y} = \\mathbf{b}$: $y_1 = ${b[0].tex()}$, $y_2 = ${b[1].tex()} - (${L[1][0].tex()})y_1 = ${y[1].tex()}$, $y_3 = ${b[2].tex()} - (${L[2][0].tex()})y_1 - (${L[2][1].tex()})y_2 = ${y[2].tex()}$. So $\\mathbf{y} = ${rowTex(y)}$.\n**Back substitution** in $U\\mathbf{x} = \\mathbf{y}$: $x_3 = ${y[2].tex()}/(${U[2][2].tex()}) = ${x[2].tex()}$, then $x_2 = ${x[1].tex()}$, $x_1 = ${x[0].tex()}$. So $\\mathbf{x} = ${rowTex(x)}$.\nCheck: $LU\\mathbf{x} = \\mathbf{b}$.`,
+    solution: `**Forward substitution** in $L\\mathbf{y} = \\mathbf{b}$: $y_1 = ${b[0].tex()}$, $y_2 = ${b[1].tex()} - (${L[1][0].tex()})y_1 = ${y[1].tex()}$, $y_3 = ${b[2].tex()} - (${L[2][0].tex()})y_1 - (${L[2][1].tex()})y_2 = ${y[2].tex()}$. So $\\mathbf{y} = ${rowTex(y)}$.\n**Backward substitution** in $U\\mathbf{x} = \\mathbf{y}$: $x_3 = ${y[2].tex()}/(${U[2][2].tex()}) = ${x[2].tex()}$, then $x_2 = ${x[1].tex()}$, $x_1 = ${x[0].tex()}$. So $\\mathbf{x} = ${rowTex(x)}$.\nCheck: $LU\\mathbf{x} = \\mathbf{b}$.`,
   });
 }
 
@@ -354,14 +332,14 @@ function luFind(rng: Rng): Draft {
     [l21, l32, 1],
   ]);
   const prompt = `Find the ${askL ? "unit lower triangular matrix $L$" : "echelon matrix $U$"} in an LU factorization $A = LU$ (no row interchanges) of $A = ${matTex(A)}$.`;
-  const sol = `Eliminate below the pivots, recording each multiplier:\n- $R_2 \\to R_2 - (${l21})R_1$, $R_3 \\to R_3 - (${l31})R_1$ (multipliers $\\ell_{21} = ${l21}$, $\\ell_{31} = ${l31}$);\n- then $R_3 \\to R_3 - (${l32})R_2$ using the **updated** row 2 (multiplier $\\ell_{32} = ${l32}$).\nThe multipliers go into $L$ with their own sign (we subtracted $\\ell_{ij}R_j$), and the echelon form is $U$:\n$$L = ${matTex(L)},\\qquad U = ${matTex(U)}.$$\nCheck: $LU = A$.`;
+  const sol = `Row reduce $A$ to an echelon form $U$ without row interchanges; at each pivot column divide the circled entries (pivot and below) by the pivot and place the result into $L$:\n- column 1: $r2 \\leftarrow r2 - (${l21})r1$, $r3 \\leftarrow r3 - (${l31})r1$, so column 1 of $L$ is $(1, ${l21}, ${l31})$;\n- column 2, using the **reduced** rows: $r3 \\leftarrow r3 - (${l32})r2$, so the $(3,2)$ entry of $L$ is $${l32}$.\nThe echelon form is $U$:\n$$L = ${matTex(L)},\\qquad U = ${matTex(U)}.$$\nCheck: $LU = A$.`;
   if (askL) {
     return mcq(rng, {
       subtopic: "LU factorization",
       prompt,
       correct: matTex(L),
       distractors: [Lneg, Lwrong, Lswap, transpose(Lneg)].map((d) => matTex(d)),
-      solution: `${sol}\nTraps: entering the negatives of the multipliers, and computing $\\ell_{32}$ from the original $a_{32}/a_{22}$ instead of the updated rows.`,
+      solution: `${sol}\nTraps: entering the negatives of these numbers, and computing the $(3,2)$ entry from the original $a_{32}/a_{22}$ instead of the reduced rows.`,
     });
   }
   const Uwrong = matmul(inverse(Lwrong)!, A);
@@ -395,11 +373,11 @@ function pdpPower(rng: Rng): Draft {
     prompt: `$A = PDP^{-1}$ where $P = ${matTex(P)}$ and $D = ${matTex(D)}$. Find $A^{${k}}$.`,
     correct: matTex(Ak),
     distractors: [wrongOrder, kD, elem, transpose(Ak), mscale(A, k)].map((d) => matTex(d)),
-    solution: `The inner $P^{-1}P$ factors cancel: $A^{${k}} = PDP^{-1}PDP^{-1}\\cdots PDP^{-1} = PD^{${k}}P^{-1}$, and $D^{${k}}$ just raises each diagonal entry to the power ${k}.\n$$P^{-1} = ${matTex(Pi)},\\quad D^{${k}} = ${matTex(diag([F(d1).pow(k), F(d2).pow(k)]))},\\quad A^{${k}} = PD^{${k}}P^{-1} = ${matTex(Ak)}.$$\nTraps: $P^{-1}D^{${k}}P$ (wrong order), $${k}D$ instead of $D^{${k}}$, and raising each entry of $A$ to the power ${k}.`,
+    solution: `Tutorial 2 Q8: the inner $P^{-1}P$ factors cancel: $A^{${k}} = PDP^{-1}PDP^{-1}\\cdots PDP^{-1} = PD^{${k}}P^{-1}$, and $D^{${k}}$ just raises each diagonal entry to the power ${k}.\n$$P^{-1} = ${matTex(Pi)},\\quad D^{${k}} = ${matTex(diag([F(d1).pow(k), F(d2).pow(k)]))},\\quad A^{${k}} = PD^{${k}}P^{-1} = ${matTex(Ak)}.$$\nTraps: $P^{-1}D^{${k}}P$ (wrong order), $${k}D$ instead of $D^{${k}}$, and raising each entry of $A$ to the power ${k}.`,
   });
 }
 
-/** (I - N)^{-1} or (I + N)^{-1} for strictly upper triangular N. */
+/** (I - N)^{-1} for a matrix N with N^3 = 0 (past paper: A^m = 0 => I - A invertible). */
 function nilpotentInverse(rng: Rng): Draft {
   const a = rng.nz(-3, 3), b = rng.int(-3, 3), c = rng.nz(-3, 3);
   const N = mat([
@@ -408,82 +386,15 @@ function nilpotentInverse(rng: Rng): Draft {
     [0, 0, 0],
   ]);
   const N2 = matmul(N, N);
-  const minus = rng.chance(0.55);
-  const IN = minus ? msub(I(3), N) : madd(I(3), N);
-  const correct = minus ? madd(madd(I(3), N), N2) : madd(msub(I(3), N), N2);
-  const ds = minus
-    ? [madd(I(3), N), msub(madd(I(3), N), N2), madd(msub(I(3), N), N2), msub(I(3), N)]
-    : [msub(I(3), N), madd(madd(I(3), N), N2), msub(msub(I(3), N), N2), madd(I(3), N)];
+  const IN = msub(I(3), N);
+  const correct = madd(madd(I(3), N), N2);
+  const ds = [madd(I(3), N), msub(madd(I(3), N), N2), madd(msub(I(3), N), N2), msub(I(3), N)];
   return mcq(rng, {
     subtopic: "Nilpotent matrices",
-    prompt: `Let $N = ${matTex(N)}$. Find $(I ${minus ? "-" : "+"} N)^{-1}$.`,
+    prompt: `Let $N = ${matTex(N)}$. Find $(I - N)^{-1}$.`,
     correct: matTex(correct),
     distractors: ds.map((d) => matTex(d)),
-    solution: `$N$ is strictly upper triangular, so $N^3 = 0$ (here $N^2 = ${matTex(N2)}$). Then\n$$(I ${minus ? "-" : "+"} N)(I ${minus ? "+" : "-"} N + N^2) = I ${minus ? "-" : "+"} N^3 = I,$$\nso $(I ${minus ? "-" : "+"} N)^{-1} = I ${minus ? "+" : "-"} N + N^2 = ${matTex(correct)}$.\nCheck: $${matTex(IN)}${matTex(correct)} = I$. Forgetting the $N^2$ term is the usual slip.`,
-  });
-}
-
-/** Polynomial identity in A gives A^{-1} as a polynomial in A. */
-function polyInverse(rng: Rng): Draft {
-  const p = rng.int(-5, 5);
-  const q = rng.nz(-6, 6);
-  const cubic = rng.chance(0.3);
-  if (cubic) {
-    const r = rng.nz(-4, 4);
-    const coef = F(-1, r);
-    const body = `(${quadTex(p, q)})`;
-    return mcq(rng, {
-      subtopic: "Inverse algebra",
-      prompt: `An $n\\times n$ matrix $A$ satisfies $A^3 ${p ? (p > 0 ? `+ ${p === 1 ? "" : p}A^2` : `- ${p === -1 ? "" : -p}A^2`) : ""} ${q > 0 ? `+ ${q === 1 ? "" : q}A` : `- ${q === -1 ? "" : -q}A`} ${r > 0 ? "+" : "-"} ${Math.abs(r) === 1 ? "" : Math.abs(r)}I = 0$. Express $A^{-1}$ in terms of $A$.`,
-      correct: coefTex(coef, body),
-      distractors: [coefTex(coef.neg(), body), coefTex(F(-r), body), coefTex(coef, `(${quadTex(-p, -q)})`), coefTex(coef, `(${quadTex(p, -q)})`)],
-      solution: `Move the $I$ term across and factor $A$: $A(${quadTex(p, q)}) = ${-r === 1 ? "" : -r === -1 ? "-" : -r}I$. Divide by $${-r}$:\n$$A\\cdot\\Big[${coef.tex()}(${quadTex(p, q)})\\Big] = I,$$\nso $A$ is invertible and $A^{-1} = ${coefTex(coef, body)}$ (the factor commutes with $A$, so it is a two-sided inverse).`,
-    });
-  }
-  if (rng.chance(0.15)) {
-    // constant term zero: invertibility undecided
-    const pp = rng.nz(-5, 5);
-    return tfn({
-      subtopic: "Inverse algebra",
-      prompt: `$A$ is a $3\\times 3$ matrix with $A^2 ${pp > 0 ? "+" : "-"} ${Math.abs(pp) === 1 ? "" : Math.abs(pp)}A = 0$. Then $A$ is invertible.`,
-      answer: 2,
-      solution: `$A^2 ${pp > 0 ? "+" : "-"} ${Math.abs(pp) === 1 ? "" : Math.abs(pp)}A = A(A ${pp > 0 ? "+" : "-"} ${Math.abs(pp) === 1 ? "" : Math.abs(pp)}I) = 0$ has **no constant term**, so we cannot isolate $I$. Both cases occur: $A = 0$ satisfies it and is singular, while $A = ${-pp}I$ satisfies it and is invertible. **Not enough information**.`,
-    });
-  }
-  const coef = F(-1, q);
-  const body = `(${linTex(p)})`;
-  return mcq(rng, {
-    subtopic: "Inverse algebra",
-    prompt: `An $n\\times n$ matrix $A$ satisfies $${quadTex(p, q)} = 0$. Express $A^{-1}$ in terms of $A$.`,
-    correct: coefTex(coef, body),
-    distractors: [coefTex(coef.neg(), body), coefTex(coef, `(${linTex(-p)})`), coefTex(F(-q), body), coefTex(coef.neg(), `(${linTex(-p)})`), coefTex(coef, `(A + ${q}I)`)],
-    solution: `$${quadTex(p, q)} = 0 \\Rightarrow A(${linTex(p)}) = ${-q === 1 ? "" : -q === -1 ? "-" : -q}I \\Rightarrow A\\Big[${coef.tex()}(${linTex(p)})\\Big] = I$.\nSo $A$ is invertible (a nonzero constant term is what makes this work) and $A^{-1} = ${coefTex(coef, body)}$.`,
-  });
-}
-
-/** Inverse of a block triangular / block diagonal matrix. */
-function blockInverse(rng: Rng): Draft {
-  const B = mat([
-    [rng.int(-4, 4), rng.int(-4, 4)],
-    [rng.int(-4, 4), rng.int(-4, 4)],
-  ]);
-  if (B.flat().filter((x) => x.isZero()).length > 1) retry();
-  const k = rng.pick([1, 2, 3, -2, -3]);
-  const upper = rng.chance(0.5);
-  const M4 = (X: Mat) =>
-    upper
-      ? [[F(1), F(0), X[0][0], X[0][1]], [F(0), F(1), X[1][0], X[1][1]], [F(0), F(0), F(1), F(0)], [F(0), F(0), F(0), F(1)]]
-      : [[F(1), F(0), F(0), F(0)], [F(0), F(1), F(0), F(0)], [X[0][0], X[0][1], F(1), F(0)], [X[1][0], X[1][1], F(0), F(1)]];
-  const what = k === 1 ? "M^{-1}" : k > 0 ? `M^{-${k}}` : `M^{${-k}}`;
-  const power = k; // asking for M^{-k}: its off-diagonal block is -kB
-  const correct = M4(mscale(B, -power));
-  const ds = [M4(mscale(B, power)), M4(mscale(transpose(B), -power)), M4(neg(matPow(B, Math.abs(power)))), M4(mscale(B, -(power + 1))), M4(mscale(B, 2 * power))];
-  return mcq(rng, {
-    subtopic: "Block matrices",
-    prompt: `Let $B = ${matTex(B)}$ and let $M$ be the $4\\times4$ block matrix $M = ${upper ? "\\begin{bmatrix} I_2 & B \\\\ 0 & I_2 \\end{bmatrix}" : "\\begin{bmatrix} I_2 & 0 \\\\ B & I_2 \\end{bmatrix}"}$. Find $${what}$.`,
-    correct: matTex(correct),
-    distractors: ds.map((d) => matTex(d)),
-    solution: `Multiply blocks like numbers (keeping order): ${upper ? "$\\begin{bmatrix} I & X \\\\ 0 & I \\end{bmatrix}\\begin{bmatrix} I & Y \\\\ 0 & I \\end{bmatrix} = \\begin{bmatrix} I & X+Y \\\\ 0 & I \\end{bmatrix}$" : "$\\begin{bmatrix} I & 0 \\\\ X & I \\end{bmatrix}\\begin{bmatrix} I & 0 \\\\ Y & I \\end{bmatrix} = \\begin{bmatrix} I & 0 \\\\ X+Y & I \\end{bmatrix}$"}. So the off-diagonal blocks simply **add**: $M^{m}$ has block $mB$ for every integer $m$, and $M^{-1}$ has block $-B$.\nHence $${what}$ has off-diagonal block $${-power}B$:\n$$${what} = ${matTex(correct)}.$$`,
+    solution: `Compute powers: $N^2 = ${matTex(N2)}$ and $N^3 = N^2N = 0$. Then\n$$(I - N)(I + N + N^2) = I - N^3 = I,$$\nand the product in the other order is also $I$, so $(I - N)^{-1} = I + N + N^2 = ${matTex(correct)}$.\nCheck: $${matTex(IN)}${matTex(correct)} = I$. Forgetting the $N^2$ term is the usual slip.`,
   });
 }
 
@@ -501,7 +412,7 @@ function transposeInverse(rng: Rng): Draft {
     prompt: `$A$ is invertible with $A^{-1} = ${matTex(Ai)}$. Find $${what}$.`,
     correct: matTex(correct),
     distractors: ds.map((d) => matTex(d)),
-    solution: `Two rules: $(cX)^{-1} = \\frac{1}{c}X^{-1}$ and $(A^T)^{-1} = (A^{-1})^T$. So\n$$${what} = ${F(1, c).tex()}\\,(A^{-1})^T = ${matTex(correct)}.$$\nNo need to find $A$ itself. Traps: multiplying by $${c}$ instead of dividing, and forgetting to transpose.`,
+    solution: `Two rules: $(cX)^{-1} = \\frac{1}{c}X^{-1}$ (because $(cX)(\\frac1c X^{-1}) = I$) and $(A^T)^{-1} = (A^{-1})^T$ (Theorem 2.2.3). So\n$$${what} = ${F(1, c).tex()}\\,(A^{-1})^T = ${matTex(correct)}.$$\nNo need to find $A$ itself. Traps: multiplying by $${c}$ instead of dividing, and forgetting to transpose.`,
   });
 }
 
@@ -536,7 +447,7 @@ function paramSingular(rng: Rng): Draft {
   });
 }
 
-/** Gauss–Jordan for a 3x3 that turns out singular vs invertible: which conclusion is right. */
+/** Parameter h for which a 3x3 matrix is invertible (pivot positions, Theorem 2.4). */
 function invertibleWithParam(rng: Rng): Draft {
   // rows r1, r2, and r3 = s*r1 + t*r2 + (h - h0) e3 style: A singular iff h = h0
   const r1 = [1, rng.int(-3, 3), rng.int(-3, 3)];
@@ -555,25 +466,24 @@ function invertibleWithParam(rng: Rng): Draft {
     prompt: `For which values of $h$ is $A = \\begin{bmatrix} ${rowsTex("h")} \\end{bmatrix}$ invertible?`,
     correct,
     distractors: [`h = ${h0}`, `h \\ne ${-h0}`, `h \\ne ${h0 + 1}`, "\\text{all real } h", `h \\ne ${s * r1[2]}`],
-    solution: `Row reduce. Row 3 is built from rows 1 and 2: $\\text{row}_3 - (${s})\\text{row}_1 - (${t})\\big(\\text{row}_2 - (${A1})\\text{row}_1\\big) = [0,\\ 0,\\ ${hm}]$.\nSo an echelon form has pivots in all three columns iff $${hm} \\ne 0$. By the Invertible Matrix Theorem (3 pivots $\\iff$ invertible), $A$ is invertible exactly when $h \\ne ${h0}$. For $h = ${h0}$ the rows are dependent.`,
+    solution: `Row reduce. Row 3 is built from rows 1 and 2: $\\text{row}_3 - (${s})\\text{row}_1 - (${t})\\big(\\text{row}_2 - (${A1})\\text{row}_1\\big) = [0,\\ 0,\\ ${hm}]$.\nSo an echelon form has pivots in all three columns iff $${hm} \\ne 0$. By the Invertible Matrix Theorem ((1) $\\iff$ (3): $3$ pivot positions), $A$ is invertible exactly when $h \\ne ${h0}$. For $h = ${h0}$ an echelon form has a zero row, so only 2 pivot positions.`,
   });
 }
 
+// Every generator carries the place in the course materials its method comes from.
 export const matrixAlgebraGens: ((rng: Rng) => Draft)[] = [
-  inverse2,
-  solveWithInverse,
-  gaussJordan3,
-  productInverse,
-  elementaryPower,
-  elementaryFromRows,
-  matrixEquation,
-  luSolve,
-  luFind,
-  pdpPower,
-  nilpotentInverse,
-  polyInverse,
-  blockInverse,
-  transposeInverse,
-  paramSingular,
-  invertibleWithParam,
+  cite("Slides 0B Inverse of a Matrix (mtx p13)", inverse2),
+  cite("Slides 2.2 Theorems 2.1, 2.2 (alg p5–6)", solveWithInverse),
+  cite("Slides 2.2 Theorem 2.3, Exercise 2.2.3 (alg p9)", rowReduceInverse3),
+  cite("Slides 2.2 Theorem 2.2 (alg p6)", productInverse),
+  cite("Slides 2.2 Elementary matrices (alg p7–8); PYP 2021–24 (T/F: E adds 3·row 1 to row 2, E²)", elementaryPower),
+  cite("Slides 2.2 Elementary matrices, Exercise 2.2.1 (alg p7–8)", elementaryFromRows),
+  cite("Tutorial 2 Q3; PYP AY25/26 S2 Q5", matrixEquation),
+  cite("Slides 2.3.1 LU factorization (alg p14–17); Tutorial 2 Q7", luSolve),
+  cite("Slides 2.3.2 LU procedure, Exercise 2.3.2 (alg p18–21); PYP 2021–24 (LU of a 3×4 matrix)", luFind),
+  cite("Tutorial 2 Q8", pdpPower),
+  cite("PYP 2021–24 (nilpotent A^m = 0 ⇒ I − A invertible)", nilpotentInverse),
+  cite("Slides 2.2 Theorem 2.2 (alg p6); Tutorial 0B Q4", transposeInverse),
+  cite("Slides 0B Inverse of a Matrix (mtx p13)", paramSingular),
+  cite("Slides 2.2 Theorem 2.4 (alg p10)", invertibleWithParam),
 ];

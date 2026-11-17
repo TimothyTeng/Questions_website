@@ -3,6 +3,7 @@
 import katex from "katex";
 import { getBank } from "../src/lib/bank";
 import { lessons } from "../src/data/lessons";
+import { TOPICS } from "../src/lib/topics";
 
 const bank = getBank();
 let errors = 0;
@@ -48,6 +49,12 @@ for (const l of lessons) {
   strs.forEach((s) => checkTex(`lesson:${l.topic}`, s));
   (l.sections.flatMap((s) => s.formulas ?? [])).forEach((f) => checkTex(`lesson:${l.topic}`, `$$${f}$$`));
 }
+
+// First-half content must say where in the course notes it comes from (no material beyond the syllabus).
+const firstHalf = new Set(TOPICS.filter((t) => t.half === 1).map((t) => t.id));
+for (const q of bank) if (firstHalf.has(q.topic) && !q.ref?.trim()) fail(q.id, "missing ref (source in the notes)");
+for (const l of lessons)
+  if (firstHalf.has(l.topic)) l.sections.forEach((s, i) => !s.refs?.length && fail(`lesson:${l.topic}`, `section ${i + 1} has no refs`));
 
 console.log(`total ${bank.length}`, byTopic, bySource);
 console.log("answer positions", answerPos);

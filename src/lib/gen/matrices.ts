@@ -5,6 +5,9 @@ import { mcq, retry, tfn, type Draft, type Rng } from "./common";
 
 // ---------------------------------------------------------------- local helpers
 
+/** Attach the course-material reference to every question a generator produces. */
+const cite = (ref: string, g: (rng: Rng) => Draft) => (rng: Rng): Draft => ({ ...g(rng), ref });
+
 function randMat(rng: Rng, m: number, n: number, lo = -3, hi = 4): Mat {
   return mat(Array.from({ length: m }, () => Array.from({ length: n }, () => rng.int(lo, hi))));
 }
@@ -15,6 +18,7 @@ const rowVecTex = (v: Vec) => `\\begin{bmatrix} ${v.map((x) => x.tex()).join(" &
 const tuple = (xs: (Frac | number)[]) => `(${xs.map((x) => Frac.of(x).tex()).join(",\\ ")})`;
 const col = (A: Mat, j: number) => A.map((r) => r[j]);
 const isScalarMat = (A: Mat) => A.every((r, i) => r.every((x, j) => (i === j ? x.eq(A[0][0]) : x.isZero())));
+const sumF = (xs: Frac[]) => xs.reduce((s, x) => s.add(x), F(0));
 
 /** a·X + b·Y written nicely, e.g. "3M - 2I", "-M + I", "5I". */
 function lin(a: Frac, X: string, b: Frac, Y: string): string {
@@ -69,7 +73,7 @@ function productEntry(rng: Rng): Draft {
     prompt: `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$. Find the $${pos}$ entry of $AB$.`,
     correct: correct.tex(),
     distractors: ds.map((x) => x.tex()),
-    solution: `$AB$ is $(${m}\\times${n})(${n}\\times${p}) = ${m}\\times${p}$. Its $${pos}$ entry is (row ${i + 1} of $A$)$\\cdot$(column ${j + 1} of $B$):\n$$${A[i].map((x, k) => `(${x.tex()})(${B[k][j].tex()})`).join(" + ")} = ${correct.tex()}.$$\nNo other entries are needed. (Multiplying entry by entry, $a_{ij}b_{ij}$, is not matrix multiplication.)`,
+    solution: `$AB$ is $(${m}\\times${n})(${n}\\times${p}) = ${m}\\times${p}$. Its $${pos}$ entry is $\\sum_k a_{${i + 1}k}b_{k${j + 1}}$: row ${i + 1} of $A$ against column ${j + 1} of $B$:\n$$${A[i].map((x, k) => `(${x.tex()})(${B[k][j].tex()})`).join(" + ")} = ${correct.tex()}.$$\nNo other entries are needed. (Multiplying entry by entry, $a_{ij}b_{ij}$, is not matrix multiplication.)`,
   });
 }
 
@@ -101,7 +105,7 @@ function rowOrColumn(rng: Rng): Draft {
     prompt: `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$. Use the column method to find the ${ord} column of $${Ln}${Rn}$.`,
     correct: rowTex(correct),
     distractors: ds.map(rowTex),
-    solution: `Column ${k + 1} of $${Ln}${Rn}$ = $${Ln}$ times (column ${k + 1} of $${Rn}$), a combination of the **columns of $${Ln}$** with weights $${tuple(col(R, k))}$:\n$$${col(R, k).map((w, i) => `(${w.tex()})${rowTex(col(L, i))}`).join(" + ")} = ${rowTex(correct)}.$$\nThe order matters: the corresponding column of $${Rn}${Ln}$ is $${rowTex(col(Q, k))}$.`,
+    solution: `Column ${k + 1} of $${Ln}${Rn}$ = $${Ln}$ times (column ${k + 1} of $${Rn}$), a linear combination of the **columns of $${Ln}$** with weights $${tuple(col(R, k))}$:\n$$${col(R, k).map((w, i) => `(${w.tex()})${rowTex(col(L, i))}`).join(" + ")} = ${rowTex(correct)}.$$\nThe order matters: the corresponding column of $${Rn}${Ln}$ is $${rowTex(col(Q, k))}$.`,
   });
 }
 
@@ -119,11 +123,11 @@ function columnWeights(rng: Rng): Draft {
     prompt: `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$, and let $\\mathbf{b}_1, \\mathbf{b}_2, \\mathbf{b}_3$ be the columns of $B$. The ${ord} column of $BA$ is written as $c_1\\mathbf{b}_1 + c_2\\mathbf{b}_2 + c_3\\mathbf{b}_3$. Which option gives $(c_1, c_2, c_3)$ and that column?`,
     correct: opt(w),
     distractors: wrong.map(opt),
-    solution: `Column ${j + 1} of $BA$ is $B\\mathbf{a}_${j + 1}$, so the weights are the entries of column ${j + 1} of $A$: $(c_1,c_2,c_3) = ${tuple(w)}$.\n$$${w.map((c, i) => `(${c.tex()})${rowTex(col(B, i))}`).join(" + ")} = ${rowTex(col(matmul(B, A), j))}.$$\nTaking row ${j + 1} of $A$ (or a column of $B$) as the weights is the usual mistake.`,
+    solution: `Column ${j + 1} of $BA$ is $B\\mathbf{a}_${j + 1}$, a linear combination of the columns of $B$ whose coefficients are the entries of column ${j + 1} of $A$: $(c_1,c_2,c_3) = ${tuple(w)}$.\n$$${w.map((c, i) => `(${c.tex()})${rowTex(col(B, i))}`).join(" + ")} = ${rowTex(col(matmul(B, A), j))}.$$\nTaking row ${j + 1} of $A$ (or a column of $B$) as the weights is the usual mistake.`,
   });
 }
 
-/** Trace of a linear combination (tutorial style). */
+/** Trace of a combination of matrices (Tutorial 0B Q1 style). */
 function traceExpr(rng: Rng): Draft {
   if (rng.chance(0.5)) {
     const A = randMat(rng, 3, 3, -4, 6);
@@ -134,52 +138,57 @@ function traceExpr(rng: Rng): Draft {
     if (tA.isZero() || tB.isZero()) retry();
     const correct = tA.add(tB.mul(c)).mul(k);
     const inner = lin(F(1), "A", F(c), "B^T");
+    const kTex = k === 1 ? "" : k === -1 ? "-" : `${k}`;
     return mcq(rng, {
       subtopic: "Trace",
-      prompt: `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$. Find $${k === 1 ? "" : k === -1 ? "-" : k}\\operatorname{tr}\\left(${inner}\\right)$.`,
+      prompt: `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$. Find $${kTex}\\operatorname{trace}\\left(${inner}\\right)$.`,
       correct: correct.tex(),
       distractors: [tA.sub(tB.mul(c)).mul(k), tA.mul(k).add(tB.mul(c)), tA.add(tB.mul(c)), correct.neg(), tA.add(tB).mul(k), tA.mul(c).add(tB).mul(k)].map((x) => x.tex()),
-      solution: `Trace is linear and $\\operatorname{tr}(B^T) = \\operatorname{tr}B$. Here $\\operatorname{tr}A = ${tA.tex()}$ and $\\operatorname{tr}B = ${tB.tex()}$, so\n$$${k === 1 ? "" : k === -1 ? "-" : k}\\left(${tA.tex()} + (${F(c).tex()})(${tB.tex()})\\right) = ${correct.tex()}.$$\nOnly the diagonals matter; there is no need to form the matrix.`,
+      solution: `Only the diagonal of $${inner}$ is needed. Transposing does not move the diagonal, so its $(i,i)$ entry is $a_{ii} + (${c})b_{ii}$.\nDiagonal sums: $a_{11}+a_{22}+a_{33} = ${tA.tex()}$ and $b_{11}+b_{22}+b_{33} = ${tB.tex()}$, so\n$$${kTex}\\left(${tA.tex()} + (${F(c).tex()})(${tB.tex()})\\right) = ${correct.tex()}.$$`,
     });
   }
-  // tr(C^T D^T + k B^T) with C 2x3, D 3x2, B 3x3
+  // trace(C^T D^T + k B^T) with C 2x3, D 3x2, B 3x3 (Tutorial 0B Q1(ii))
   const C = randMat(rng, 2, 3, -3, 4);
   const D = randMat(rng, 3, 2, -3, 4);
   const B = randMat(rng, 3, 3, -3, 5);
   const k = rng.nz(-3, 3);
-  const CD = matmul(C, D);
-  const tCD = tr(CD), tB = tr(B);
+  const diag = [0, 1, 2].map((i) => col(C, i)[0].mul(D[i][0]).add(col(C, i)[1].mul(D[i][1])));
+  const tCD = sumF(diag), tB = tr(B);
   if (tB.isZero()) retry();
   const correct = tCD.add(tB.mul(k));
+  const kAbs = Math.abs(k) === 1 ? "" : `${Math.abs(k)}`;
   return mcq(rng, {
     subtopic: "Trace",
-    prompt: `Let $B = ${matTex(B)}$, $C = ${matTex(C)}$ and $D = ${matTex(D)}$. Find $\\operatorname{tr}\\left(C^TD^T ${k < 0 ? "-" : "+"} ${Math.abs(k) === 1 ? "" : Math.abs(k)}B^T\\right)$.`,
+    prompt: `Let $B = ${matTex(B)}$, $C = ${matTex(C)}$ and $D = ${matTex(D)}$. Find $\\operatorname{trace}\\left(C^TD^T ${k < 0 ? "-" : "+"} ${kAbs}B^T\\right)$.`,
     correct: correct.tex(),
-    distractors: [tCD, tCD.sub(tB.mul(k)), CD[0][0].add(tB.mul(k)), tCD.add(tB), correct.add(CD[0][1])].map((x) => x.tex()),
-    solution: `$C^TD^T = (DC)^T$, so $\\operatorname{tr}(C^TD^T) = \\operatorname{tr}(DC) = \\operatorname{tr}(CD)$, and $CD$ is only $2\\times2$: $(CD)_{11} = ${CD[0][0].tex()}$, $(CD)_{22} = ${CD[1][1].tex()}$, so $\\operatorname{tr}(C^TD^T) = ${tCD.tex()}$.\n$\\operatorname{tr}(${k}B^T) = ${k}\\operatorname{tr}B = ${F(k).mul(tB).tex()}$.\nTotal: $${correct.tex()}$.`,
+    distractors: [tCD, tCD.sub(tB.mul(k)), diag[0].add(diag[1]).add(tB.mul(k)), tCD.add(tB), correct.add(diag[2]), correct.neg()].map((x) => x.tex()),
+    solution: `$C^TD^T$ is $(3\\times2)(2\\times3) = 3\\times3$. Its $(i,i)$ entry is (row $i$ of $C^T$) against (column $i$ of $D^T$) = (column $i$ of $C$)$\\cdot$(row $i$ of $D$): $${diag.map((x) => x.tex()).join(",\\ ")}$, sum $${tCD.tex()}$.\nThe diagonal of $B^T$ is the diagonal of $B$, so the diagonal of $${k}B^T$ sums to $${k}(${tB.tex()}) = ${F(k).mul(tB).tex()}$.\nTotal: $${correct.tex()}$.`,
   });
 }
 
-/** tr(AB) = tr(BA) for non-square factors. */
-function traceProduct(rng: Rng): Draft {
-  const m = 2;
+/** Trace of a product, computing only the diagonal entries. */
+function traceOfProduct(rng: Rng): Draft {
   const n = rng.pick([3, 4]);
-  const A = randMat(rng, m, n, -3, 4);
-  const B = randMat(rng, n, m, -3, 4);
-  const AB = matmul(A, B);
-  const correct = tr(AB);
-  const askBig = rng.chance(0.6);
-  const all = AB.flat().reduce((s, x) => s.add(x), F(0));
+  const A = randMat(rng, 2, n, -3, 4);
+  const B = randMat(rng, n, 2, -3, 4);
+  const askBig = rng.chance(0.5);
+  const [L, R, Ln, Rn] = askBig ? [B, A, "B", "A"] : [A, B, "A", "B"];
+  const P = matmul(L, R);
+  const size = P.length;
+  const diag = P.map((r, i) => r[i]);
+  const correct = sumF(diag);
+  const all = sumF(P.flat());
+  const line = (i: number) => `(${Ln}${Rn})_{${i + 1}${i + 1}} = ${L[i].map((x, k) => `(${x.tex()})(${R[k][i].tex()})`).join(" + ")} = ${diag[i].tex()}`;
   return mcq(rng, {
     subtopic: "Trace",
-    prompt: `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$. Find $\\operatorname{tr}(${askBig ? "BA" : "AB"})$.`,
+    prompt: `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$. Find $\\operatorname{trace}(${Ln}${Rn})$.`,
     correct: correct.tex(),
-    distractors: [AB[0][0], AB[1][1], all, correct.neg(), AB[0][0].sub(AB[1][1])].map((x) => x.tex()),
-    solution: `${askBig ? `$BA$ is $${n}\\times${n}$, but $\\operatorname{tr}(BA) = \\operatorname{tr}(AB)$ and $AB$ is only $2\\times2$.\n` : ""}$(AB)_{11} = ${A[0].map((x, k) => `(${x.tex()})(${B[k][0].tex()})`).join(" + ")} = ${AB[0][0].tex()}$\n$(AB)_{22} = ${A[1].map((x, k) => `(${x.tex()})(${B[k][1].tex()})`).join(" + ")} = ${AB[1][1].tex()}$\nSo the trace is $${correct.tex()}$.`,
+    distractors: [diag[0], correct.sub(diag[size - 1]), all, correct.neg(), correct.add(P[0][1]), diag[0].mul(diag[1])].map((x) => x.tex()),
+    solution: `$${Ln}${Rn}$ is $${size}\\times${size}$; only its diagonal is needed. The $(i,i)$ entry is row $i$ of $${Ln}$ against column $i$ of $${Rn}$:\n${diag.map((_, i) => `$${line(i)}$`).join("\n")}\nSo $\\operatorname{trace}(${Ln}${Rn}) = ${correct.tex()}$.`,
   });
 }
 
-/** M^2 = pM + qI: reduce M^n. */
+/** M^2 = pM + qI: reduce M^n (PYP AY25/26 S1 Q2). */
 function powerRecurrence(rng: Rng): Draft {
   const [p, q] = rng.pick([[-1, 1], [1, 1], [-1, 2], [1, 2], [2, 1], [-2, 1], [2, -1], [1, 3], [-1, 3], [3, -2]]);
   const coeffs: [Frac, Frac][] = [];
@@ -192,11 +201,11 @@ function powerRecurrence(rng: Rng): Draft {
   const [an, bn] = coeffs[n - 1];
   const rel = lin(F(p), "M", F(q), "I");
   const table = coeffs.slice(1, n).map(([x, y], i) => `$M^{${i + 2}} = ${lin(x, "M", y, "I")}$`).join(", ");
-  const sol = `Write $M^k = a_kM + b_kI$. Then $M^{k+1} = a_kM^2 + b_kM = a_k(${rel}) + b_kM$, i.e. $a_{k+1} = ${lin(F(p), "a_k", F(1), "b_k")}$, $b_{k+1} = ${lin(F(q), "a_k", F(0), "")}$.\n${table}.`;
+  const sol = `Write $M^k = a_kM + b_kI$. Then $M^{k+1} = M\\cdot M^k = a_kM^2 + b_kM = a_k(${rel}) + b_kM$, i.e. $a_{k+1} = ${lin(F(p), "a_k", F(1), "b_k")}$, $b_{k+1} = ${lin(F(q), "a_k", F(0), "")}$.\n${table}.`;
   if (rng.chance(0.5)) {
     const opt = ([x, y]: [Frac, Frac]) => `M^{${n}} = ${lin(x, "M", y, "I")}`;
     return mcq(rng, {
-      subtopic: "Powers & polynomials",
+      subtopic: "Powers",
       prompt: `A square matrix $M$, not a scalar multiple of $I$, satisfies $M^2 = ${rel}$. Express $M^{${n}}$ in the form $aM + bI$.`,
       correct: opt([an, bn]),
       distractors: [coeffs[n - 2], coeffs[n], [bn, an] as [Frac, Frac], [an.neg(), bn] as [Frac, Frac], [an, bn.neg()] as [Frac, Frac]].map(opt),
@@ -207,41 +216,39 @@ function powerRecurrence(rng: Rng): Draft {
   // the target pair must not repeat at another listed power
   if (opts.some((k) => k !== n && coeffs[k - 1][0].eq(an) && coeffs[k - 1][1].eq(bn))) retry();
   return mcq(rng, {
-    subtopic: "Powers & polynomials",
+    subtopic: "Powers",
     prompt: `A square matrix $M$, not a scalar multiple of $I$, satisfies $M^2 = ${rel}$. If $M^n = ${lin(bn, "I", an, "M")}$, find $n$.`,
     correct: `n = ${n}`,
     distractors: opts.filter((k) => k !== n).map((k) => `n = ${k}`),
-    solution: `${sol}\nSo $n = ${n}$. (Because $M$ is not a multiple of $I$, the coefficients $a, b$ are unique.)`,
+    solution: `${sol}\nSo $n = ${n}$.`,
   });
 }
 
-/** A^2 = kA + mI for a 2x2 matrix (Cayley–Hamilton), or A^{-1} from it. */
-function cayleyHamilton(rng: Rng): Draft {
+/** Find k (and m) with A^2 = kA + mI by comparing entries (PYP: find k with A^2 = kA - 2I). */
+function squareRelation(rng: Rng): Draft {
   const A = randMat(rng, 2, 2, -4, 5);
-  const t = tr(A), d = det2(A);
-  if (t.isZero() || d.isZero() || t.abs().eq(d.abs()) || (A[0][1].isZero() && A[1][0].isZero())) retry();
+  const k = tr(A), m = det2(A).neg();
+  if (k.isZero() || m.isZero() || k.abs().eq(m.abs()) || A[0][1].isZero()) retry();
   const A2 = matmul(A, A);
-  if (rng.chance(0.55)) {
-    const opt = (k: Frac, m: Frac) => `k = ${k.tex()},\\ m = ${m.tex()}`;
+  if (!matEq(A2, madd(mscale(A, k), mscale(identity(2), m)))) retry();
+  const cmp = `Compare the $(1,2)$ entries (the $I$ term is $0$ there): $(A^2)_{12} = ${A2[0][1].tex()} = k\\cdot(${A[0][1].tex()})$, so $k = ${k.tex()}$.`;
+  if (rng.chance(0.5)) {
+    const opt = (x: Frac, y: Frac) => `k = ${x.tex()},\\ m = ${y.tex()}`;
     return mcq(rng, {
-      subtopic: "Powers & polynomials",
+      subtopic: "Powers",
       prompt: `Let $A = ${matTex(A)}$. Find the scalars $k$ and $m$ such that $A^2 = kA + mI$.`,
-      correct: opt(t, d.neg()),
-      distractors: [opt(t.neg(), d), opt(t, d), opt(t.neg(), d.neg()), opt(d, t.neg()), opt(d.neg(), t)],
-      solution: `$A^2 = ${matTex(A2)}$. Compare an off-diagonal entry (the $I$ term contributes nothing there): $${A[0][1].isZero() ? `(A^2)_{21} = ${A2[1][0].tex()} = k\\cdot(${A[1][0].tex()})` : `(A^2)_{12} = ${A2[0][1].tex()} = k\\cdot(${A[0][1].tex()})`}$, so $k = ${t.tex()}$; then a diagonal entry gives $m = ${d.neg().tex()}$.\nShortcut (Cayley–Hamilton): $A^2 = (\\operatorname{tr}A)A - (\\det A)I$ with $\\operatorname{tr}A = ${t.tex()}$, $\\det A = ${d.tex()}$.`,
+      correct: opt(k, m),
+      distractors: [opt(k.neg(), m.neg()), opt(k, m.neg()), opt(k.neg(), m), opt(m, k), opt(m.neg(), k.neg())],
+      solution: `$A^2 = ${matTex(A2)}$ and $kA + mI = \\begin{bmatrix} ${A[0][0].tex()}k + m & ${A[0][1].tex()}k \\\\ ${A[1][0].tex()}k & ${A[1][1].tex()}k + m \\end{bmatrix}$.\n${cmp} Then the $(1,1)$ entries give $${A2[0][0].tex()} = ${A[0][0].mul(k).tex()} + m$, so $m = ${m.tex()}$. Check: $${k.tex()}A ${m.n < 0 ? "-" : "+"} ${m.abs().eq(1) ? "" : m.abs().tex()}I = ${matTex(A2)}$ ✓.`,
     });
   }
-  const fr = (c: Frac, inner: string) => (c.eq(1) ? inner : c.eq(-1) ? `-\\left(${inner}\\right)` : `${c.tex()}\\left(${inner}\\right)`);
-  const tI_A = lin(t, "I", F(-1), "A");
-  const A_tI = lin(F(1), "A", t.neg(), "I");
-  const dI_A = lin(d, "I", F(-1), "A");
-  const inv = d.n !== 0 ? F(1).div(d) : F(1);
+  const mTxt = `${m.n < 0 ? "-" : "+"} ${m.abs().eq(1) ? "" : m.abs().tex()}I`;
   return mcq(rng, {
-    subtopic: "Powers & polynomials",
-    prompt: `Let $A = ${matTex(A)}$. Using $A^2 - (\\operatorname{tr}A)A + (\\det A)I = 0$, which expression equals $A^{-1}$?`,
-    correct: fr(inv, tI_A),
-    distractors: [fr(inv, A_tI), fr(d, tI_A), fr(F(1).div(t), dI_A), fr(inv, lin(t.neg(), "I", F(-1), "A")), fr(inv, lin(t, "I", F(1), "A"))],
-    solution: `$\\operatorname{tr}A = ${t.tex()}$ and $\\det A = ${d.tex()}$, so $A^2 - (${t.tex()})A + (${d.tex()})I = 0$.\nRearrange: $A\\left(${tI_A}\\right) = ${d.tex()}I$, hence $A^{-1} = ${fr(inv, tI_A)}$.\nCheck with the formula: $A^{-1} = ${matTex(inverse(A)!)}$.`,
+    subtopic: "Powers",
+    prompt: `Let $A = ${matTex(A)}$. Find $k$ such that $A^2 = kA ${mTxt}$.`,
+    correct: `k = ${k.tex()}`,
+    distractors: [k.neg(), k.add(1), k.sub(1), m, m.neg(), k.mul(2)].filter((x) => !x.eq(k)).map((x) => `k = ${x.tex()}`),
+    solution: `$A^2 = ${matTex(A2)}$.\n${cmp}\nCheck every entry: $${k.tex()}A ${mTxt} = ${matTex(A2)}$ ✓.`,
   });
 }
 
@@ -262,11 +269,11 @@ function commuteSolve(rng: Rng): Draft {
     prompt: `Find $x$ and $y$ such that $A = ${matTex(A)}$ and $B = ${shown}$ commute ($AB = BA$).`,
     correct: opt(x, y),
     distractors: [opt(y, x), opt(x.neg(), y), opt(x, y.neg()), opt(B[1][1], B[1][0]), opt(x.add(1), y)],
-    solution: `Write out $AB$ and $BA$ with the unknowns and match all four entries. The $(2,1)$ and $(2,2)$ equations give $x = ${x.tex()}$ and $y = ${y.tex()}$; the other two then hold.\nCheck: $AB = BA = ${matTex(AB)}$.\nStructure: $B = ${lin(F(beta), "A", F(alpha), "I")}$, a polynomial in $A$, and such matrices always commute with $A$.`,
+    solution: `Write out $AB$ and $BA$ with the unknowns and match all four entries (equal matrices have equal entries). The $(2,1)$ and $(2,2)$ equations give $x = ${x.tex()}$ and $y = ${y.tex()}$; the other two then hold.\nCheck: $AB = BA = ${matTex(AB)}$.`,
   });
 }
 
-/** Given (kA)^{-1} or (kA^T)^{-1}, find A. */
+/** Given (kA)^{-1} or (kA^T)^{-1}, find A (Tutorial 0B Q4). */
 function scaledInverse(rng: Rng): Draft {
   const M = unimodular2(rng);
   const k = rng.pick([2, 3, 4, 5, 7]);
@@ -284,7 +291,7 @@ function scaledInverse(rng: Rng): Draft {
     prompt: `If $${lhs} = ${matTex(M)}$, find $A$.`,
     correct: matTex(A),
     distractors: ds.filter((D) => !matEq(D, A)).map((D) => matTex(D)),
-    solution: `Invert both sides: $${k}A${withT ? "^T" : ""} = ${matTex(M)}^{-1}$. The determinant is $${det2(M).tex()}$, so (swap the diagonal, negate the off-diagonal, divide by the determinant) the inverse is $${matTex(Minv)}$.\n${withT ? `$A^T = \\frac{1}{${k}}${matTex(Minv)}$, so $A = ${matTex(A)}$ (do not forget the final transpose).` : `$A = \\frac{1}{${k}}${matTex(Minv)}$.`}\nRemember $(kA)^{-1} = \\tfrac1kA^{-1}$, not $kA^{-1}$.`,
+    solution: `$${k}A${withT ? "^T" : ""}$ is the inverse of the given matrix: $${k}A${withT ? "^T" : ""} = ${matTex(M)}^{-1}$. Here $ad - bc = ${det2(M).tex()}$, so (swap the diagonal, negate the off-diagonal, divide by $ad - bc$) the inverse is $${matTex(Minv)}$.\n${withT ? `$A^T = \\frac{1}{${k}}${matTex(Minv)}$, so $A = ${matTex(A)}$ (do not forget the final transpose, $(A^T)^T = A$).` : `$A = \\frac{1}{${k}}${matTex(Minv)}$.`}\nDivide by $${k}$; multiplying by $${k}$ is the usual slip.`,
   });
 }
 
@@ -302,75 +309,116 @@ function matrixEquation(rng: Rng): Draft {
     prompt: `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$. Find the matrix $X$ with $${left ? "AX" : "XA"} = B$.`,
     correct: matTex(X),
     distractors: [other, matmul(A, B), matmul(B, A), mscale(X, -1)].filter((D) => !matEq(D, X)).map((D) => matTex(D)),
-    solution: `$\\det A = ${det2(A).tex()}$, so $A^{-1} = ${matTex(Ai)}$.\n${left ? "$AX = B$: multiply on the **left** by $A^{-1}$, so $X = A^{-1}B$" : "$XA = B$: multiply on the **right** by $A^{-1}$, so $X = BA^{-1}$"} $= ${matTex(X)}$.\nThe other order gives $${matTex(other)}$, which does not solve the equation because matrix products do not commute.`,
+    solution: `$ad - bc = ${det2(A).tex()}$, so $A^{-1} = ${matTex(Ai)}$.\n${left ? "$AX = B$: multiply on the **left** by $A^{-1}$, so $X = A^{-1}B$" : "$XA = B$: multiply on the **right** by $A^{-1}$, so $X = BA^{-1}$"} $= ${matTex(X)}$.\nThe other order gives $${matTex(other)}$, which does not solve the equation because $AB \\ne BA$ in general.`,
   });
 }
 
-/** Symmetric / skew-symmetric parts. */
-function symSkewPart(rng: Rng): Draft {
-  const A = randMat(rng, 3, 3, -4, 5);
-  const At = transpose(A);
-  if (matEq(A, At)) retry();
-  const S = mscale(madd(A, At), F(1, 2));
-  const K = mscale(msub(A, At), F(1, 2));
-  const askK = rng.chance(0.5);
-  const correct = askK ? K : S;
-  const ds = askK ? [msub(A, At), mscale(K, -1), S, msub(At, A)] : [madd(A, At), K, mscale(A, F(1, 2)), madd(S, identity(3))];
+/** 2×2 inverse by the formula. */
+function inverse2x2(rng: Rng): Draft {
+  const A = randMat(rng, 2, 2, -4, 5);
+  const d = det2(A);
+  if (d.isZero() || A.flat().some((x) => x.isZero())) retry();
+  const [a, b, c, e] = [A[0][0], A[0][1], A[1][0], A[1][1]];
+  const adj = [[e, b.neg()], [c.neg(), a]];
+  const Ai = mscale(adj, F(1).div(d));
+  const ds = [
+    mscale([[e, b], [c, a]], F(1).div(d)),
+    mscale([[e.neg(), b], [c, a.neg()]], F(1).div(d)),
+    adj,
+    mscale(adj, F(-1).div(d)),
+    mscale([[a, b.neg()], [c.neg(), e]], F(1).div(d)),
+  ];
+  return mcq(rng, {
+    subtopic: "Inverse & matrix equations",
+    prompt: `Find the inverse of $A = ${matTex(A)}$.`,
+    correct: matTex(Ai),
+    distractors: ds.filter((D) => !matEq(D, Ai)).map((D) => matTex(D)),
+    solution: `$ad - bc = (${a.tex()})(${e.tex()}) - (${b.tex()})(${c.tex()}) = ${d.tex()} \\ne 0$, so $A$ is invertible and\n$$A^{-1} = \\frac{1}{${d.tex()}}${matTex(adj)} = ${matTex(Ai)}.$$\nSwap the diagonal entries, negate the off-diagonal entries, divide by $ad - bc$.`,
+  });
+}
+
+/** Values of k making a 2×2 matrix singular. */
+function singularK(rng: Rng): Draft {
+  const [r1, r2] = rng.shuffle([-4, -3, -2, -1, 1, 2, 3, 4, 5]).slice(0, 2);
+  if (r1 + r2 === 0) retry();
+  const prod = -r1 * r2; // = a*b
+  const divs = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20].filter((x) => prod % x === 0 && Math.abs(prod / x) <= 20);
+  const a = rng.pick(divs) * rng.pick([1, -1]);
+  const bb = prod / a;
+  const c = -(r1 + r2);
+  const [lo, hi] = r1 < r2 ? [r1, r2] : [r2, r1];
+  const kc = c === 0 ? "k" : `k ${c < 0 ? "-" : "+"} ${Math.abs(c)}`;
+  const opt = (x: number, y: number) => `k = ${Math.min(x, y)} \\text{ or } k = ${Math.max(x, y)}`;
+  return mcq(rng, {
+    subtopic: "Inverse & matrix equations",
+    prompt: `For which values of $k$ is $\\begin{bmatrix} k & ${a} \\\\ ${bb} & ${kc} \\end{bmatrix}$ **not** invertible?`,
+    correct: opt(lo, hi),
+    distractors: [opt(-lo, -hi), opt(lo, -hi), opt(-lo, hi), `k = ${hi} \\text{ only}`, `k = ${lo} \\text{ only}`],
+    solution: `A $2\\times2$ matrix is invertible iff $ad - bc \\ne 0$. Here $ad - bc = k(${kc}) - (${a})(${bb}) = k^2 ${c < 0 ? "-" : "+"} ${Math.abs(c) === 1 ? "" : Math.abs(c)}k ${-prod < 0 ? "-" : "+"} ${Math.abs(prod)} = (k ${lo < 0 ? "+" : "-"} ${Math.abs(lo)})(k ${hi < 0 ? "+" : "-"} ${Math.abs(hi)})$.\nIt is $0$ (so the matrix is singular) exactly for $k = ${lo}$ or $k = ${hi}$.`,
+  });
+}
+
+/** Unknown entries of a symmetric / skew-symmetric matrix. */
+function symEntries(rng: Rng): Draft {
+  const skew = rng.chance(0.5);
+  const m = [rng.nz(-6, 6), rng.nz(-6, 6), rng.nz(-6, 6)]; // visible mirror entries a21, a32, a13
+  if (new Set(m.map(Math.abs)).size < 3) retry();
+  const d = skew ? [0, 0, 0] : [rng.int(-5, 5), rng.int(-5, 5), rng.int(-5, 5)];
+  const sign = skew ? -1 : 1;
+  const ans = m.map((x) => x * sign); // x = a12, y = a23, z = a31
+  const shown = `\\begin{bmatrix} ${d[0]} & x & ${m[2]} \\\\ ${m[0]} & ${d[1]} & y \\\\ z & ${m[1]} & ${d[2]} \\end{bmatrix}`;
+  const t = (v: number[]) => `(x, y, z) = (${v.join(", ")})`;
+  const word = skew ? "skew-symmetric" : "symmetric";
   return mcq(rng, {
     subtopic: "Special matrices",
-    prompt: `Write $A = ${matTex(A)}$ as $A = S + K$ with $S$ symmetric and $K$ skew-symmetric. Find ${askK ? "$K$" : "$S$"}.`,
-    correct: matTex(correct),
-    distractors: ds.filter((D) => !matEq(D, correct)).map((D) => matTex(D)),
-    solution: `$S = \\tfrac12(A + A^T) = ${matTex(S)}$ and $K = \\tfrac12(A - A^T) = ${matTex(K)}$.\nChecks: $S^T = S$; $K$ has zero diagonal and $k_{ji} = -k_{ij}$; $S + K = A$. Forgetting the $\\tfrac12$ is the usual slip.`,
+    prompt: `The matrix $${shown}$ is ${word}. Find $x$, $y$ and $z$.`,
+    correct: t(ans),
+    distractors: [t(ans.map((x) => -x)), t([ans[0], -ans[1], ans[2]]), t([ans[1], ans[2], ans[0]]), t([-ans[0], ans[1], -ans[2]]), t([m[1], m[2], m[0]].map((x) => x * sign))],
+    solution: `${skew ? "Skew-symmetric: $A^T = -A$, i.e. $a_{ij} = -a_{ji}$." : "Symmetric: $A^T = A$, i.e. $a_{ij} = a_{ji}$."}\n$x = a_{12} = ${skew ? "-" : ""}a_{21}$, $y = a_{23} = ${skew ? "-" : ""}a_{32}$, $z = a_{31} = ${skew ? "-" : ""}a_{13}$, so $${t(ans)}$.${skew ? " (Consistently, the diagonal of a skew-symmetric matrix is $0$.)" : ""}`,
   });
 }
 
-/** Outer products u v^T. */
+/** Outer products u v^T: entries, columns, rows (PYP AY24/25 S2 Q7). */
 function outerProduct(rng: Rng): Draft {
-  const u = vec([rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)]);
-  const v = vec([rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)]);
-  const dot = (a: Vec, b: Vec) => a.reduce((s, x, i) => s.add(x.mul(b[i])), F(0));
-  const uv = dot(u, v), uu = dot(u, u), vv = dot(v, v);
-  if (uv.isZero() || uu.isZero() || vv.isZero()) retry();
+  const u = vec([rng.nz(-3, 3), rng.nz(-3, 3), rng.nz(-3, 3)]);
+  const v = vec([rng.nz(-3, 3), rng.nz(-3, 3), rng.nz(-3, 3)]);
   const P = u.map((a) => v.map((b) => a.mul(b)));
-  const mode = rng.pick(["square", "apply", "trace"] as const);
+  const mode = rng.pick(["entry", "column", "row"] as const);
   const head = `Let $\\mathbf{u} = ${rowTex(u)}$, $\\mathbf{v} = ${rowTex(v)}$ and $P = \\mathbf{u}\\mathbf{v}^T$.`;
-  if (mode === "square") {
-    const opt = (c: Frac) => (c.eq(1) ? "P" : c.eq(-1) ? "-P" : `${c.tex()}P`);
-    return mcq(rng, {
-      subtopic: "Outer products",
-      prompt: `${head} Then $P^2 = cP$. Find $P^2$.`,
-      correct: opt(uv),
-      distractors: [uu, vv, uv.neg(), uv.mul(uv), F(1)].filter((c) => !c.eq(uv)).map(opt),
-      solution: `$P^2 = \\mathbf{u}(\\mathbf{v}^T\\mathbf{u})\\mathbf{v}^T = (\\mathbf{v}\\cdot\\mathbf{u})P$, because $\\mathbf{v}^T\\mathbf{u}$ is a scalar.\n$\\mathbf{v}\\cdot\\mathbf{u} = ${uv.tex()}$, so $P^2 = ${opt(uv)}$. (Here $P = ${matTex(P)}$.)`,
-    });
-  }
-  if (mode === "apply") {
-    const w = vec([rng.int(-3, 3), rng.int(-3, 3), rng.int(-3, 3)]);
-    const vw = dot(v, w), uw = dot(u, w);
-    if (vw.isZero() || uw.isZero()) retry();
-    const res = u.map((x) => x.mul(vw));
-    return mcq(rng, {
-      subtopic: "Outer products",
-      prompt: `${head} Find $P\\mathbf{w}$ for $\\mathbf{w} = ${rowTex(w)}$.`,
-      correct: rowTex(res),
-      distractors: [v.map((x) => x.mul(uw)), u.map((x) => x.mul(uv)), w.map((x) => x.mul(uv)), res.map((x) => x.neg())].map(rowTex),
-      solution: `$P\\mathbf{w} = \\mathbf{u}(\\mathbf{v}^T\\mathbf{w}) = (\\mathbf{v}\\cdot\\mathbf{w})\\,\\mathbf{u}$, and $\\mathbf{v}\\cdot\\mathbf{w} = ${vw.tex()}$.\nSo $P\\mathbf{w} = ${vw.tex()}\\,${rowTex(u)} = ${rowTex(res)}$: every output of $P$ is a multiple of $\\mathbf{u}$.`,
-    });
-  }
   const i = rng.int(0, 2), j = rng.int(0, 2);
-  const correct = `${uv.tex()},\\ ${P[i][j].tex()}`;
+  if (mode === "entry") {
+    if (i === j) retry();
+    const dotuv = sumF(u.map((x, k) => x.mul(v[k])));
+    return mcq(rng, {
+      subtopic: "Outer products",
+      prompt: `${head} Find the $(${i + 1},${j + 1})$ entry of $P$.`,
+      correct: P[i][j].tex(),
+      distractors: [P[j][i], dotuv, u[i].add(v[j]), P[i][j].neg(), P[i][i]].filter((x) => !x.eq(P[i][j])).map((x) => x.tex()),
+      solution: `$\\mathbf{u}$ is $3\\times1$ and $\\mathbf{v}^T$ is $1\\times3$, so $P$ is $3\\times3$ with $p_{ij} = u_iv_j$ (each sum has a single term).\n$p_{${i + 1}${j + 1}} = u_${i + 1}v_${j + 1} = (${u[i].tex()})(${v[j].tex()}) = ${P[i][j].tex()}$. (The $(${j + 1},${i + 1})$ entry $u_${j + 1}v_${i + 1}$ is different in general.)`,
+    });
+  }
+  if (mode === "column") {
+    const correct = col(P, j);
+    return mcq(rng, {
+      subtopic: "Outer products",
+      prompt: `${head} Find the ${["first", "second", "third"][j]} column of $P$.`,
+      correct: rowTex(correct),
+      distractors: [P[j], v.map((x) => x.mul(u[j])), u, correct.map((x) => x.neg()), v].map(rowTex),
+      solution: `Column method: column ${j + 1} of $\\mathbf{u}\\mathbf{v}^T$ is $\\mathbf{u}$ times column ${j + 1} of $\\mathbf{v}^T$, which is the number $v_${j + 1} = ${v[j].tex()}$.\nSo the column is $${v[j].tex()}\\,${rowTex(u)} = ${rowTex(correct)}$: every column of $P$ is a multiple of $\\mathbf{u}$.`,
+    });
+  }
+  const correct = P[i];
   return mcq(rng, {
     subtopic: "Outer products",
-    prompt: `${head} Find $\\operatorname{tr}(P)$ and the $(${i + 1},${j + 1})$ entry of $P$.`,
-    correct,
-    distractors: [`${uu.tex()},\\ ${P[i][j].tex()}`, `${uv.tex()},\\ ${P[j][i].tex()}`, `${uv.neg().tex()},\\ ${P[i][j].tex()}`, `${vv.tex()},\\ ${P[i][j].tex()}`, `${uv.tex()},\\ ${P[i][j].neg().tex()}`],
-    solution: `$P_{ij} = u_iv_j$, so $p_{${i + 1}${j + 1}} = (${u[i].tex()})(${v[j].tex()}) = ${P[i][j].tex()}$.\n$\\operatorname{tr}(\\mathbf{u}\\mathbf{v}^T) = \\sum u_iv_i = \\mathbf{u}\\cdot\\mathbf{v} = ${uv.tex()}$.`,
+    prompt: `${head} Find the ${["first", "second", "third"][i]} row of $P$.`,
+    correct: rowVecTex(correct),
+    distractors: [col(P, i), u.map((x) => x.mul(v[i])), v, correct.map((x) => x.neg()), u].map(rowVecTex),
+    solution: `Row method: row ${i + 1} of $\\mathbf{u}\\mathbf{v}^T$ is (row ${i + 1} of $\\mathbf{u}$)$\\,\\mathbf{v}^T = u_${i + 1}\\mathbf{v}^T$ with $u_${i + 1} = ${u[i].tex()}$.\nSo the row is $${rowVecTex(correct)}$: every row of $P$ is a multiple of $\\mathbf{v}^T$.`,
   });
 }
 
-/** p(A) for a quadratic p. */
-function polyEval(rng: Rng): Draft {
+/** A^2 + bA + cI for a 2×2 matrix. */
+function matrixExpr(rng: Rng): Draft {
   const A = randMat(rng, 2, 2, -3, 3);
   const b = rng.nz(-4, 4);
   const c = rng.nz(-5, 5);
@@ -378,18 +426,19 @@ function polyEval(rng: Rng): Draft {
   const base = madd(A2, mscale(A, b));
   const correct = madd(base, mscale(identity(2), c));
   const J = mat([[1, 1], [1, 1]]);
-  const ds = [madd(base, mscale(J, c)), base, msub(base, mscale(identity(2), c)), madd(msub(A2, mscale(A, b)), mscale(identity(2), c)), madd(madd(mscale(A, 2), mscale(A, b)), mscale(identity(2), c))];
-  const p = `x^2 ${b < 0 ? "-" : "+"} ${Math.abs(b) === 1 ? "" : Math.abs(b)}x ${c < 0 ? "-" : "+"} ${Math.abs(c)}`;
+  const sq = A.map((r) => r.map((x) => x.mul(x)));
+  const ds = [madd(base, mscale(J, c)), base, msub(base, mscale(identity(2), c)), madd(msub(A2, mscale(A, b)), mscale(identity(2), c)), madd(madd(sq, mscale(A, b)), mscale(identity(2), c))];
+  const expr = `A^2 ${b < 0 ? "-" : "+"} ${Math.abs(b) === 1 ? "" : Math.abs(b)}A ${c < 0 ? "-" : "+"} ${Math.abs(c) === 1 ? "" : Math.abs(c)}I`;
   return mcq(rng, {
-    subtopic: "Powers & polynomials",
-    prompt: `Let $p(x) = ${p}$ and $A = ${matTex(A)}$. Find $p(A)$.`,
+    subtopic: "Powers",
+    prompt: `Let $A = ${matTex(A)}$. Compute $${expr}$.`,
     correct: matTex(correct),
     distractors: ds.filter((D) => !matEq(D, correct)).map((D) => matTex(D)),
-    solution: `$p(A) = A^2 ${b < 0 ? "-" : "+"} ${Math.abs(b) === 1 ? "" : Math.abs(b)}A ${c < 0 ? "-" : "+"} ${Math.abs(c) === 1 ? "" : Math.abs(c)}I$: the constant term becomes a multiple of $I$.\n$A^2 = ${matTex(A2)}$, so $p(A) = ${matTex(A2)} + ${matTex(mscale(A, b))} + ${matTex(mscale(identity(2), c))} = ${matTex(correct)}$.\nAdding $${c}$ to every entry (instead of $${lin(F(c), "I", F(0), "")}$) is the classic slip.`,
+    solution: `$A^2 = AA = ${matTex(A2)}$ (rows of $A$ against columns of $A$, not the squares of the entries).\nThen $${expr} = ${matTex(A2)} + ${matTex(mscale(A, b))} + ${matTex(mscale(identity(2), c))} = ${matTex(correct)}$.\nThe term $${c}I$ only changes the diagonal; adding $${c}$ to every entry is the classic slip.`,
   });
 }
 
-/** Commutator [A,B] = AB - BA. */
+/** Commutator [A,B] = AB - BA (PYP older). */
 function commutator(rng: Rng): Draft {
   const A = randMat(rng, 2, 2, -3, 3);
   const B = randMat(rng, 2, 2, -3, 3);
@@ -403,7 +452,7 @@ function commutator(rng: Rng): Draft {
     prompt: `Let $A = ${matTex(A)}$ and $B = ${matTex(B)}$. Find the commutator $[A, B] = AB - BA$.`,
     correct: matTex(C),
     distractors: ds.map((D) => matTex(D)),
-    solution: `$AB = ${matTex(AB)}$, $BA = ${matTex(BA)}$, so $[A,B] = ${matTex(C)}$.\nCheck: $\\operatorname{tr}[A,B] = ${tr(C).tex()}$, as for every commutator (because $\\operatorname{tr}(AB) = \\operatorname{tr}(BA)$). $BA - AB$ is $-[A,B]$.`,
+    solution: `$AB = ${matTex(AB)}$, $BA = ${matTex(BA)}$, so $[A,B] = AB - BA = ${matTex(C)}$.\n$BA - AB$ is $-[A,B]$; since $AB \\ne BA$ in general, the order matters.`,
   });
 }
 
@@ -427,51 +476,51 @@ function sizes(rng: Rng): Draft {
     prompt: `$A$ is $${a}\\times${b}$, $B$ is $${a}\\times${c}$ and $C$ is $${c}\\times${d}$. What is the size of $${pick.e}$?`,
     correct: sz(pick.r),
     distractors: pool.filter(([x, y]) => !(x === pick.r[0] && y === pick.r[1])).map(sz),
-    solution: `Multiply sizes left to right, checking that inner numbers match: ${pick.why}, giving $${sz(pick.r)}$. A transpose swaps rows and columns, and $(m\\times n)(n\\times p) = m\\times p$.`,
+    solution: `Multiply sizes left to right, checking that inner numbers match: ${pick.why}, giving $${sz(pick.r)}$. The transpose of an $m\\times n$ matrix is $n\\times m$, and $(m\\times r)(r\\times n) = m\\times n$.`,
   });
 }
 
 /** True / False / not-enough-information facts with a random size. */
-const FACTS: { s: (n: number) => string; a: 0 | 1 | 2; why: string | ((n: number) => string); sub: string }[] = [
-  { sub: "Transpose", s: (n) => `For all $${n}\\times${n}$ matrices $A$ and $B$, $(A + B)^T = A^T + B^T$.`, a: 0, why: "Transposing is done entry by entry, and $(a_{ji} + b_{ji})$ is the $(i,j)$ entry of both sides. **True**." },
-  { sub: "Transpose", s: (n) => `For all $${n}\\times${n}$ matrices $A$ and $B$, $(AB)^T = A^TB^T$.`, a: 1, why: "The order reverses: $(AB)^T = B^TA^T$, which differs from $A^TB^T$ unless $A^T$ and $B^T$ commute. **False**." },
-  { sub: "Zero divisors & cancellation", s: (n) => `Every $${n}\\times${n}$ matrix $A$ with $A^2 = 0$ is the zero matrix.`, a: 1, why: "Nilpotent matrices exist: the matrix with a single $1$ in position $(1,2)$ and zeros elsewhere is nonzero, yet its square is $0$. **False**." },
-  { sub: "Special matrices", s: (n) => `If $A$ is a $${n}\\times${n + 2}$ matrix, then $AA^T$ is a symmetric $${n}\\times${n}$ matrix.`, a: 0, why: (n) => `$AA^T$ is $(${n}\\times${n + 2})(${n + 2}\\times${n}) = ${n}\\times${n}$, and $(AA^T)^T = (A^T)^TA^T = AA^T$. **True**.` },
-  { sub: "Trace", s: (n) => `For every $${n}\\times${n}$ matrix $A$ and scalar $k$, $\\operatorname{tr}(kA) = k + \\operatorname{tr}(A)$.`, a: 1, why: "Every diagonal entry is multiplied by $k$, so $\\operatorname{tr}(kA) = k\\operatorname{tr}(A)$. **False**." },
-  { sub: "Special matrices", s: (n) => `For every $${n}\\times${n}$ matrix $A$, the matrix $A - A^T$ has only zeros on its main diagonal.`, a: 0, why: "Its $(i,i)$ entry is $a_{ii} - a_{ii} = 0$ (it is skew-symmetric). **True**." },
-  { sub: "Inverse & matrix equations", s: (n) => `If $A$ is an invertible $${n}\\times${n}$ matrix, then $(A^2)^{-1} = (A^{-1})^2$.`, a: 0, why: "$A^2(A^{-1})^2 = AAA^{-1}A^{-1} = I$. **True**." },
-  { sub: "Transpose", s: (n) => `If $A$ is $${n}\\times${n + 1}$ and $B$ is $${n + 1}\\times${n + 3}$, then $(AB)^T$ is $${n + 3}\\times${n}$.`, a: 0, why: (n) => `$AB$ is $${n}\\times${n + 3}$, so its transpose is $${n + 3}\\times${n}$. **True**.` },
-  { sub: "Special matrices", s: (n) => `Any two $${n}\\times${n}$ diagonal matrices commute.`, a: 0, why: "The product of diagonal matrices is diagonal with entries $d_ie_i = e_id_i$, so $DE = ED$. **True**." },
-  { sub: "Algebra rules", s: (n) => `Every $${n}\\times${n}$ matrix $A$ commutes with $A^T$.`, a: 1, why: "Counterexample: $A = \\begin{bmatrix}0&1\\\\0&0\\end{bmatrix}$ (padded with zeros) gives $AA^T = \\begin{bmatrix}1&0\\\\0&0\\end{bmatrix}$ but $A^TA = \\begin{bmatrix}0&0\\\\0&1\\end{bmatrix}$. **False**." },
-  { sub: "Trace", s: (n) => `$A$ is a $${n}\\times${n}$ matrix with $\\operatorname{tr}A = 0$ (nothing else is known). Then $A$ is skew-symmetric.`, a: 2, why: "A skew-symmetric matrix has trace $0$, but trace $0$ does not force skew-symmetry: $\\operatorname{diag}(1,-1,0,\\dots)$ has trace $0$ and is symmetric, not skew (unless it is $0$). Both cases are possible: **Not enough information**." },
-  { sub: "Special matrices", s: (n) => `$A$ is an upper triangular and $B$ a lower triangular $${n}\\times${n}$ matrix (nothing else is known). Then $AB$ is diagonal.`, a: 2, why: "If $A = B = I$, $AB = I$ is diagonal. But $A = \\begin{bmatrix}1&1\\\\0&1\\end{bmatrix}$, $B = I$ (padded) gives $AB = A$, not diagonal. **Not enough information**." },
-  { sub: "Zero divisors & cancellation", s: (n) => `$A$, $B$, $C$ are $${n}\\times${n}$ matrices with $AB = AC$ and $A \\ne 0$ (nothing else is known). Then $B = C$.`, a: 2, why: "If $A$ happens to be invertible, $B = C$. If not, $B \\ne C$ is possible (e.g. $A = \\operatorname{diag}(1,0,\\dots)$, $B = 0$, $C = \\operatorname{diag}(0,1,\\dots)$). **Not enough information**." },
-  { sub: "Powers & polynomials", s: (n) => `If $A$ is $${n}\\times${n}$ and $A^2 = A$, then $A^{${n + 5}} = A$.`, a: 0, why: "Each extra factor of $A$ changes nothing: $A^3 = A^2A = AA = A$, and so on by induction. **True**." },
-  { sub: "Commutator", s: (n) => `For all $${n}\\times${n}$ matrices $A$ and $B$, $\\operatorname{tr}(AB - BA) = 0$.`, a: 0, why: "$\\operatorname{tr}(AB) = \\operatorname{tr}(BA)$, so the trace of the commutator is $0$. **True**." },
-  { sub: "Inverse & matrix equations", s: (n) => `For all invertible $${n}\\times${n}$ matrices $A$ and $B$, $(AB)^{-1} = A^{-1}B^{-1}$.`, a: 1, why: "The order reverses: $(AB)^{-1} = B^{-1}A^{-1}$, since $(AB)(B^{-1}A^{-1}) = I$. The stated formula fails whenever $A^{-1}$ and $B^{-1}$ do not commute. **False**." },
+const FACTS: { s: (n: number) => string; a: 0 | 1 | 2; why: string | ((n: number) => string); sub: string; ref: string }[] = [
+  { sub: "Transpose", ref: "Slides 0B Operations on Matrices (mtx p8)", s: (n) => `For all $${n}\\times${n}$ matrices $A$ and $B$, $(A + B)^T = A^T + B^T$.`, a: 0, why: "This is one of the properties on mtx p8: transposing is done entry by entry, and $a_{ji} + b_{ji}$ is the $(i,j)$ entry of both sides. **True**." },
+  { sub: "Transpose", ref: "Slides 0B Properties of Matrix Multiplication (mtx p10)", s: (n) => `For all $${n}\\times${n}$ matrices $A$ and $B$, $(AB)^T = A^TB^T$.`, a: 1, why: "The order reverses: $(AB)^T = B^TA^T$, which differs from $A^TB^T$ unless $A^T$ and $B^T$ commute. **False**." },
+  { sub: "Zero products & cancellation", ref: "Slides 0B Properties of Matrix Multiplication (mtx p10)", s: (n) => `Every $${n}\\times${n}$ matrix $A$ with $A^2 = 0$ is the zero matrix.`, a: 1, why: "$AB = 0$ does not force $A = 0$ or $B = 0$. The matrix with a single $1$ in position $(1,2)$ and zeros elsewhere is nonzero, yet its square is $0$ (e.g. $\\begin{bmatrix}0&1\\\\0&0\\end{bmatrix}^2 = 0$). **False**." },
+  { sub: "Special matrices", ref: "Slides 0B symmetric (mtx p6), $(AB)^T = B^TA^T$ (mtx p10); PYP AY25/26 S2 Q17", s: (n) => `If $A$ is a $${n}\\times${n + 2}$ matrix, then $AA^T$ is a symmetric $${n}\\times${n}$ matrix.`, a: 0, why: (n) => `$AA^T$ is $(${n}\\times${n + 2})(${n + 2}\\times${n}) = ${n}\\times${n}$, and $(AA^T)^T = (A^T)^TA^T = AA^T$. **True**.` },
+  { sub: "Trace", ref: "Slides 0B trace (mtx p5), scalar multiple (mtx p7)", s: (n) => `For every $${n}\\times${n}$ matrix $A$ and scalar $k \\ne 0$, $\\operatorname{trace}(kA) = k + \\operatorname{trace}(A)$.`, a: 1, why: "Every diagonal entry of $kA$ is $ka_{ii}$, so $\\operatorname{trace}(kA) = ka_{11} + \\cdots + ka_{nn} = k\\operatorname{trace}(A)$, not $k + \\operatorname{trace}(A)$. For $A = 0$: $\\operatorname{trace}(kA) = 0$ but $k + \\operatorname{trace}(A) = k \\ne 0$. **False**." },
+  { sub: "Special matrices", ref: "Slides 0B transpose, skew-symmetric (mtx p6)", s: (n) => `For every $${n}\\times${n}$ matrix $A$, the matrix $A - A^T$ has only zeros on its main diagonal.`, a: 0, why: "Transposing keeps the diagonal in place, so the $(i,i)$ entry of $A - A^T$ is $a_{ii} - a_{ii} = 0$. **True**." },
+  { sub: "Inverse & matrix equations", ref: "Slides 0B Inverse of a Matrix: $(AB)^{-1} = B^{-1}A^{-1}$ (mtx p13)", s: (n) => `If $A$ is an invertible $${n}\\times${n}$ matrix, then $A^2$ is invertible and $(A^2)^{-1} = (A^{-1})^2$.`, a: 0, why: "Apply $(AB)^{-1} = B^{-1}A^{-1}$ with $B = A$: $(AA)^{-1} = A^{-1}A^{-1}$. **True**." },
+  { sub: "Transpose", ref: "Slides 0B transpose (mtx p6), Matrix Multiplication (mtx p9)", s: (n) => `If $A$ is $${n}\\times${n + 1}$ and $B$ is $${n + 1}\\times${n + 3}$, then $(AB)^T$ is $${n + 3}\\times${n}$.`, a: 0, why: (n) => `$AB$ is $${n}\\times${n + 3}$, so its transpose is $${n + 3}\\times${n}$. **True**.` },
+  { sub: "Algebra rules", ref: "Slides 0B Properties of Matrix Multiplication: $AB \\ne BA$ in general (mtx p10)", s: (n) => `Every $${n}\\times${n}$ matrix $A$ commutes with $A^T$.`, a: 1, why: "Counterexample: $A = \\begin{bmatrix}0&1\\\\0&0\\end{bmatrix}$ (padded with zeros) gives $AA^T = \\begin{bmatrix}1&0\\\\0&0\\end{bmatrix}$ but $A^TA = \\begin{bmatrix}0&0\\\\0&1\\end{bmatrix}$. **False**." },
+  { sub: "Trace", ref: "Slides 0B trace, symmetric, skew-symmetric (mtx p5–6)", s: (n) => `$A$ is a $${n}\\times${n}$ matrix with $\\operatorname{trace} A = 0$ (nothing else is known). Then $A$ is skew-symmetric.`, a: 2, why: "A skew-symmetric matrix has zero diagonal, hence trace $0$, so it is possible. But the diagonal matrix with diagonal entries $1, -1, 0, \\dots, 0$ has trace $0$ and is symmetric, not skew-symmetric. Both cases are possible: **Not enough information**." },
+  { sub: "Zero products & cancellation", ref: "Slides 0B Properties (mtx p10), Inverse of a Matrix (mtx p13)", s: (n) => `$A$, $B$, $C$ are $${n}\\times${n}$ matrices with $AB = AC$ and $A \\ne 0$ (nothing else is known). Then $B = C$.`, a: 2, why: "If $A$ happens to be invertible, multiplying by $A^{-1}$ on the left gives $B = C$. If not, $B \\ne C$ is possible (e.g. $A$ diagonal with entries $1, 0, \\dots, 0$, $B = 0$, $C$ diagonal with entries $0, 1, 0, \\dots, 0$: $AB = AC = 0$). **Not enough information**." },
+  { sub: "Powers", ref: "Slides 0B Properties: $A(BC) = (AB)C$ (mtx p10)", s: (n) => `If $A$ is $${n}\\times${n}$ and $A^2 = A$, then $A^{${n + 5}} = A$.`, a: 0, why: "Each extra factor of $A$ changes nothing: $A^3 = A^2A = AA = A$, $A^4 = A^3A = AA = A$, and so on. **True**." },
+  { sub: "Inverse & matrix equations", ref: "Slides 0B Inverse of a Matrix (mtx p13)", s: (n) => `For all invertible $${n}\\times${n}$ matrices $A$ and $B$, $(AB)^{-1} = A^{-1}B^{-1}$.`, a: 1, why: "The order reverses: $(AB)^{-1} = B^{-1}A^{-1}$. The stated formula fails whenever $A^{-1}$ and $B^{-1}$ do not commute. **False**." },
+  { sub: "Special matrices", ref: "Slides 0B symmetric (mtx p6), transpose rules (mtx p8)", s: (n) => `For every $${n}\\times${n}$ matrix $A$, the matrix $A + A^T$ is symmetric.`, a: 0, why: "$(A + A^T)^T = A^T + (A^T)^T = A^T + A$. **True**." },
 ];
 
 function tfnFacts(rng: Rng): Draft {
   const f = rng.pick(FACTS);
   const n = rng.int(2, 5);
-  return tfn({ subtopic: f.sub, prompt: f.s(n), answer: f.a, solution: typeof f.why === "string" ? f.why : f.why(n) });
+  return { ...tfn({ subtopic: f.sub, prompt: f.s(n), answer: f.a, solution: typeof f.why === "string" ? f.why : f.why(n) }), ref: f.ref };
 }
 
 export const matricesGens: ((rng: Rng) => Draft)[] = [
-  productEntry,
-  rowOrColumn,
-  columnWeights,
-  traceExpr,
-  traceProduct,
-  powerRecurrence,
-  cayleyHamilton,
-  commuteSolve,
-  scaledInverse,
-  matrixEquation,
-  symSkewPart,
-  outerProduct,
-  polyEval,
-  commutator,
-  sizes,
+  cite("Slides 0B Matrix Multiplication (mtx p9)", productEntry),
+  cite("Slides 0B Matrix Multiplication by Columns and by Rows (mtx p11); Tutorial 0B Q2", rowOrColumn),
+  cite("Slides 0B Matrix Products as Linear Combinations (mtx p12); Tutorial 0B Q3", columnWeights),
+  cite("Tutorial 0B Q1; Slides 0B trace, transpose (mtx p5–6)", traceExpr),
+  cite("Slides 0B trace (mtx p5), Matrix Multiplication (mtx p9); Tutorial 0B Q1", traceOfProduct),
+  cite("PYP AY25/26 S1 Q2 ($M^2 = I - M$, find $n$)", powerRecurrence),
+  cite("PYP older (find $k$ with $A^2 = kA - 2I$); Slides 0B Equality (mtx p7)", squareRelation),
+  cite("Slides 0B Properties: $AB \\ne BA$ (mtx p10), Equality (mtx p7)", commuteSolve),
+  cite("Tutorial 0B Q4; Slides 0B Inverse of a Matrix (mtx p13)", scaledInverse),
+  cite("PYP AY25/26 S2 Q5; Slides 0B Inverse of a Matrix (mtx p13)", matrixEquation),
+  cite("Slides 0B Inverse of a Matrix: $2\\times2$ formula (mtx p13)", inverse2x2),
+  cite("Slides 0B Inverse of a Matrix: invertible iff $ad - bc \\ne 0$ (mtx p13)", singularK),
+  cite("Slides 0B symmetric / skew-symmetric (mtx p6)", symEntries),
+  cite("PYP AY24/25 S2 Q7 ($A = \\mathbf{x}\\mathbf{r}^T$); Slides 0B Multiplication by Columns and by Rows (mtx p11)", outerProduct),
+  cite("Slides 0B Operations on Matrices (mtx p7–9), identity matrix (mtx p5)", matrixExpr),
+  cite("PYP older (commutator $[A,B] = AB - BA$); Slides 0B Matrix Multiplication (mtx p9)", commutator),
+  cite("Slides 0B transpose (mtx p6), Matrix Multiplication sizes (mtx p9)", sizes),
   tfnFacts,
 ];

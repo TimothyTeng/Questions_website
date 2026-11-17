@@ -1,4 +1,4 @@
-// Generators for linear systems: row reduction, consistency with parameters, span, independence.
+// Generators for linear systems (Tutorial 1, past papers): row reduction, consistency with parameters, span, independence.
 import { det, F, Frac, inverse, isZeroVec, mat, matTex, matvec, rank, rowTexPlain, transpose, vec, type Mat, type Vec } from "@/lib/math/frac";
 import { mcq, retry, tfn, type Draft, type Rng } from "./common";
 
@@ -232,7 +232,7 @@ function paramSystem(rng: Rng): Draft {
     correct,
     distractors: pool.filter((s) => s !== correct),
     solution:
-      `Eliminate: $R_2 - (${r})R_1$ gives $[0\\ 1\\ ${u} \\mid ${b2}]$. Then $R_3 - (${al})R_1 - (${be})R_2'$ gives the last row\n$$[\\,0\\ \\ 0\\ \\ ${P}^2 - ${m * m} \\mid ${plusConst(P, -sigma * m)}\\,] = [\\,0\\ \\ 0\\ \\ ${fac} \\mid ${plusConst(P, -sigma * m)}\\,].$$\n` +
+      `Eliminate: $r_2 \\leftarrow r_2 - (${r})r_1$ gives $[0\\ 1\\ ${u} \\mid ${b2}]$. Then $r_3 \\leftarrow r_3 - (${al})r_1 - (${be})r_2$ (using the new $r_2$) gives the last row\n$$[\\,0\\ \\ 0\\ \\ ${P}^2 - ${m * m} \\mid ${plusConst(P, -sigma * m)}\\,] = [\\,0\\ \\ 0\\ \\ ${fac} \\mid ${plusConst(P, -sigma * m)}\\,].$$\n` +
       `- $${P} \\ne \\pm ${m}$: pivot in every column → exactly one solution.\n- $${P} = ${infV}$: the row becomes $[0\\ 0\\ 0 \\mid 0]$ → a free variable → infinitely many solutions.\n- $${P} = ${noneV}$: the row becomes $[0\\ 0\\ 0 \\mid ${-2 * sigma * m}]$, i.e. $0 = ${-2 * sigma * m}$ → no solution.\nTrap: answering "$${P} = \\pm ${m}$" for no solution — only one of the two roots makes the right-hand side nonzero.`,
   });
 }
@@ -263,7 +263,7 @@ function nontrivialK(rng: Rng): Draft {
     prompt: `For which value(s) of $k$ does the homogeneous system\n${sys}\nhave a **nontrivial** solution?`,
     correct,
     distractors: pool,
-    solution: `A square homogeneous system has a nontrivial solution exactly when its coefficient matrix is singular (row reduction leaves a free variable). Expanding,\n$$\\det = ${polyTex(pd, "k")}.$$\nSetting it to zero gives $${correct}$. For any other $k$ there is a pivot in every column and only $\\mathbf{x} = \\mathbf{0}$ works.`,
+    solution: `A square homogeneous system has a nontrivial solution exactly when the coefficient matrix $A$ is not invertible (Theorem 2.4: fewer than 3 pivots, so a free variable), i.e. when $|A| = 0$ (Rule 8 of determinants). Here\n$$|A| = ${polyTex(pd, "k")}$$\n(row reduce to an echelon form $U$ and use $|A| = \\pm$ product of the pivots, as in Tutorial 3 Q2).\nSetting it to zero gives $${correct}$. For any other $k$ there is a pivot in every column and only $\\mathbf{x} = \\mathbf{0}$ works.`,
   });
 }
 
@@ -314,7 +314,7 @@ function consistencyP(rng: Rng): Draft {
     prompt: `Let $A = ${matTex(mat(A))}$ and $\\mathbf{b} = ${bTex}$. For which value of $p$ is the equation $A\\mathbf{x} = \\mathbf{b}$ consistent?`,
     correct: `p = ${p}`,
     distractors: [al * b1 - be * b2, -p, be * b1 + al * b2, p + 1, -al * b1 + be * b2, al + be].map((x) => `p = ${x}`),
-    solution: `Row reduction of $A$ leaves a zero row, because row ${pRow} $= (${al})\\cdot$row ${i1} $+ (${be})\\cdot$row ${i2}. Doing the same operations on the augmented column, the zero row of $A$ becomes\n$$[\\,0\\ \\ 0\\ \\ 0 \\mid p - ((${al})(${b1}) + (${be})(${b2}))\\,] = [\\,0\\ \\ 0\\ \\ 0 \\mid p - (${p})\\,].$$\nThe system is consistent iff this entry is $0$, i.e. $p = ${p}$. (For every other $p$, $\\mathbf{b}\\notin\\operatorname{Col}A$.)`,
+    solution: `Row reduction of $A$ leaves a zero row, because row ${pRow} $= (${al})\\cdot$row ${i1} $+ (${be})\\cdot$row ${i2}. Doing the same operations on the augmented column, the zero row of $A$ becomes\n$$[\\,0\\ \\ 0\\ \\ 0 \\mid p - ((${al})(${b1}) + (${be})(${b2}))\\,] = [\\,0\\ \\ 0\\ \\ 0 \\mid p - (${p})\\,].$$\nThe system is consistent iff this entry is $0$, i.e. $p = ${p}$. (For every other $p$, $\\mathbf{b}$ is not a linear combination of the columns of $A$.)`,
   });
 }
 
@@ -440,7 +440,7 @@ function independenceParam(rng: Rng): Draft {
     prompt: `For which real $x$ is the set $\\left\\{ ${vt(0)}, ${vt(1)}, ${vt(2)} \\right\\}$ linearly ${askDep ? "**dependent**" : "**independent**"}?`,
     correct,
     distractors: pool.filter((s) => s !== correct),
-    solution: `Three vectors in $\\mathbb{R}^3$ are independent iff the matrix with them as columns has a pivot in every column, i.e. iff its determinant is nonzero:\n$$\\det = ${polyTex(pd, "x")}.$$\nIts real roots are $${roots.join(",\\ ")}$, so the set is dependent exactly for $${S(roots)}$ and independent for $${NotS(roots)}$.\nTrap: dividing by an expression in $x$ during row reduction without checking when it is zero.`,
+    solution: `Three vectors in $\\mathbb{R}^3$ are independent iff the matrix $A$ with them as columns has a pivot in every column, i.e. (Theorem 2.4 with Rule 8 of determinants) iff $|A| \\ne 0$. Row reducing to an echelon form $U$ and taking $\\pm$ the product of the pivots gives\n$$|A| = ${polyTex(pd, "x")}.$$\nIts real roots are $${roots.join(",\\ ")}$, so the set is dependent exactly for $${S(roots)}$ and independent for $${NotS(roots)}$.\nTrap: dividing by an expression in $x$ during row reduction without checking when it is zero.`,
   });
 }
 
@@ -475,7 +475,7 @@ function rrefFromSolution(rng: Rng): Draft {
     prompt: `$A$ is a $3\\times${n}$ matrix and the complete solution of $A\\mathbf{x} = \\mathbf{b}$ is\n$$${sol}, \\quad ${free.length > 1 ? "c, d" : "c"} \\in \\mathbb{R}.$$\nWhat is the reduced row echelon form of $A$?`,
     correct: matTex(R, false),
     distractors: ds,
-    solution: `The free variables are the ones that appear alone as parameters: ${free.map((f) => `$x_${f + 1}$`).join(", ")}; the other ${r} variable${r > 1 ? "s are" : " is"} basic, so $\\operatorname{rank}A = ${r}$ and the RREF has ${r} nonzero row${r > 1 ? "s" : ""}. Each basic variable reads $x_{\\text{basic}} = p_i - (\\text{RREF entries})\\cdot(\\text{free variables})$, so the RREF entries in the free columns are the **negatives** of the entries in the direction vectors:\n$$${matTex(R, false)}$$\nCheck: every direction vector satisfies $R\\mathbf{v} = \\mathbf{0}$. Trap: forgetting the sign change.`,
+    solution: `The free variables are the ones that appear alone as parameters: ${free.map((f) => `$x_${f + 1}$`).join(", ")}; the other ${r} variable${r > 1 ? "s are" : " is"} leading, so $A$ has ${r} pivot${r > 1 ? "s" : ""} and the RREF has ${r} nonzero row${r > 1 ? "s" : ""}. Each leading variable reads $x_{\\text{leading}} = p_i - (\\text{RREF entries})\\cdot(\\text{free variables})$, so the RREF entries in the free columns are the **negatives** of the entries in the direction vectors:\n$$${matTex(R, false)}$$\nCheck: every direction vector satisfies $R\\mathbf{v} = \\mathbf{0}$. Trap: forgetting the sign change.`,
   });
 }
 
@@ -508,12 +508,20 @@ function combosIndep(rng: Rng): Draft {
   const k = rng.pick([2, 3, 3]);
   const names = ["\\mathbf{u}", "\\mathbf{v}", "\\mathbf{w}"].slice(0, k);
   let C: number[][];
+  let rel: number[] = [];
   const singular = rng.chance(0.5);
   for (;;) {
     C = Array.from({ length: k }, () => Array.from({ length: k }, () => rng.int(-2, 2)));
     if (singular) {
-      if (k === 2) C[1] = C[0].map((x) => x * rng.pick([-2, -1, 2]));
-      else C[2] = C[0].map((x, j) => rng.pick([1, -1]) * x + rng.pick([1, -1]) * C[1][j]);
+      if (k === 2) {
+        const m = rng.pick([-2, -1, 2]);
+        C[1] = C[0].map((x) => x * m);
+        rel = [m, -1];
+      } else {
+        const s1 = rng.pick([1, -1]), s2 = rng.pick([1, -1]);
+        C[2] = C[0].map((x, j) => s1 * x + s2 * C[1][j]);
+        rel = [s1, s2, -1];
+      }
     }
     if (C.every((r) => r.some((x) => x !== 0)) && C.flat().every((x) => Math.abs(x) <= 3) && new Set(C.map(String)).size === k) break;
   }
@@ -523,11 +531,17 @@ function combosIndep(rng: Rng): Draft {
   const vecs = C.map((r) => termsTex(r.map((x) => F(x)), names));
   const space = rng.pick(["\\mathbb{R}^3", "\\mathbb{R}^4", "\\mathbb{R}^5"]);
   const answer: 0 | 1 | 2 = dC.isZero() ? 1 : knownIndep ? 0 : 2;
+  const cs = ["c_1", "c_2", "c_3"].slice(0, k);
+  const combo = `${cs.map((c, i) => `${c}(${vecs[i]})`).join(" + ")} = \\mathbf{0}`;
+  // collecting the coefficient of names[j] gives sum_i C[i][j] c_i = 0
+  const eqs = names.map((_, j) => `${termsTex(C.map((r) => F(r[j])), cs)} = 0`);
+  const sysTex = `$$\\begin{aligned} ${eqs.map((e) => e.replace(" = 0", " &= 0")).join(" \\\\ ")} \\end{aligned}$$`;
+  const relTex = termsTex(rel.map((x) => F(x)), vecs.map((v) => `(${v})`));
   const why = dC.isZero()
-    ? `The coefficient matrix (rows = combinations) $${matTex(mat(C))}$ is singular (determinant $0$): a nontrivial combination of its rows is zero, and the same weights give a nontrivial combination of the new vectors equal to $\\mathbf{0}$. So the set is **dependent** no matter what ${names.map((x) => `$${x}$`).join(", ")} are: **False**.`
+    ? `Look for weights with $${combo}$. Here $${relTex} = \\mathbf{0}$ (expand: every coefficient of ${names.map((x) => `$${x}$`).join(", ")} cancels). That is a combination with weights not all zero, whatever ${names.map((x) => `$${x}$`).join(", ")} are, so the set is **dependent**: **False**.`
     : knownIndep
-      ? `With ${names.map((x) => `$${x}$`).join(", ")} independent, $\\sum y_i(\\text{vector}_i) = \\mathbf{0}$ forces $C^T\\mathbf{y} = \\mathbf{0}$ for $C = ${matTex(mat(C))}$. $\\det C = ${dC.tex()} \\ne 0$, so $\\mathbf{y} = \\mathbf{0}$: the set is independent, **True**.`
-      : `$\\det C = ${dC.tex()} \\ne 0$ for $C = ${matTex(mat(C))}$, so the new set is independent **if** ${names.map((x) => `$${x}$`).join(", ")} are; but nothing says they are (e.g. if $${names[0]} = \\mathbf{0}$ everything collapses). **Not enough information**.`;
+      ? `Set $${combo}$ and collect the coefficient of each of ${names.map((x) => `$${x}$`).join(", ")}. Because ${names.map((x) => `$${x}$`).join(", ")} are independent, each coefficient must be $0$:\n${sysTex}\nThis square homogeneous system has ${k} pivots (its determinant is $${dC.tex()} \\ne 0$), so only $${cs.join(" = ")} = 0$: the set is independent, **True**.`
+      : `If ${names.map((x) => `$${x}$`).join(", ")} were independent, setting $${combo}$ and collecting coefficients would give\n${sysTex}\nwhich has only the trivial solution (determinant $${dC.tex()} \\ne 0$), so the set would be independent. But nothing says ${names.map((x) => `$${x}$`).join(", ")} are independent: if they are all $\\mathbf{0}$, every vector in the set is $\\mathbf{0}$ and the set is dependent. **Not enough information**.`;
   return tfn({
     subtopic: "Independence of combinations",
     prompt: `Let ${names.map((x) => `$${x}$`).join(", ")} be ${knownIndep ? "linearly independent vectors" : "vectors"} in $${space}$. The set $\\{${vecs.join(",\\ ")}\\}$ is linearly independent.`,
@@ -609,7 +623,7 @@ function freeVarT(rng: Rng): Draft {
     prompt: `Let $A = ${A}$. For which value(s) of $t$ does $A\\mathbf{x} = \\mathbf{0}$ have exactly **${three ? "three" : "two"}** free variables?`,
     correct,
     distractors: pool.filter((s) => s !== correct),
-    solution: `$A$ has 5 columns, so #free variables $= 5 - \\operatorname{rank}A$; ${three ? "three" : "two"} free variables means rank ${three ? 2 : 3}. The two rows without $t$, $\\mathbf{r}_1 = [${r1.join(",\\ ")}]$ and $\\mathbf{r}_2 = [${r2.join(",\\ ")}]$, are independent. The row containing $t$ agrees with $(${al})\\mathbf{r}_1 + (${be})\\mathbf{r}_2 = [${r3.join(",\\ ")}]$ except in column ${j + 1}, so subtracting that combination leaves $[0\\ \\cdots\\ (${plusConst("t", off - r3[j])})\\ \\cdots\\ 0]$, a multiple of $\\mathbf{e}_{${j + 1}}$. Since $\\mathbf{e}_{${j + 1}}$ is not a combination of $\\mathbf{r}_1, \\mathbf{r}_2$, the rank is $2$ exactly when $t = ${t0}$ and $3$ otherwise.\nSo ${three ? `three free variables iff $t = ${t0}$` : `two free variables iff $t \\ne ${t0}$`}.`,
+    solution: `$A$ has 5 columns, so #free variables $= 5 - (\\#\\text{pivots})$; ${three ? "three" : "two"} free variables means ${three ? 2 : 3} pivots. The two rows without $t$, $\\mathbf{r}_1 = [${r1.join(",\\ ")}]$ and $\\mathbf{r}_2 = [${r2.join(",\\ ")}]$, reduce to 2 pivots. The row containing $t$ agrees with $(${al})\\mathbf{r}_1 + (${be})\\mathbf{r}_2 = [${r3.join(",\\ ")}]$ except in column ${j + 1}, so the replacement that subtracts this combination leaves $[0\\ \\cdots\\ (${plusConst("t", off - r3[j])})\\ \\cdots\\ 0]$, with its only possible nonzero entry in column ${j + 1}. Reducing $\\mathbf{r}_1, \\mathbf{r}_2$ together with $[0\\ \\cdots\\ 1\\ \\cdots\\ 0]$ (the $1$ in column ${j + 1}) gives 3 pivots, so this row adds a third pivot exactly when $t \\ne ${t0}$, and is a zero row when $t = ${t0}$.\nSo ${three ? `three free variables iff $t = ${t0}$` : `two free variables iff $t \\ne ${t0}$`}.`,
   });
 }
 
@@ -667,20 +681,23 @@ function sizeFacts(rng: Rng): Draft {
   });
 }
 
+/** Attach the course-material reference to every draft a generator produces. */
+const cite = (ref: string, g: (rng: Rng) => Draft) => (rng: Rng): Draft => ({ ...g(rng), ref });
+
 export const systemsGens: ((rng: Rng) => Draft)[] = [
-  solutionType,
-  paramSystem,
-  nontrivialK,
-  spanH,
-  consistencyP,
-  findCoeffs,
-  parametricForm,
-  independenceParam,
-  rrefFromSolution,
-  spanRm,
-  combosIndep,
-  pivotColumns,
-  linComboWeights,
-  freeVarT,
-  sizeFacts,
+  cite("Tutorial 1 Q2, Q12; Additional practice problems (consistency, free variables)", solutionType),
+  cite("Tutorial 1 Q2; PYP AY22/23 S1 Q1(a)", paramSystem),
+  cite("Tutorial 1 Q1; Slides 2.2 Theorem 2.4 (alg p10); Slides 3.1 Rule 8 (det p8)", nontrivialK),
+  cite("Tutorial 1 Q3; PYP AY22/23 S1 Q1(b)", spanH),
+  cite("PYP (written papers): p for which Ax = [3, 9, p] is consistent", consistencyP),
+  cite("PYP AY21/22 S1 Q1(a)", findCoeffs),
+  cite("Additional practice problems (general solution); Tutorial 1 Q11", parametricForm),
+  cite("PYP AY25/26 S1 Q9; Tutorial 1 Q8; Slides 2.2 Theorem 2.4 (alg p10); Slides 3.1 Rule 8 (det p8)", independenceParam),
+  cite("Tutorial 1 Q11; PYP AY25/26 S1 Q8; PYP AY21/22 S1 Q1(c)", rrefFromSolution),
+  cite("Tutorial 1 Q5; Slides 2.2 Theorem 1.2 (alg p11); Slides 4.7 (vsp p29)", spanRm),
+  cite("PYP (written papers): are u+v, u-v, u-2v+w independent?; Slides 4.7 definition (vsp p29)", combosIndep),
+  cite("Tutorial 1 Q5", pivotColumns),
+  cite("Slides 0B Matrix products as linear combinations (mtx p12); Tutorial 1 Q3", linComboWeights),
+  cite("PYP (written papers): find t so that Ax = 0 has 3 free variables", freeVarT),
+  cite("Tutorial 1 Q7, Q12; Slides 2.2 Theorem 1.2 (alg p11)", sizeFacts),
 ];

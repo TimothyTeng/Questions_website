@@ -61,6 +61,7 @@ export function QuestionCard({
             {picked === undefined ? "Not answered" : state === "correct" ? "Correct" : "Incorrect"} — answer: ({letters[q.answer]})
           </div>
           <Rich text={q.solution} />
+          {q.ref && <div className="small muted" style={{ marginTop: 6 }}>Source: {q.ref}</div>}
         </div>
       )}
     </article>

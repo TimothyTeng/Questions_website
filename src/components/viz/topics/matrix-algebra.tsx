@@ -72,7 +72,7 @@ function InverseGrid() {
   const unit: V2[] = [[0, 0], a1, add(a1, a2), a2];
   return (
     <VizFrame
-      title="A⁻¹ undoes A: solving Ax = b"
+      title="A⁻¹ transforms Ax back to x: solving Ax = b"
       hint="Drag the column tips a₁, a₂ (the columns of A) and the target b. The tilted grid is the image of the square grid under A."
       onReset={() => {
         setA1(init.a1);
@@ -111,7 +111,7 @@ function InverseGrid() {
           ) : (
             <Read
               tone="bad"
-              tex="$ad - bc = 0$: the columns are parallel, the whole plane is squashed onto a line (red). No inverse exists: $A\mathbf{x} = \mathbf{b}$ has **no** solution unless $\mathbf{b}$ is on the line, and then **infinitely many**."
+              tex="$ad - bc = 0$: $A$ is not invertible (singular). The columns lie on one line (red), so they do not span $\mathbb{R}^2$ and $A\mathbf{x} = \mathbf{b}$ has no solution for $\mathbf{b}$ off that line (Theorem 2.4)."
             />
           )}
         </>
@@ -129,9 +129,9 @@ function InverseGrid() {
 // ---------------------------------------------------------------- 2. (AB)^{-1} = B^{-1}A^{-1}
 
 const MOVES: Record<string, { label: string; M: M2 }> = {
-  shear: { label: "shear", M: [[1, 1], [0, 1]] },
+  shear: { label: "$E$: $r_1 \\leftarrow r_1 + r_2$", M: [[1, 1], [0, 1]] },
   rot: { label: "rotate 90°", M: [[0, -1], [1, 0]] },
-  stretch: { label: "stretch $x$ by 2", M: [[2, 0], [0, 1]] },
+  stretch: { label: "$E$: $r_1 \\leftarrow 2r_1$", M: [[2, 0], [0, 1]] },
   reflect: { label: "reflect in $y = x$", M: [[0, 1], [1, 0]] },
 };
 type MoveKey = keyof typeof MOVES;
@@ -155,7 +155,7 @@ function InverseOrder() {
   const undone = moved.map((p) => apply(U, p));
   return (
     <VizFrame
-      title="Socks and shoes: (AB)⁻¹ = B⁻¹A⁻¹"
+      title="Theorem 2.2: (AB)⁻¹ = B⁻¹A⁻¹"
       hint="Pick B (done first) and A (done second). The blue F is ABx. Then choose an order for undoing it."
       figure={
         <Plane2D x={[-4, 4]} y={[-3, 3]}>
@@ -192,7 +192,7 @@ function InverseOrder() {
         </>
       }
       tasks={[
-        "Predict, then check: with B = shear and A = rotate, which undo order restores the F?",
+        "Predict, then check: with B = E (r₁ ← r₁ + r₂) and A = rotate, which undo order restores the F?",
         "Find a pair (A, B) for which the wrong order **also** works. What is special about such a pair? (Hint: do $A$ and $B$ commute?)",
         "Choose A = B = reflect. Explain why every undo order works here.",
       ]}
@@ -200,7 +200,7 @@ function InverseOrder() {
   );
 }
 
-// ---------------------------------------------------------------- 3. Gauss–Jordan on [A | I], one elementary matrix at a time
+// ---------------------------------------------------------------- 3. Row reducing [A I] (Theorem 2.3), one elementary matrix at a time
 
 interface GJStep {
   label: string;
@@ -265,8 +265,8 @@ function GaussJordan2() {
   const c2: V2 = [left[0][1], left[1][1]];
   return (
     <VizFrame
-      title="Gauss–Jordan = multiplying by elementary matrices"
-      hint="Step through the row reduction of [A | I]. The shaded shape is the unit square under the current left block; it ends as the unit square exactly when the left block reaches I."
+      title="Row reducing [A I] = multiplying by elementary matrices (Theorem 2.3)"
+      hint="Step through the row reduction of [A I]. The shaded shape is spanned by the columns of the current left block; it ends as the unit square exactly when the left block reaches I."
       onReset={() => setK(0)}
       figure={
         <Plane2D x={[-2, 5]} y={[-1.5, 4]}>

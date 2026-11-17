@@ -1,9 +1,13 @@
-// Generators for the linear-transformations topic (Lay §1.8–1.9 + kernel/range, maps on P_n and M_2x2).
+// Generators for the linear-transformations topic. Syllabus: Tutorial 1 Q9, Q10, Q13; Tutorial 4 Q17; Slides 4.6
+// (kernel and range), 2.2 (invertible linear transformations), 3.3 (area/volume), 4.10 (coordinates); past papers.
 import {
   cross, det, dot, F, Frac, fromColumns, inverse, isZeroVec, mat, matEq, matmul, matTex, matvec, mscale, primitive,
   rank, transpose, vadd, vec, vscale, type Mat, type Vec,
 } from "@/lib/math/frac";
 import { mcq, NONE, retry, tfn, type Draft, type Rng } from "./common";
+
+/** Attach the course-material reference to every question a generator produces. */
+const cite = (ref: string, g: (rng: Rng) => Draft) => (rng: Rng): Draft => ({ ...g(rng), ref });
 
 // ---------------------------------------------------------------------------------------------- helpers
 
@@ -127,7 +131,7 @@ function stdFromBasis(rng: Rng): Draft {
     prompt: `$T:\\mathbb{R}^2\\to\\mathbb{R}^2$ is linear with $T${tup(b1)} = ${tup(y1)}$ and $T${tup(b2)} = ${tup(y2)}$. What is the standard matrix of $T$?`,
     correct: matTex(A),
     distractors: [matTex(Y), matTex(transpose(Y)), matTex(transpose(A)), matTex(matmul(Pinv, Y)), matTex(matmul(Y, P))],
-    solution: `Put the inputs and images as columns: $B = ${matTex(P)}$, $Y = ${matTex(Y)}$. Linearity gives $AB = Y$, so $A = YB^{-1}$ with $B^{-1} = ${matTex(Pinv)}$:\n$$A = ${matTex(Y)}${matTex(Pinv)} = ${matTex(A)}$$\nCheck: $A${tup(b1)} = ${tup(y1)}$ and $A${tup(b2)} = ${tup(y2)}$ ✓. The matrix $Y$ itself is only correct when the inputs are $\\mathbf{e}_1, \\mathbf{e}_2$.`,
+    solution: `Write $\\mathbf{e}_1$ and $\\mathbf{e}_2$ as combinations of $\\mathbf{b}_1 = ${tup(b1)}$ and $\\mathbf{b}_2 = ${tup(b2)}$ (solve $P_{\\mathcal B}\\mathbf{c} = \\mathbf{e}_i$ with $P_{\\mathcal B} = ${matTex(P)}$):\n- $\\mathbf{e}_1 = (${Pinv[0][0].tex()})\\mathbf{b}_1 + (${Pinv[1][0].tex()})\\mathbf{b}_2$, so $T(\\mathbf{e}_1) = (${Pinv[0][0].tex()})${tup(y1)} + (${Pinv[1][0].tex()})${tup(y2)} = ${tup(transpose(A)[0])}$.\n- $\\mathbf{e}_2 = (${Pinv[0][1].tex()})\\mathbf{b}_1 + (${Pinv[1][1].tex()})\\mathbf{b}_2$, so $T(\\mathbf{e}_2) = (${Pinv[0][1].tex()})${tup(y1)} + (${Pinv[1][1].tex()})${tup(y2)} = ${tup(transpose(A)[1])}$.\nSo $A = [T(\\mathbf{e}_1)\\ T(\\mathbf{e}_2)] = ${matTex(A)}$. Check: $A${tup(b1)} = ${tup(y1)}$ and $A${tup(b2)} = ${tup(y2)}$ ✓. Stacking the given images, $${matTex(Y)}$, is only correct when the inputs are $\\mathbf{e}_1, \\mathbf{e}_2$.`,
   });
 }
 
@@ -161,27 +165,18 @@ interface Named {
   M: Mat;
 }
 
-function geoPool(rng: Rng): Named[] {
-  const k = rng.pick([1, 2, 3, -1, -2]);
-  const s = rng.pick([2, 3]);
-  const kx = (v: string) => `${k < 0 ? "-" : "+"} ${Math.abs(k) === 1 ? "" : Math.abs(k)}${v}`;
+function geoPool(): Named[] {
   return [
     { name: "rotates points $90^\\circ$ counter-clockwise", M: mat([[0, -1], [1, 0]]) },
     { name: "rotates points $90^\\circ$ clockwise", M: mat([[0, 1], [-1, 0]]) },
-    { name: "reflects points across the $x_1$-axis", M: mat([[1, 0], [0, -1]]) },
-    { name: "reflects points across the $x_2$-axis", M: mat([[-1, 0], [0, 1]]) },
-    { name: "reflects points across the line $y = x$", M: mat([[0, 1], [1, 0]]) },
-    { name: "reflects points across the line $y = -x$", M: mat([[0, -1], [-1, 0]]) },
-    { name: "projects points onto the $x_1$-axis", M: mat([[1, 0], [0, 0]]) },
-    { name: "projects points onto the $x_2$-axis", M: mat([[0, 0], [0, 1]]) },
-    { name: `applies the horizontal shear $x_1\\mapsto x_1 ${kx("x_2")}$`, M: mat([[1, k], [0, 1]]) },
-    { name: `applies the vertical shear $x_2\\mapsto x_2 ${kx("x_1")}$`, M: mat([[1, 0], [k, 1]]) },
-    { name: `stretches horizontally by a factor of $${s}$`, M: mat([[s, 0], [0, 1]]) },
+    { name: "reflects points through the horizontal $x$-axis", M: mat([[1, 0], [0, -1]]) },
+    { name: "reflects points through the line $y = x$", M: mat([[0, 1], [1, 0]]) },
+    { name: "projects points onto the $x$-axis", M: mat([[1, 0], [0, 0]]) },
   ];
 }
 
 function pickTwo(rng: Rng): [Named, Named] {
-  const pool = rng.shuffle(geoPool(rng));
+  const pool = rng.shuffle(geoPool());
   return [pool[0], pool[1]];
 }
 
@@ -246,24 +241,26 @@ const m2 = (a: Surd, b: Surd, c: Surd, d: Surd) =>
 function rotationMatrix(rng: Rng): Draft {
   const a = rng.pick(ANGLES);
   const cw = rng.chance(0.5);
-  const k = rng.pick([1, 1, 2, 3]);
-  const c = sm(a.c, k);
-  const s = sm(a.s, cw ? -k : k); // signed sin(θ)·k
-  const correct = m2(c, sm(s, -1), s, c);
-  const kc = k === 1 ? "" : ` and then dilates by a factor of $${k}$`;
+  const refl = rng.chance(0.5); // then reflect through the horizontal x-axis (Tutorial 1 Q10(a))
+  const f = refl ? -1 : 1; // the reflection multiplies the second row by -1
+  const c = a.c;
+  const s = sm(a.s, cw ? -1 : 1); // signed sin(θ)
+  const R = (cc: Surd, ss: Surd) => m2(cc, sm(ss, -1), sm(ss, f), sm(cc, f));
+  const correct = R(c, s);
+  const kc = refl ? " and then reflects points through the horizontal $x$-axis" : "";
   const ds = [
-    m2(c, s, sm(s, -1), c), // opposite direction
-    m2(s, sm(c, -1), c, s), // sin/cos swapped
-    m2(c, s, s, sm(c, -1)), // reflection pattern
-    m2(sm(c, -1), s, sm(s, -1), sm(c, -1)), // negated
+    R(c, sm(s, -1)), // opposite direction
+    m2(s, sm(c, -1), sm(c, f), sm(s, f)), // sin/cos swapped
+    m2(c, s, s, sm(c, -1)), // refl: wrong order (column negated); no refl: reflection pattern
+    m2(sm(c, -1), s, sm(s, -f), sm(c, -f)), // negated
   ];
-  if (k !== 1) ds.push(m2(a.c, sm(a.s, cw ? 1 : -1), sm(a.s, cw ? -1 : 1), a.c));
+  if (refl) ds.push(m2(c, sm(s, -1), s, c)); // rotation only
   return mcqS(rng, {
     subtopic: "Geometric transformations",
     prompt: `$T:\\mathbb{R}^2\\to\\mathbb{R}^2$ rotates points through $${a.rad}$ radians ${cw ? "**clockwise**" : "counter-clockwise"} about the origin${kc}. What is the standard matrix of $T$?`,
     correct,
     distractors: ds,
-    solution: `${cw ? `Clockwise means $\\theta = -${a.rad}$, so $\\sin\\theta = ${surdTex(sm(a.s, -1))}$` : `$\\theta = ${a.rad}$, so $\\sin\\theta = ${surdTex(a.s)}$`} and $\\cos\\theta = ${surdTex(a.c)}$.\n$R_\\theta = \\begin{bmatrix}\\cos\\theta & -\\sin\\theta\\\\ \\sin\\theta & \\cos\\theta\\end{bmatrix}$${k === 1 ? "" : `, then multiply by $${k}$ for the dilation (dilation $kI$ commutes with everything)`}, giving $${correct}$.\nSanity check: the first column is the image of $\\mathbf{e}_1$, which should point ${cw ? "below" : "above"} the $x_1$-axis.`,
+    solution: `${cw ? `Clockwise means $\\theta = -${a.rad}$, so $\\sin\\theta = ${surdTex(sm(a.s, -1))}$` : `$\\theta = ${a.rad}$, so $\\sin\\theta = ${surdTex(a.s)}$`} and $\\cos\\theta = ${surdTex(a.c)}$.\n$R_\\theta = \\begin{bmatrix}\\cos\\theta & -\\sin\\theta\\\\ \\sin\\theta & \\cos\\theta\\end{bmatrix}$${refl ? ". The reflection $\\begin{bmatrix}1&0\\\\0&-1\\end{bmatrix}$ acts second, so it multiplies on the **left** and negates the second row" : ""}, giving $${correct}$.\nSanity check: the first column is the image of $\\mathbf{e}_1$; follow $(1,0)$ through the steps on a sketch.`,
   });
 }
 
@@ -299,10 +296,10 @@ function kernelVector(rng: Rng): Draft {
   if (m !== 3) ds.unshift(tup(m === 2 ? vec([correct[0].valueOf(), correct[1].valueOf()]) : [...correct, F(0)]));
   return mcqS(rng, {
     subtopic: "Kernel & range",
-    prompt: `Let $T:\\mathbb{R}^3\\to${pl(m)}$ be defined by $${formula(A)}$. Which vector lies in $\\ker T$?`,
+    prompt: `Let $T:\\mathbb{R}^3\\to${pl(m)}$ be defined by $${formula(A)}$. Which vector lies in the kernel of $T$?`,
     correct: tup(correct),
     distractors: ds.slice(0, 6),
-    solution: `$\\ker T$ is the solution set of $A\\mathbf{x} = \\mathbf{0}$ with $A = ${matTex(A)}$. Row reduction shows rank 2, so $\\dim\\ker T = 3 - 2 = 1$ and $\\ker T = \\operatorname{Span}\\{${tup(kv)}\\}$.\nCheck: $T${tup(correct)} = ${tup(matvec(A, correct))}$ ✓. Every other option gives a nonzero image${m !== 3 ? `, and a vector with ${m} entries is not even in the domain $\\mathbb{R}^3$` : ""}.`,
+    solution: `The kernel of $T$ is $N(A)$, the solution set of $A\\mathbf{x} = \\mathbf{0}$ with $A = ${matTex(A)}$. Row reduction shows rank 2, so by the Rank Theorem $\\dim N(A) = 3 - 2 = 1$ and $N(A) = \\operatorname{Span}\\{${tup(kv)}\\}$.\nCheck: $T${tup(correct)} = ${tup(matvec(A, correct))}$ ✓. Every other option gives a nonzero image${m !== 3 ? `, and a vector with ${m} entries is not even in $\\mathbb{R}^3$, the space $T$ maps from` : ""}.`,
   });
 }
 
@@ -311,14 +308,14 @@ function rankNullity(rng: Rng): Draft {
   const m = rng.pick([2, 3, 4]);
   const r = rng.int(1, Math.min(m, n));
   const A = matOfRank(rng, m, n, r);
-  const opt = (a: number, b: number) => `\\operatorname{rank}T = ${a},\\ \\operatorname{nullity}T = ${b}`;
+  const opt = (a: number, b: number) => `\\text{rank of } T = ${a},\\ \\text{nullity of } T = ${b}`;
   const cands: [number, number][] = [[r, m - r], [n - r, r], [r + 1, n - r - 1], [r - 1, n - r + 1], [Math.min(m, n), n - Math.min(m, n)], [r, n - r + 1]];
   return mcqS(rng, {
-    subtopic: "Rank–nullity",
+    subtopic: "Rank & nullity",
     prompt: `Find the rank and nullity of the linear transformation $T:${pl(n)}\\to${pl(m)}$, $${formula(A)}$.`,
     correct: opt(r, n - r),
     distractors: cands.filter(([a, b]) => a >= 0 && b >= 0).map(([a, b]) => opt(a, b)),
-    solution: `The standard matrix is $A = ${matTex(A)}$ (${sz(A)}). Row reducing gives ${r} pivot${r === 1 ? "" : "s"}, so $\\operatorname{rank}T = ${r}$.\nRank–nullity uses the dimension of the **domain** $${pl(n)}$: $\\operatorname{nullity}T = ${n} - ${r} = ${n - r}$.`,
+    solution: `The standard matrix is $A = ${matTex(A)}$ ($${sz(A)}$). Row reducing gives ${r} pivot${r === 1 ? "" : "s"}, so the range $C(A)$ has dimension ${r}: the rank of $T$ is ${r}.\nThe Rank Theorem uses the number of **columns** ($${n}$, the size of the input): nullity $= \\dim N(A) = ${n} - ${r} = ${n - r}$.`,
   });
 }
 
@@ -337,7 +334,7 @@ function oneToOneOnto(rng: Rng): Draft {
     prompt: `Let $A = ${matTex(A)}$ and $T(\\mathbf{x}) = A\\mathbf{x}$, so $T:${pl(n)}\\to${pl(m)}$. Then $T$ is`,
     options,
     answer,
-    solution: `Row reducing $A$ (${sz(A)}) gives ${r} pivot${r === 1 ? "" : "s"}.\n- One-to-one needs a pivot in every **column** (${n}): ${inj ? "yes" : "no"}${inj ? "" : `, since $\\dim\\ker T = ${n} - ${r} = ${n - r} > 0$`}.\n- Onto $${pl(m)}$ needs a pivot in every **row** (${m}): ${sur ? "yes" : "no"}${sur ? "" : `, since the range has dimension ${r} < ${m}`}.\nSo $T$ is **${options[answer]}**.`,
+    solution: `Row reducing $A$ ($${sz(A)}$) gives ${r} pivot${r === 1 ? "" : "s"}, so the rank of $A$ is ${r}.\n- $\\mathbf{x}\\mapsto A\\mathbf{x}$ is one-to-one iff $N(A) = \\{\\mathbf{0}\\}$. Rank Theorem: $\\dim N(A) = ${n} - ${r} = ${n - r}$, so ${inj ? "yes" : "no"}.\n- It maps onto $${pl(m)}$ iff $C(A) = ${pl(m)}$, i.e. $\\dim C(A) = ${m}$. Here $\\dim C(A) = ${r}$, so ${sur ? "yes" : "no"}.\nSo $T$ is **${options[answer]}**.`,
   };
 }
 
@@ -353,7 +350,7 @@ function rangeParam(rng: Rng): Draft {
     prompt: `Let $T(\\mathbf{x}) = A\\mathbf{x}$ with $A = ${matTex(A)}$. For which value of $k$ is $\\mathbf{b} = ${tup([b[0], b[1]]).replace(/\)$/, ",\\ k)")}$ in the range of $T$?`,
     correct: `k = ${k.tex()}`,
     distractors: [k.neg(), k.add(1), k.sub(1), swapped, k.add(2)].map((v) => `k = ${v.tex()}`).concat(["\\text{every real } k"]),
-    solution: `$\\mathbf{b}$ is in the range iff $A\\mathbf{x} = \\mathbf{b}$ is consistent. The first two rows give $${lin(A[0], XS)} = ${b[0].tex()}$ and $${lin(A[1], XS)} = ${b[1].tex()}$, so $\\mathbf{x} = ${tup(x)}$.\nThe third row must then agree: $k = ${lin(A[2], XS)} = ${k.tex()}$ at this $\\mathbf{x}$.\nThe range is only a plane in $\\mathbb{R}^3$ (rank 2), so not every $k$ works.`,
+    solution: `$\\mathbf{b}$ is in the range iff $A\\mathbf{x} = \\mathbf{b}$ is consistent. The first two rows give $${lin(A[0], XS)} = ${b[0].tex()}$ and $${lin(A[1], XS)} = ${b[1].tex()}$, so $\\mathbf{x} = ${tup(x)}$.\nThe third row must then agree: $k = ${lin(A[2], XS)} = ${k.tex()}$ at this $\\mathbf{x}$.\nThe range $C(A)$ is only a plane in $\\mathbb{R}^3$ (rank 2), so not every $k$ works.`,
   });
 }
 
@@ -369,7 +366,7 @@ function preimage(rng: Rng): Draft {
     prompt: `Let $T(\\mathbf{x}) = A\\mathbf{x}$ with $A = ${matTex(A)}$. Find $\\mathbf{x}$ such that $T(\\mathbf{x}) = ${tup(b)}$.`,
     correct: tup(x),
     distractors: [vec([x[1].valueOf(), x[0].valueOf()]), [x[0].neg(), x[1]], [x[0], x[1].neg()], [b[0], b[1]], vadd(x, vec([1, 0]))].map(tup),
-    solution: `Solve $A\\mathbf{x} = \\mathbf{b}$ by row reducing $[A\\ |\\ \\mathbf{b}]$. This gives $\\mathbf{x} = ${tup(x)}$.\nCheck: $A${tup(x)} = ${tup(matvec(A, x))}$ ✓. The columns of $A$ are independent, so $T$ is one-to-one and this $\\mathbf{x}$ is the only solution.`,
+    solution: `Solve $A\\mathbf{x} = \\mathbf{b}$ by row reducing $[A\\ |\\ \\mathbf{b}]$. This gives $\\mathbf{x} = ${tup(x)}$.\nCheck: $A${tup(x)} = ${tup(matvec(A, x))}$ ✓. The columns of $A$ are independent, so $N(A) = \\{\\mathbf{0}\\}$ and this $\\mathbf{x}$ is the only solution.`,
   });
 }
 
@@ -413,9 +410,9 @@ function linearityTFN(rng: Rng): Draft {
   if (kind === "linear") {
     solution = `Every entry is a combination of $x_1, x_2$ with no constant, product or power term, so $T(\\mathbf{x}) = A\\mathbf{x}$ with $A = ${matTex(comps.map((t) => vec([t.a, t.b])))}$. Matrix transformations are linear: **True**.`;
   } else if (kind === "const") {
-    solution = `$T(0,0) = ${at(0, 0)} \\ne \\mathbf{0}$. A linear map must send $\\mathbf{0}$ to $\\mathbf{0}$, so $T$ is not linear: **False**.`;
+    solution = `Test rule (2) $T(c\\mathbf{u}) = cT(\\mathbf{u})$ with $\\mathbf{u} = (0,0)$ and $c = 2$: $T(2\\cdot(0,0)) = T(0,0) = ${at(0, 0)}$, but $2T(0,0) = (${comps.map((t) => 2 * compAt(t, 0, 0)).join(",\\ ")})$. These differ because of the constant term, so $T$ is not linear: **False**.`;
   } else {
-    solution = `$T(\\mathbf{0}) = \\mathbf{0}$, so the zero test is inconclusive. Test scaling with $\\mathbf{u} = (1,1)$ and $c = 2$: $T(2,2) = ${at(2, 2)}$, but $2T(1,1) = 2${at(1, 1)} = (${comps.map((t) => 2 * compAt(t, 1, 1)).join(",\\ ")})$. These differ because of the ${kind === "prod" ? "product $x_1x_2$" : "square $x_2^2$"}, so $T$ is not linear: **False**.`;
+    solution = `Test rule (2) $T(c\\mathbf{u}) = cT(\\mathbf{u})$ with $\\mathbf{u} = (1,1)$ and $c = 2$: $T(2,2) = ${at(2, 2)}$, but $2T(1,1) = 2${at(1, 1)} = (${comps.map((t) => 2 * compAt(t, 1, 1)).join(",\\ ")})$. These differ because of the ${kind === "prod" ? "product $x_1x_2$" : "square $x_2^2$"}, so $T$ is not linear: **False**.`;
   }
   return tfn({
     subtopic: "Linearity",
@@ -444,7 +441,7 @@ function inverseFormula(rng: Rng): Draft {
     prompt: `$T:\\mathbb{R}^2\\to\\mathbb{R}^2$, $${formula(A)}$. Find $T^{-1}(y_1,y_2)$.`,
     correct: show(inv),
     distractors: [show(transpose(inv)), show(mscale(inv, -1)), show(adjNoSign), show(A), show(mscale(inv, d))],
-    solution: `$A = ${matTex(A)}$ has $ad - bc = ${d.tex()} \\ne 0$, so $T$ is invertible with $T^{-1}(\\mathbf{y}) = A^{-1}\\mathbf{y}$:\n$$A^{-1} = \\frac{1}{${d.tex()}}\\begin{bmatrix} ${e.tex()} & ${b.neg().tex()} \\\\ ${c.neg().tex()} & ${a.tex()} \\end{bmatrix} = ${matTex(inv)}$$\nSo $T^{-1}(y_1,y_2) = ${show(inv)}$. Check: $T^{-1}(T(\\mathbf{e}_1)) = A^{-1}${tup(transpose(A)[0])} = (1,\\ 0)$ ✓.`,
+    solution: `$A = ${matTex(A)}$ has $ad - bc = ${d.tex()} \\ne 0$, so $A$ is invertible, and $A^{-1}$ transforms $A\\mathbf{x}$ back to $\\mathbf{x}$: $T^{-1}(\\mathbf{y}) = A^{-1}\\mathbf{y}$ with\n$$A^{-1} = \\frac{1}{${d.tex()}}\\begin{bmatrix} ${e.tex()} & ${b.neg().tex()} \\\\ ${c.neg().tex()} & ${a.tex()} \\end{bmatrix} = ${matTex(inv)}$$\nSo $T^{-1}(y_1,y_2) = ${show(inv)}$. Check: $T^{-1}(T(\\mathbf{e}_1)) = A^{-1}${tup(transpose(A)[0])} = (1,\\ 0)$ ✓.`,
   });
 }
 
@@ -530,18 +527,57 @@ function m22Dims(rng: Rng): Draft {
   if (!A) retry();
   const V = ["a", "b", "c", "d"];
   const f = A.map((row) => lin(row, V));
-  const opt = (k: number, g: number) => `\\dim\\ker T = ${k},\\ \\dim\\operatorname{range}T = ${g}`;
+  const opt = (k: number, g: number) => `\\dim(\\text{kernel}) = ${k},\\ \\dim(\\text{range}) = ${g}`;
   const cands: [number, number][] = [[r, 4 - r], [3 - r, r + 1], [5 - r, r - 1], [0, 4], [4, 0], [3 - r, r], [4 - r, r - 1]];
   return mcqS(rng, {
     subtopic: "General vector spaces",
-    prompt: `Let $T:M_{2\\times2}\\to M_{2\\times2}$ be the linear transformation $T\\left(\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}\\right) = \\begin{bmatrix} ${f[0]} & ${f[1]} \\\\ ${f[2]} & ${f[3]} \\end{bmatrix}$. Find the dimensions of $\\ker T$ and $\\operatorname{range}T$.`,
+    prompt: `Let $T:M_{2\\times2}\\to M_{2\\times2}$ be the linear transformation $T\\left(\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}\\right) = \\begin{bmatrix} ${f[0]} & ${f[1]} \\\\ ${f[2]} & ${f[3]} \\end{bmatrix}$. Find the dimensions of the kernel and the range of $T$.`,
     correct: opt(4 - r, r),
     distractors: cands.filter(([k, g]) => k >= 0 && g >= 0 && k + g <= 4).map(([k, g]) => opt(k, g)),
-    solution: `In coordinates with respect to $\\{E_{11}, E_{12}, E_{21}, E_{22}\\}$, a matrix becomes $(a,b,c,d)$ and $T$ has matrix $${matTex(A)}$ (row $i$ = coefficients of output entry $i$).\nRow reduction gives rank ${r}, so $\\dim\\operatorname{range}T = ${r}$. Rank–nullity on $\\dim M_{2\\times2} = 4$ then gives $\\dim\\ker T = ${4 - r}$.`,
+    solution: `In coordinates relative to the standard basis of $M_{2\\times2}$, a matrix becomes $(a,b,c,d)$ and $T$ has matrix $M = ${matTex(A)}$ (row $i$ = coefficients of output entry $i$; column $j$ = coordinates of the image of the $j$-th basis matrix).\nThe range of $T$ corresponds to $C(M)$ and the kernel to $N(M)$. Row reduction gives rank ${r}, so the range has dimension ${r}, and the Rank Theorem ($4$ columns) gives $\\dim N(M) = 4 - ${r} = ${4 - r}$.`,
+  });
+}
+
+// ------------------------------------------------------------------------------ area and volume
+
+function volumeImage(rng: Rng): Draft {
+  const A = randMat(rng, 3, 3, -2, 3);
+  const dA = det(A);
+  if (dA.isZero() || Math.abs(dA.valueOf()) > 30) retry();
+  const cube = rng.chance(0.4);
+  const B = cube ? mat([[1, 0, 0], [0, 1, 0], [0, 0, 1]]) : randMat(rng, 3, 3, -2, 3);
+  const dB = det(B);
+  if (dB.isZero() || Math.abs(dB.valueOf()) > 8) retry();
+  const vA = dA.abs(), vB = dB.abs();
+  const correct = vA.mul(vB);
+  const [b1, b2, b3] = transpose(B);
+  const shape = cube
+    ? "the unit cube $S$ (determined by $(1,0,0)$, $(0,1,0)$, $(0,0,1)$)"
+    : `the parallelepiped $S$ with one vertex at the origin and adjacent vertices at $${tup(b1)}$, $${tup(b2)}$ and $${tup(b3)}$`;
+  return mcqS(rng, {
+    subtopic: "Area & volume",
+    prompt: `A linear transformation $T:\\mathbb{R}^3\\to\\mathbb{R}^3$ has standard matrix $A = ${matTex(A)}$. What is the volume of $T(S)$, the image of ${shape}?`,
+    correct: correct.tex(),
+    distractors: [dA.mul(vB), vA, vB.div(vA), vA.add(vB), vA.mul(vA).mul(vB), correct.neg()].map((x) => x.tex()),
+    solution: `${cube ? "The unit cube has volume $1$." : `Volume of $S$ $= abs(|B|)$ with $B = ${matTex(B)}$ (the vertices as columns): $|B| = ${dB.tex()}$, so the volume of $S$ is $${vB.tex()}$.`}\n$|A| = ${dA.tex()}$. By Theorem 3.2, volume of $T(S) = abs(|A|)\\times$ volume of $S = ${vA.tex()}\\times${vB.tex()} = ${correct.tex()}$.`,
   });
 }
 
 export const transformationsGens: ((rng: Rng) => Draft)[] = [
-  imageFromColumns, stdFromBasis, imageFromBasis, compositionMatrix, compositionImage, rotationMatrix,
-  kernelVector, rankNullity, oneToOneOnto, rangeParam, preimage, linearityTFN, inverseFormula, polyMatrix, m22Dims,
+  cite("Tutorial 1 Q9", imageFromColumns),
+  cite("PYP AY25/26 S2 Q3; AY23/24 S2 Q1(c); Slides 4.10 (vsp p44–48)", stdFromBasis),
+  cite("PYP AY21/22 S1 Q1(d); AY23/24 S2 Q1(c)", imageFromBasis),
+  cite("Tutorial 1 Q10, Q13; PYP AY20/21 S2 Q1(d); AY22/23 S1 Q1(c)", compositionMatrix),
+  cite("Tutorial 1 Q10, Q13; PYP AY20/21 S2 Q1(d)", compositionImage),
+  cite("Tutorial 1 Q10(a)", rotationMatrix),
+  cite("Tutorial 4 Q17; PYP AY25/26 S1 Q3; Slides 4.6 (vsp p27–28)", kernelVector),
+  cite("PYP AY22/23 S2 Q1(b); Theorem 4.8 (vsp p64)", rankNullity),
+  cite("Slides 4.5 table (vsp p26); Theorem 4.8 (vsp p64)", oneToOneOnto),
+  cite("Slides 4.6 (vsp p28); 4.5 table (vsp p26)", rangeParam),
+  cite("Slides 4.6 (vsp p28)", preimage),
+  cite("Slides 4.6 definition of linear transformation (vsp p27)", linearityTFN),
+  cite("Slides 2.2 Invertible Linear Transformations (alg p12); Slides 0B inverse (mtx p13)", inverseFormula),
+  cite("PYP AY24/25 S2 Q4; AY25/26 S1 Q6", polyMatrix),
+  cite("PYP AY20/21 S2 Q2(d); Theorem 4.8 (vsp p64)", m22Dims),
+  cite("Slides 3.3 Theorem 3.2 (det p17); PYP AY25/26 S2 Q4; AY20/21 S2 Q2(c)", volumeImage),
 ];

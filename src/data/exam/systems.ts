@@ -13,7 +13,8 @@ export const systemsExam: ConceptQuestion[] = [
     options: ["I and II only", "I, II and III only", "II and III only", "I, III and IV only", "All of the above"],
     answer: 1,
     solution:
-      "$R_2 \\leftarrow R_2 - 2R_1$: $[0\\ 1\\ 3 \\mid -1]$. $\\ R_3 \\leftarrow R_3 - R_1$: $[0\\ 1\\ a^2 - 6 \\mid a - 4]$. $\\ R_3 \\leftarrow R_3 - R_2$: $[0\\ 0\\ a^2 - 9 \\mid a - 3] = [0\\ 0\\ (a-3)(a+3) \\mid a - 3]$.\n- $a = 3$: zero row, $z$ free → infinitely many (I ✓). Only **one** free variable, so the solution set is a **line**, not a plane (IV ✗).\n- $a = -3$: $[0\\ 0\\ 0 \\mid -6]$ → no solution (II ✓).\n- $a = 0$: $a^2 - 9 = -9 \\ne 0$ → pivot in every column → unique (III ✓).",
+      "$r_2 \\leftarrow r_2 - 2r_1$: $[0\\ 1\\ 3 \\mid -1]$. $\\ r_3 \\leftarrow r_3 - r_1$: $[0\\ 1\\ a^2 - 6 \\mid a - 4]$. $\\ r_3 \\leftarrow r_3 - r_2$: $[0\\ 0\\ a^2 - 9 \\mid a - 3] = [0\\ 0\\ (a-3)(a+3) \\mid a - 3]$.\n- $a = 3$: zero row, $z$ free → infinitely many (I ✓). Only **one** free variable, so the solution set is a **line**, not a plane (IV ✗).\n- $a = -3$: $[0\\ 0\\ 0 \\mid -6]$ → no solution (II ✓).\n- $a = 0$: $a^2 - 9 = -9 \\ne 0$ → pivot in every column → exactly one (III ✓).",
+    ref: "Tutorial 1 Q2; PYP AY22/23 S1 Q1(a)",
   },
   {
     subtopic: "Systems with a parameter",
@@ -28,13 +29,14 @@ export const systemsExam: ConceptQuestion[] = [
     ],
     answer: 2,
     solution:
-      "The coefficient matrix $\\begin{bmatrix}\\lambda & 4\\\\ 9 & \\lambda\\end{bmatrix}$ has $\\det = \\lambda^2 - 36$, so the solution is unique unless $\\lambda = \\pm6$.\n- $\\lambda = 6$: $6x + 4y = 2$ and $9x + 6y = 3$. The second is $\\tfrac32\\times$ the first ($9x + 6y = 3$ ✓), so the system reduces to one line: infinitely many solutions.\n- $\\lambda = -6$: $-6x + 4y = 2$ and $9x - 6y = 3$. $R_2 + \\tfrac32R_1$ gives $0 = 3 + 3 = 6$: no solution.\nThe two special values behave differently, which is the trap in options (b) and (d).",
+      "The coefficient matrix $\\begin{bmatrix}\\lambda & 4\\\\ 9 & \\lambda\\end{bmatrix}$ has $|A| = \\lambda^2 - 36$, so the solution is unique unless $\\lambda = \\pm6$ (Theorem 2.4 with Rule 8).\n- $\\lambda = 6$: $6x + 4y = 2$ and $9x + 6y = 3$. The second is $\\tfrac32\\times$ the first, so the system reduces to one line: infinitely many solutions.\n- $\\lambda = -6$: $-6x + 4y = 2$ and $9x - 6y = 3$. $r_2 \\leftarrow r_2 + \\tfrac32 r_1$ gives $0 = 3 + 3 = 6$: no solution.\nThe two special values behave differently, which is the trap in options (b) and (d).",
+    ref: "PYP AY24/25 S2 Q5; Slides 3.1 Rule 8 (det p8)",
   },
   {
     subtopic: "RREF from a solution",
     kind: "mcq",
     prompt:
-      "$A$ is a $3\\times4$ matrix and the complete solution of $A\\mathbf{x} = \\mathbf{b}$ is\n$$\\mathbf{x} = \\begin{bmatrix}2\\\\0\\\\-1\\\\0\\end{bmatrix} + s\\begin{bmatrix}-3\\\\1\\\\0\\\\0\\end{bmatrix} + t\\begin{bmatrix}4\\\\0\\\\2\\\\1\\end{bmatrix}, \\qquad s, t\\in\\mathbb{R}.$$\nThe reduced row echelon form of $[A \\mid \\mathbf{b}]$ is",
+      "$A$ is a $3\\times4$ matrix. The system $A\\mathbf{x} = \\mathbf{b}$ can be transformed by elementary row operations to $R\\mathbf{x} = \\mathbf{d}$, where $R$ is the reduced row echelon form of $A$, and the complete solution of $A\\mathbf{x} = \\mathbf{b}$ is\n$$\\mathbf{x} = \\begin{bmatrix}2\\\\0\\\\-1\\\\0\\end{bmatrix} + s\\begin{bmatrix}-3\\\\1\\\\0\\\\0\\end{bmatrix} + t\\begin{bmatrix}4\\\\0\\\\2\\\\1\\end{bmatrix}, \\qquad s, t\\in\\mathbb{R}.$$\nThe augmented matrix $[R \\mid \\mathbf{d}]$ is",
     options: [
       "$\\left[\\begin{array}{cccc|c} 1 & -3 & 0 & 4 & 2 \\\\ 0 & 0 & 1 & 2 & -1 \\\\ 0 & 0 & 0 & 0 & 0 \\end{array}\\right]$",
       "$\\left[\\begin{array}{cccc|c} 1 & 3 & 0 & -4 & -2 \\\\ 0 & 0 & 1 & -2 & 1 \\\\ 0 & 0 & 0 & 0 & 0 \\end{array}\\right]$",
@@ -44,17 +46,36 @@ export const systemsExam: ConceptQuestion[] = [
     ],
     answer: 3,
     solution:
-      "$x_2 = s$ and $x_4 = t$ appear alone, so they are free; $x_1, x_3$ are basic. Reading the rows: $x_1 = 2 - 3x_2 + 4x_4$ and $x_3 = -1 + 2x_4$.\nMove the free variables to the left: $x_1 + 3x_2 - 4x_4 = 2$ and $x_3 - 2x_4 = -1$. These are the two nonzero RREF rows; rank $2$ leaves one zero row.\nCheck: $[2,0,-1,0]$ satisfies both rows, and each direction vector gives $0$ (e.g. $4 + 0 - 4 = 0$, $2 - 2 = 0$). Option (a) forgets to flip the signs, (b) negates the right-hand side, (c) puts the pivots in the wrong columns.",
+      "$x_2 = s$ and $x_4 = t$ appear alone, so they are free; $x_1, x_3$ are leading. Reading the rows: $x_1 = 2 - 3x_2 + 4x_4$ and $x_3 = -1 + 2x_4$.\nMove the free variables to the left: $x_1 + 3x_2 - 4x_4 = 2$ and $x_3 - 2x_4 = -1$. These are the two nonzero rows of $[R \\mid \\mathbf{d}]$; 2 pivots in 3 rows leaves one zero row.\nCheck: $[2,0,-1,0]$ satisfies both rows, and each direction vector gives $0$ (e.g. $4 + 0 - 4 = 0$, $2 - 2 = 0$). Option (a) forgets to flip the signs, (b) negates the right-hand side, (c) puts the pivots in the wrong columns.",
+    ref: "PYP AY21/22 S1 Q1(c); Tutorial 1 Q11",
+  },
+  {
+    subtopic: "RREF from a solution",
+    kind: "mcq",
+    prompt:
+      "The solution to the linear system $A\\mathbf{x} = \\mathbf{b}$, with $A$ a $3\\times3$ matrix, is $\\mathbf{x} = \\begin{bmatrix}3\\\\0\\\\0\\end{bmatrix} + c\\begin{bmatrix}-2\\\\1\\\\0\\end{bmatrix} + d\\begin{bmatrix}4\\\\0\\\\1\\end{bmatrix}$, where $c, d\\in\\mathbb{R}$. The reduced row echelon form of $A$ is",
+    options: [
+      "$\\begin{bmatrix} 1 & 0 & 0 \\\\ 0 & 1 & 0 \\\\ 0 & 0 & 1 \\end{bmatrix}$",
+      "$\\begin{bmatrix} 1 & 0 & 0 \\\\ 0 & 1 & 0 \\\\ 0 & 0 & 0 \\end{bmatrix}$",
+      "$\\begin{bmatrix} 1 & -2 & 4 \\\\ 0 & 0 & 0 \\\\ 0 & 0 & 0 \\end{bmatrix}$",
+      "$\\begin{bmatrix} 1 & 0 & 0 \\\\ 0 & 0 & 1 \\\\ 0 & 0 & 0 \\end{bmatrix}$",
+      "$\\begin{bmatrix} 1 & 2 & -4 \\\\ 0 & 0 & 0 \\\\ 0 & 0 & 0 \\end{bmatrix}$",
+    ],
+    answer: 4,
+    solution:
+      "Two parameters attached to $x_2 = c$ and $x_3 = d$: two free variables, so $A$ has $3 - 2 = 1$ pivot, in column 1. The first component reads $x_1 = 3 - 2x_2 + 4x_3$, i.e. $x_1 + 2x_2 - 4x_3 = 3$. So the RREF has the single nonzero row $[1\\ \\ 2\\ \\ {-4}]$ and two zero rows.\nOption (c) copies the direction entries without changing their sign; (a), (b), (d) have the wrong number of pivots (3, 2, 2).",
+    ref: "Tutorial 1 Q11; PYP AY25/26 S1 Q8",
   },
   {
     subtopic: "Solution sets",
     kind: "mcq",
     prompt:
-      "$A$ is a $4\\times4$ matrix and the complete solution of $A\\mathbf{x} = \\mathbf{b}$ is $\\mathbf{x} = [1,0,2,0]^T + s[2,1,0,0]^T + t[-1,0,3,1]^T$, $s,t\\in\\mathbb{R}$. Which of the following statements are correct?\nI. $\\operatorname{rank}A = 2$.\nII. $A\\mathbf{x} = \\mathbf{c}$ is consistent for every $\\mathbf{c}\\in\\mathbb{R}^4$.\nIII. $[2, 1, 5, 1]^T$ is a solution of $A\\mathbf{x} = \\mathbf{b}$.\nIV. $[0, 0, 1, 0]^T$ is a solution of $A\\mathbf{x} = \\mathbf{0}$.",
+      "$A$ is a $4\\times4$ matrix and the complete solution of $A\\mathbf{x} = \\mathbf{b}$ is $\\mathbf{x} = [1,0,2,0]^T + s[2,1,0,0]^T + t[-1,0,3,1]^T$, $s,t\\in\\mathbb{R}$. Which of the following statements are correct?\nI. $A$ has exactly 2 pivot positions.\nII. $A\\mathbf{x} = \\mathbf{c}$ is consistent for every $\\mathbf{c}\\in\\mathbb{R}^4$.\nIII. $[2, 1, 5, 1]^T$ is a solution of $A\\mathbf{x} = \\mathbf{b}$.\nIV. $[0, 0, 1, 0]^T$ is a solution of $A\\mathbf{x} = \\mathbf{0}$.",
     options: ["I and II only", "III only", "I and III only", "I, III and IV only", "All of the above"],
     answer: 2,
     solution:
-      "- I ✓: two parameters means two free variables, so rank $= 4 - 2 = 2$.\n- II ✗: rank $2 < 4$ rows, so $A$ lacks a pivot in two rows and some $\\mathbf{c}$ are unreachable.\n- III ✓: $s = t = 1$ gives $[1+2-1,\\ 0+1+0,\\ 2+0+3,\\ 0+0+1] = [2,1,5,1]$.\n- IV ✗: solutions of $A\\mathbf{x} = \\mathbf{0}$ are $s[2,1,0,0]^T + t[-1,0,3,1]^T$; matching the 4th entry forces $t = 0$ and the 2nd forces $s = 0$, giving $\\mathbf{0} \\ne [0,0,1,0]^T$.",
+      "- I ✓: two parameters means two free variables, so $4 - 2 = 2$ pivots.\n- II ✗: 2 pivots for 4 rows, so $A$ lacks a pivot in two rows and by Theorem 1.2 some $\\mathbf{c}$ give an inconsistent system.\n- III ✓: $s = t = 1$ gives $[1+2-1,\\ 0+1+0,\\ 2+0+3,\\ 0+0+1] = [2,1,5,1]$.\n- IV ✗: solutions of $A\\mathbf{x} = \\mathbf{0}$ are $s[2,1,0,0]^T + t[-1,0,3,1]^T$; matching the 4th entry forces $t = 0$ and the 2nd forces $s = 0$, giving $\\mathbf{0} \\ne [0,0,1,0]^T$.",
+    ref: "PYP AY21/22 S1 Q1(c); PYP AY24/25 S2 Q8; Slides 2.2 Theorem 1.2 (alg p11)",
   },
   {
     subtopic: "Homogeneous systems",
@@ -64,7 +85,8 @@ export const systemsExam: ConceptQuestion[] = [
     options: ["$k \\in \\{1, 2\\}$", "$k = 2$ only", "$k \\in \\{-1, -2\\}$", "$k \\notin \\{1, 2\\}$", NOTA],
     answer: 0,
     solution:
-      "A square homogeneous system has a nontrivial solution iff its coefficient matrix is singular:\n$$\\det\\begin{bmatrix} 1 & 2 & k \\\\ 2 & k & 2 \\\\ 1 & 1 & 1 \\end{bmatrix} = 1(k - 2) - 2(2 - 2) + k(2 - k) = -k^2 + 3k - 2 = -(k-1)(k-2).$$\nSo $k = 1$ or $k = 2$. (Check: at $k = 1$, $[1, 0, -1]^T$ is a nontrivial solution; at $k = 2$ the second equation is twice the third.) Option (d) describes exactly when only the trivial solution exists.",
+      "Put $x + y + z = 0$ first: rows $[1\\ 1\\ 1]$, $[1\\ 2\\ k]$, $[2\\ k\\ 2]$.\n$r_2 \\leftarrow r_2 - r_1$: $[0\\ 1\\ \\ k-1]$. $\\ r_3 \\leftarrow r_3 - 2r_1$: $[0\\ \\ k-2\\ \\ 0]$. $\\ r_3 \\leftarrow r_3 - (k-2)r_2$: $[0\\ \\ 0\\ \\ -(k-2)(k-1)]$.\nThe third pivot vanishes iff $k = 1$ or $k = 2$; then $z$ is free and there is a nontrivial solution. (Check: at $k = 1$, $[1, 0, -1]^T$ works; at $k = 2$ the second equation is twice the third.) Option (d) describes exactly when only the trivial solution exists.",
+    ref: "Tutorial 1 Q1",
   },
   {
     subtopic: "Linear independence",
@@ -79,7 +101,24 @@ export const systemsExam: ConceptQuestion[] = [
     ],
     answer: 1,
     solution:
-      "Three vectors in $\\mathbb{R}^3$ are independent iff the matrix having them as columns is invertible:\n$$\\det\\begin{bmatrix} x & 1 & 0 \\\\ 1 & x & 1 \\\\ 0 & 1 & x \\end{bmatrix} = x(x^2 - 1) - 1(x - 0) = x^3 - 2x = x(x^2 - 2).$$\nIt vanishes at $x = 0$ and $x = \\pm\\sqrt2$. (At $x = 0$: the first and third vectors are $[0,1,0]$ — equal, so clearly dependent.) Independent for all other $x$.",
+      "Columns: $\\begin{bmatrix} x & 1 & 0 \\\\ 1 & x & 1 \\\\ 0 & 1 & x \\end{bmatrix}$. Swap $r_1 \\leftrightarrow r_2$ to avoid dividing by $x$: $[1\\ x\\ 1]$, $[x\\ 1\\ 0]$, $[0\\ 1\\ x]$.\n$r_2 \\leftarrow r_2 - x\\,r_1$: $[0\\ \\ 1 - x^2\\ \\ -x]$. Swap $r_2 \\leftrightarrow r_3$: $[0\\ 1\\ x]$ on top, then $r_3 \\leftarrow r_3 - (1 - x^2)r_2$: $[0\\ \\ 0\\ \\ -x - x(1 - x^2)] = [0\\ 0\\ x(x^2 - 2)]$.\nA pivot in every column iff $x(x^2 - 2) \\ne 0$, i.e. $x \\ne 0, \\pm\\sqrt2$. (At $x = 0$ the first and third vectors are both $[0,1,0]$.)",
+    ref: "PYP AY25/26 S1 Q9",
+  },
+  {
+    subtopic: "Linear independence",
+    kind: "mcq",
+    prompt: "The set of all real $x$ for which $\\left\\{ \\begin{bmatrix}1\\\\x\\\\0\\end{bmatrix}, \\begin{bmatrix}0\\\\x\\\\1\\end{bmatrix}, \\begin{bmatrix}0\\\\4\\\\x\\end{bmatrix} \\right\\}$ is linearly independent is",
+    options: [
+      "$\\{x\\in\\mathbb{R} : x \\ne 2\\}$",
+      "$\\{x\\in\\mathbb{R} : x \\ne 0\\}$",
+      "$\\{x\\in\\mathbb{R} : x \\ne \\pm2\\}$",
+      "$\\{x\\in\\mathbb{R} : x \\ne 0,\\ x \\ne \\pm2\\}$",
+      NOTA,
+    ],
+    answer: 2,
+    solution:
+      "Columns: $\\begin{bmatrix} 1 & 0 & 0 \\\\ x & x & 4 \\\\ 0 & 1 & x \\end{bmatrix}$. $r_2 \\leftarrow r_2 - x\\,r_1$: $[0\\ x\\ 4]$. Swap $r_2 \\leftrightarrow r_3$: $[0\\ 1\\ x]$, $[0\\ x\\ 4]$; then $r_3 \\leftarrow r_3 - x\\,r_2$: $[0\\ 0\\ 4 - x^2]$.\nA pivot in every column iff $x^2 \\ne 4$, i.e. $x \\ne \\pm2$. Check: at $x = 2$ the third vector $[0,4,2]$ is $2\\times[0,2,1]$; at $x = -2$, $[0,4,-2] = -2\\times[0,-2,1]$. $x = 0$ is fine (the vectors are $\\mathbf{e}_1$, $\\mathbf{e}_3$, $4\\mathbf{e}_2$).",
+    ref: "PYP AY25/26 S1 Q9",
   },
   {
     subtopic: "Span",
@@ -95,7 +134,8 @@ export const systemsExam: ConceptQuestion[] = [
     ],
     answer: 2,
     solution:
-      "Row reduce $\\left[\\begin{array}{cc|c} 1 & -2 & 3 \\\\ 2 & -3 & h \\\\ -1 & 4 & -7 \\end{array}\\right]$: $R_2 - 2R_1 = [0\\ 1 \\mid h - 6]$, $R_3 + R_1 = [0\\ 2 \\mid -4]$, then $R_3 - 2R_2 = [0\\ 0 \\mid -4 - 2(h-6)] = [0\\ 0 \\mid 8 - 2h]$.\nConsistent iff $h = 4$. Then $x_2 = h - 6 = -2$ and $x_1 = 3 + 2x_2 = -1$: $\\mathbf{b} = -\\mathbf{a}_1 - 2\\mathbf{a}_2 = [-1+4,\\ -2+6,\\ 1-8] = [3, 4, -7]$ ✓. Two vectors span only a plane, so (d) is impossible.",
+      "Row reduce $\\left[\\begin{array}{cc|c} 1 & -2 & 3 \\\\ 2 & -3 & h \\\\ -1 & 4 & -7 \\end{array}\\right]$: $r_2 - 2r_1 = [0\\ 1 \\mid h - 6]$, $r_3 + r_1 = [0\\ 2 \\mid -4]$, then $r_3 - 2r_2 = [0\\ 0 \\mid -4 - 2(h-6)] = [0\\ 0 \\mid 8 - 2h]$.\nConsistent iff $h = 4$. Then $x_2 = h - 6 = -2$ and $x_1 = 3 + 2x_2 = -1$: $\\mathbf{b} = -\\mathbf{a}_1 - 2\\mathbf{a}_2 = [-1+4,\\ -2+6,\\ 1-8] = [3, 4, -7]$ ✓. Two vectors span only a plane, so (d) is impossible.",
+    ref: "PYP AY22/23 S1 Q1(b); Tutorial 1 Q3",
   },
   {
     subtopic: "Consistency",
@@ -105,7 +145,8 @@ export const systemsExam: ConceptQuestion[] = [
     options: ["$p = 16$; exactly one", "$p = -4$; exactly one", "$p = 4$; infinitely many", "$p = -4$; infinitely many", NOTA],
     answer: 3,
     solution:
-      "$R_2 \\leftarrow R_2 - 2R_1$: $[0\\ 1\\ 2 \\mid 1]$. $\\ R_3 \\leftarrow R_3 + R_1$: $[0\\ {-2}\\ {-4} \\mid p + 2]$. $\\ R_3 \\leftarrow R_3 + 2R_2$: $[0\\ 0\\ 0 \\mid p + 4]$.\nConsistent iff $p = -4$ (equivalently row 3 $= 3\\cdot$row 1 $- 2\\cdot$row 2, so $p = 3(2) - 2(5)$). Then $x_3$ is free: **infinitely many** solutions. $p = 16$ comes from $3(2) + 2(5)$, a sign slip.",
+      "$r_2 \\leftarrow r_2 - 2r_1$: $[0\\ 1\\ 2 \\mid 1]$. $\\ r_3 \\leftarrow r_3 + r_1$: $[0\\ {-2}\\ {-4} \\mid p + 2]$. $\\ r_3 \\leftarrow r_3 + 2r_2$: $[0\\ 0\\ 0 \\mid p + 4]$.\nConsistent iff $p = -4$. Then $x_3$ is free: **infinitely many** solutions. $p = 16$ comes from a sign slip.",
+    ref: "PYP (written papers): $p$ for which $A\\mathbf{x} = [3, 9, p]^T$ is consistent",
   },
   {
     subtopic: "Existence & uniqueness",
@@ -115,7 +156,8 @@ export const systemsExam: ConceptQuestion[] = [
     options: ["I, II and IV only", "I and II only", "II and IV only", "I, III and IV only", "All of the above"],
     answer: 0,
     solution:
-      "- I ✓: at most 3 pivots for 5 columns, so a free variable exists.\n- II ✓: a pivot in every column means no free variables; a consistent system has exactly one solution (some $\\mathbf{b}$ may give none).\n- III ✗: $A\\mathbf{x} = \\mathbf{0}$ is always consistent, but e.g. $A = \\begin{bmatrix}1&0\\\\0&0\\end{bmatrix}$ cannot reach $[0,1]^T$.\n- IV ✓: 4 pivots in a $4\\times4$ matrix is a pivot in every column **and** every row.",
+      "- I ✓: at most 3 pivots for 5 columns, so a free variable exists.\n- II ✓: a pivot in every column means no free variables; a consistent system has exactly one solution (some $\\mathbf{b}$ may give none).\n- III ✗: $A\\mathbf{x} = \\mathbf{0}$ is always consistent, but e.g. $A = \\begin{bmatrix}1&0\\\\0&0\\end{bmatrix}$ cannot reach $[0,1]^T$.\n- IV ✓: by Theorem 2.4, only the trivial solution means 4 pivots, a pivot in every column **and** every row.",
+    ref: "PYP (written papers): columns of every $3\\times5$ matrix are dependent; Slides 2.2 Theorems 1.2, 2.4 (alg p10–11)",
   },
   {
     subtopic: "Independence of combinations",
@@ -125,7 +167,8 @@ export const systemsExam: ConceptQuestion[] = [
     options: ["I and II only", "I and IV only", "II, III and IV only", "I, II and IV only", "All of the above"],
     answer: 3,
     solution:
-      "Write each set's coefficients (with respect to $\\mathbf{u},\\mathbf{v},\\mathbf{w}$) as rows of a matrix $C$; since $\\mathbf{u},\\mathbf{v},\\mathbf{w}$ are independent, the set is independent iff $C$ has full row rank (for a square $C$: $\\det C \\ne 0$).\n- I: $\\begin{bmatrix}1&1\\\\1&-1\\end{bmatrix}$, $\\det = -2$ ✓.\n- II: $\\begin{bmatrix}1&1&0\\\\0&1&1\\\\1&0&1\\end{bmatrix}$, $\\det = 2$ ✓.\n- III: the three vectors sum to $\\mathbf{0}$, so they are dependent ✗.\n- IV: $\\begin{bmatrix}1&1&0\\\\1&-1&0\\\\1&-2&1\\end{bmatrix}$, $\\det = 1\\cdot(-1) - 1\\cdot(1) = -2$ ✓ (only the third vector involves $\\mathbf{w}$, and the first two are independent).",
+      "For each set, set a combination equal to $\\mathbf{0}$, collect the coefficients of $\\mathbf{u}, \\mathbf{v}, \\mathbf{w}$, and use their independence to set each coefficient to $0$.\n- I: $(c_1+c_2)\\mathbf{u} + (c_1-c_2)\\mathbf{v} = \\mathbf{0}$ ⇒ $c_1 + c_2 = 0$, $c_1 - c_2 = 0$ ⇒ $c_1 = c_2 = 0$ ✓.\n- II: $(c_1+c_3)\\mathbf{u} + (c_1+c_2)\\mathbf{v} + (c_2+c_3)\\mathbf{w} = \\mathbf{0}$ ⇒ $c_1 = -c_3$, $c_2 = -c_1 = c_3$, $c_2 + c_3 = 2c_3 = 0$ ⇒ all zero ✓.\n- III: $(\\mathbf{u}-\\mathbf{v}) + (\\mathbf{v}-\\mathbf{w}) + (\\mathbf{w}-\\mathbf{u}) = \\mathbf{0}$ with weights $1, 1, 1$: dependent ✗.\n- IV: $(c_1+c_2+c_3)\\mathbf{u} + (c_1-c_2-2c_3)\\mathbf{v} + c_3\\mathbf{w} = \\mathbf{0}$ ⇒ $c_3 = 0$, then $c_1 + c_2 = 0$, $c_1 - c_2 = 0$ ⇒ all zero ✓.",
+    ref: "PYP (written papers): are $\\mathbf{u}+\\mathbf{v}$, $\\mathbf{u}-\\mathbf{v}$, $\\mathbf{u}-2\\mathbf{v}+\\mathbf{w}$ independent?; Slides 4.7 definition (vsp p29)",
   },
   {
     subtopic: "Existence & uniqueness",
@@ -134,7 +177,8 @@ export const systemsExam: ConceptQuestion[] = [
     options: TFN_OPTIONS,
     answer: 1,
     solution:
-      "Only the trivial solution means a pivot in each of the 4 columns, so solutions are unique **when they exist**. But 4 pivots cannot fill 5 rows: some row of the echelon form of $A$ is zero, and a suitable $\\mathbf{b}$ turns it into $[0\\ 0\\ 0\\ 0 \\mid 1]$. So $A\\mathbf{x} = \\mathbf{b}$ is inconsistent for some $\\mathbf{b}$: **False**.",
+      "Only the trivial solution means a pivot in each of the 4 columns, so solutions are unique **when they exist**. But 4 pivots cannot fill 5 rows, so by Theorem 1.2 $A\\mathbf{x} = \\mathbf{b}$ is inconsistent for some $\\mathbf{b}$: **False**.",
+    ref: "Slides 2.2 Theorem 1.2 (alg p11); Tutorial 1 Q12",
   },
   {
     subtopic: "Coefficients from a solution",
@@ -150,25 +194,27 @@ export const systemsExam: ConceptQuestion[] = [
     ],
     answer: 4,
     solution:
-      "Substitute $(2, -1, 3)$:\n- $2a + 1 + 6 = 13 \\Rightarrow a = 3$;\n- $6 - b - 3 = -5 \\Rightarrow b = 8$;\n- $2 - 4 + 3c = 4 \\Rightarrow c = 2$.\nWith these values $\\det\\begin{bmatrix} 3 & -1 & 2 \\\\ 3 & 8 & -1 \\\\ 1 & 4 & 2 \\end{bmatrix} = 3(16 + 4) + 1(6 + 1) + 2(12 - 8) = 60 + 7 + 8 = 75 \\ne 0$, so the solution $(2,-1,3)$ is the **only** one.\nThe correct combination \"$(3, 8, 2)$, exactly one solution\" is not offered: **None of the above**.",
+      "Substitute $(2, -1, 3)$:\n- $2a + 1 + 6 = 13 \\Rightarrow a = 3$;\n- $6 - b - 3 = -5 \\Rightarrow b = 8$;\n- $2 - 4 + 3c = 4 \\Rightarrow c = 2$.\nWith these values, row reduce the coefficient matrix with $x + 4y + 2z$ first: rows $[1\\ 4\\ 2]$, $[3\\ 8\\ {-1}]$, $[3\\ {-1}\\ 2]$. $r_2 - 3r_1 = [0\\ {-4}\\ {-7}]$, $r_3 - 3r_1 = [0\\ {-13}\\ {-4}]$, then $r_3 - \\tfrac{13}{4}r_2 = [0\\ 0\\ \\tfrac{75}{4}]$. Three nonzero pivots: the solution $(2,-1,3)$ is the **only** one.\nThe correct combination \"$(3, 8, 2)$, exactly one solution\" is not offered: **None of the above**.",
+    ref: "PYP AY21/22 S1 Q1(a)",
   },
   {
-    subtopic: "Echelon & RREF",
+    subtopic: "Existence & uniqueness",
     kind: "mcq",
-    prompt: "Which of the following statements about linear systems and row reduction is **false**?",
+    prompt: "Which of the following statements about linear systems is **false**?",
     options: [
       "A linear system with more unknowns than equations always has infinitely many solutions.",
-      "Every matrix is row equivalent to exactly one matrix in reduced row echelon form.",
+      "A homogeneous system with more unknowns than equations has a nontrivial solution.",
       "If two augmented matrices are row equivalent, the corresponding systems have the same solution set.",
-      "The pivot positions of a matrix are the same in every echelon form of that matrix.",
+      "If $A$ is $3\\times3$ and $A\\mathbf{x} = \\mathbf{0}$ has only the trivial solution, then $A\\mathbf{x} = \\mathbf{b}$ has a solution for every $\\mathbf{b}\\in\\mathbb{R}^3$.",
       "A consistent linear system with at least one free variable has infinitely many solutions.",
     ],
     answer: 0,
     solution:
-      "More unknowns than equations guarantees a free variable, but only matters **if the system is consistent**. $x + y + z = 1$, $x + y + z = 2$ has 3 unknowns, 2 equations and no solution. The other four statements are standard theorems (uniqueness of RREF, row equivalence preserves solutions, pivot positions are determined by the RREF, and free variable + consistent ⇒ infinitely many).",
+      "More unknowns than equations guarantees a free variable, but that only gives infinitely many solutions **if the system is consistent**. $x + y + z = 1$, $x + y + z = 2$ has 3 unknowns, 2 equations and no solution. (b) is true because a homogeneous system is consistent and has a free variable; (c) holds because row operations can be undone; (d) is Theorem 2.4 (4) ⇒ (6); (e) holds because each value of the free variable gives a solution.",
+    ref: "Tutorial 1 Q12; Slides 2.2 Theorem 2.4 (alg p10); Slides 2.2 elementary row operations (alg p7–8)",
   },
   {
-    subtopic: "Parametric vector form",
+    subtopic: "General solution",
     kind: "mcq",
     prompt:
       "The augmented matrix of a system in $x_1, x_2, x_3, x_4$ has the echelon form\n$$\\left[\\begin{array}{cccc|c} 1 & 2 & -1 & 3 & 1 \\\\ 0 & 0 & 1 & -2 & 3 \\\\ 0 & 0 & 0 & 0 & 0 \\end{array}\\right]$$\nWhich of the following is the complete solution ($s, t\\in\\mathbb{R}$)?",
@@ -181,7 +227,8 @@ export const systemsExam: ConceptQuestion[] = [
     ],
     answer: 2,
     solution:
-      "Back-substitute: row 2 gives $x_3 = 3 + 2x_4$; row 1 gives $x_1 = 1 - 2x_2 + x_3 - 3x_4 = 4 - 2x_2 - x_4$. With $x_2 = s$, $x_4 = t$ the standard form is $[4,0,3,0]^T + s[-2,1,0,0]^T + t[-1,0,2,1]^T$, which is not listed **as such**.\nBut option (c) uses $[3,0,5,1]^T$, which is the solution with $s = 0$, $t = 1$, and the same direction vectors, so it describes **the same set**. Option (a) skips the back-substitution of $x_3$, (b) forgets to change signs, (d) has the wrong sign in the $x_3$ entry.",
+      "Back-substitute: row 2 gives $x_3 = 3 + 2x_4$; row 1 gives $x_1 = 1 - 2x_2 + x_3 - 3x_4 = 4 - 2x_2 - x_4$. With $x_2 = s$, $x_4 = t$ the usual form is $[4,0,3,0]^T + s[-2,1,0,0]^T + t[-1,0,2,1]^T$, which is not listed **as such**.\nBut option (c) uses $[3,0,5,1]^T$, which is the solution with $s = 0$, $t = 1$, and the same direction vectors, so it describes **the same set**. Option (a) skips the back-substitution of $x_3$, (b) forgets to change signs, (d) has the wrong sign in the $x_3$ entry.",
+    ref: "Additional practice problems (general solution); PYP AY21/22 S1 Q1(c)",
   },
   {
     subtopic: "Span & pivots",
@@ -191,7 +238,8 @@ export const systemsExam: ConceptQuestion[] = [
     options: ["4; yes", "3; no", "3; yes", "2; no", NOTA],
     answer: 1,
     solution:
-      "$R_2 - 2R_1 = [0\\ {-1}\\ 1\\ 2]$, $R_4 - R_1 = [0\\ {-1}\\ 0\\ 3]$. Then $R_3 + R_2' = [0\\ 0\\ 0\\ 0]$ and $R_4 - R_2' = [0\\ 0\\ {-1}\\ 1]$. After a swap the echelon form is\n$$\\begin{bmatrix} 1 & 2 & 0 & -1 \\\\ 0 & -1 & 1 & 2 \\\\ 0 & 0 & -1 & 1 \\\\ 0 & 0 & 0 & 0 \\end{bmatrix}$$\nso there are 3 pivots. Without a pivot in every row, the columns of $B$ do **not** span $\\mathbb{R}^4$ and some $\\mathbf{y}$ give an inconsistent system.",
+      "$r_2 - 2r_1 = [0\\ {-1}\\ 1\\ 2]$, $r_4 - r_1 = [0\\ {-1}\\ 0\\ 3]$. Then $r_3 + r_2 = [0\\ 0\\ 0\\ 0]$ and $r_4 - r_2 = [0\\ 0\\ {-1}\\ 1]$. After a swap the echelon form is\n$$\\begin{bmatrix} 1 & 2 & 0 & -1 \\\\ 0 & -1 & 1 & 2 \\\\ 0 & 0 & -1 & 1 \\\\ 0 & 0 & 0 & 0 \\end{bmatrix}$$\nso 3 rows contain a pivot. Without a pivot in every row, by Theorem 1.2 the columns of $B$ do **not** span $\\mathbb{R}^4$ and some $\\mathbf{y}$ give an inconsistent system.",
+    ref: "Tutorial 1 Q5; Slides 2.2 Theorem 1.2 (alg p11)",
   },
   {
     subtopic: "Solution sets",
@@ -207,7 +255,8 @@ export const systemsExam: ConceptQuestion[] = [
     ],
     answer: 3,
     solution:
-      "One zero row means rank 2, so exactly $3 - 2 = 1$ free variable: the solution set of $A\\mathbf{x} = \\mathbf{0}$ is a line through the origin, and the solution set of $A\\mathbf{x} = \\mathbf{b}$ is that line shifted by a particular solution $\\mathbf{p}$. It contains $\\mathbf{0}$ iff $A\\mathbf{0} = \\mathbf{b}$, i.e. iff $\\mathbf{b} = \\mathbf{0}$. Option (b) is only right when $\\mathbf{b} = \\mathbf{0}$.",
+      "One zero row means 2 pivots, so exactly $3 - 2 = 1$ free variable: the complete solution is $\\mathbf{p} + t\\mathbf{v}$, a line. It contains $\\mathbf{0}$ iff $\\mathbf{x} = \\mathbf{0}$ is a solution, i.e. iff $A\\mathbf{0} = \\mathbf{b}$, i.e. iff $\\mathbf{b} = \\mathbf{0}$. Option (b) is only right when $\\mathbf{b} = \\mathbf{0}$.",
+    ref: "PYP AY25/26 S2 Q10; Tutorial 1 Q6",
   },
   {
     subtopic: "Linear independence",
@@ -222,7 +271,8 @@ export const systemsExam: ConceptQuestion[] = [
     ],
     answer: 1,
     solution:
-      "Use the vectors as columns (or rows; the determinant is the same): the Vandermonde determinant is\n$$\\det\\begin{bmatrix} 1 & a & a^2 \\\\ 1 & b & b^2 \\\\ 1 & c & c^2 \\end{bmatrix} = (b - a)(c - a)(c - b).$$\nIt is nonzero iff no two of $a, b, c$ coincide. Zero values are allowed: $a = 0, b = 1, c = 2$ gives independent vectors, so (d) adds an unnecessary condition.",
+      "Columns: $\\begin{bmatrix} 1 & a & a^2 \\\\ 1 & b & b^2 \\\\ 1 & c & c^2 \\end{bmatrix}$. $r_2 - r_1 = [0\\ \\ b-a\\ \\ b^2-a^2]$, $r_3 - r_1 = [0\\ \\ c-a\\ \\ c^2-a^2]$.\nIf $a = b$ (or $a = c$, or $b = c$) two of the rows are equal and there are at most 2 pivots: dependent. If $a, b, c$ are distinct, $b - a \\ne 0$ is a pivot and $r_3 \\leftarrow r_3 - \\tfrac{c-a}{b-a}r_2$ leaves $(c^2 - a^2) - (c-a)(b+a) = (c-a)(c-b) \\ne 0$, a third pivot: independent.\nZero values are allowed: $a = 0, b = 1, c = 2$ gives independent vectors, so (d) adds an unnecessary condition.",
+    ref: "PYP AY2021-S2 Q1(c)",
   },
   {
     subtopic: "Free variables",
@@ -232,7 +282,8 @@ export const systemsExam: ConceptQuestion[] = [
     options: ["$t = 4$", "$t = 1$", "$t = -6$", "No value of $t$", NOTA],
     answer: 4,
     solution:
-      "Three free variables among 5 unknowns means rank $2$.\n$R_2 - 2R_1 = [0\\ 0\\ 3\\ 3\\ {-3}]$, $\\ R_3 + R_1 = [0\\ 0\\ t + 4\\ 3\\ {-3}]$. Subtracting, $R_3 - R_2' = [0\\ 0\\ t + 1\\ 0\\ 0]$.\nThis row is zero iff $t = -1$: then rank $2$ and three free variables ($x_2, x_4, x_5$). For $t \\ne -1$ it gives a third pivot and only two free variables. Since $-1$ is not offered, the answer is **None of the above**. ($t = 4$ is what you get by matching the entry to $4$ without the $+5$.)",
+      "Three free variables among 5 unknowns means exactly $5 - 3 = 2$ pivots.\n$r_2 - 2r_1 = [0\\ 0\\ 3\\ 3\\ {-3}]$, $\\ r_3 + r_1 = [0\\ 0\\ t + 4\\ 3\\ {-3}]$. Subtracting, $r_3 - r_2 = [0\\ 0\\ t + 1\\ 0\\ 0]$.\nThis row is zero iff $t = -1$: then 2 pivots and three free variables ($x_2, x_4, x_5$). For $t \\ne -1$ it gives a third pivot and only two free variables. Since $-1$ is not offered, the answer is **None of the above**. ($t = 4$ is what you get by matching the entry to $4$ without the $+5$.)",
+    ref: "PYP (written papers): find $t$ so that $A\\mathbf{x} = \\mathbf{0}$ has 3 free variables",
   },
   {
     subtopic: "Existence & uniqueness",
@@ -242,16 +293,7 @@ export const systemsExam: ConceptQuestion[] = [
     answer: 0,
     solution:
       "Some $\\mathbf{y}$ is unreachable, so $A$ does not have a pivot in every row: at most 2 pivots. For a $3\\times3$ matrix this leaves a column without a pivot, i.e. a free variable, so $A\\mathbf{x} = \\mathbf{0}$ has nontrivial solutions. **True**.",
-  },
-  {
-    subtopic: "Solution sets",
-    kind: "mcq",
-    prompt:
-      "$\\mathbf{p}$ and $\\mathbf{q}$ are two different solutions of $A\\mathbf{x} = \\mathbf{b}$, where $\\mathbf{b} \\ne \\mathbf{0}$. Which of the following must also be solutions of $A\\mathbf{x} = \\mathbf{b}$?\nI. $\\mathbf{p} + \\mathbf{q}$\nII. $\\mathbf{p} - \\mathbf{q}$\nIII. $2\\mathbf{p} - \\mathbf{q}$\nIV. $\\tfrac12(\\mathbf{p} + \\mathbf{q})$",
-    options: ["I and II only", "II and III only", "II, III and IV only", "III and IV only", "All of the above"],
-    answer: 3,
-    solution:
-      "$A(\\alpha\\mathbf{p} + \\beta\\mathbf{q}) = (\\alpha + \\beta)\\mathbf{b}$, which equals $\\mathbf{b}$ iff $\\alpha + \\beta = 1$ (as $\\mathbf{b} \\ne \\mathbf{0}$).\n- I: $1 + 1 = 2$ ✗ (gives $2\\mathbf{b}$).\n- II: $1 - 1 = 0$ ✗ (it solves $A\\mathbf{x} = \\mathbf{0}$ instead).\n- III: $2 - 1 = 1$ ✓.\n- IV: $\\tfrac12 + \\tfrac12 = 1$ ✓.",
+    ref: "Tutorial 1 Q7; Slides 2.2 Theorem 2.4 (alg p10)",
   },
   {
     subtopic: "Span",
@@ -267,7 +309,8 @@ export const systemsExam: ConceptQuestion[] = [
     ],
     answer: 0,
     solution:
-      "Row reduce $[\\mathbf{a}_1\\ \\mathbf{a}_2\\ \\mathbf{a}_3 \\mid \\mathbf{b}] = \\left[\\begin{array}{ccc|c} 1 & 2 & 0 & 5 \\\\ -1 & 1 & 3 & 1 \\\\ 2 & 1 & -3 & 4 \\end{array}\\right]$: $R_2 + R_1 = [0\\ 3\\ 3 \\mid 6]$, $R_3 - 2R_1 = [0\\ {-3}\\ {-3} \\mid {-6}]$, so $R_3 + R_2 = [0\\ 0\\ 0 \\mid 0]$.\nConsistent, so $\\mathbf{b}\\in W$ (e.g. $\\mathbf{b} = \\mathbf{a}_1 + 2\\mathbf{a}_2$). Only 2 pivots: $\\mathbf{a}_3 = \\mathbf{a}_2 - 2\\mathbf{a}_1$ is redundant and $W$ is a plane through $\\mathbf{0}$, not $\\mathbb{R}^3$. A span of nonzero vectors always has infinitely many elements.",
+      "Row reduce $[\\mathbf{a}_1\\ \\mathbf{a}_2\\ \\mathbf{a}_3 \\mid \\mathbf{b}] = \\left[\\begin{array}{ccc|c} 1 & 2 & 0 & 5 \\\\ -1 & 1 & 3 & 1 \\\\ 2 & 1 & -3 & 4 \\end{array}\\right]$: $r_2 + r_1 = [0\\ 3\\ 3 \\mid 6]$, $r_3 - 2r_1 = [0\\ {-3}\\ {-3} \\mid {-6}]$, so $r_3 + r_2 = [0\\ 0\\ 0 \\mid 0]$.\nConsistent, so $\\mathbf{b}\\in W$ (e.g. $\\mathbf{b} = \\mathbf{a}_1 + 2\\mathbf{a}_2$). Only 2 pivots, so the columns do not span $\\mathbb{R}^3$ (Theorem 1.2); $\\mathbf{a}_3 = \\mathbf{a}_2 - 2\\mathbf{a}_1$ adds nothing, and $W = \\operatorname{Span}\\{\\mathbf{a}_1, \\mathbf{a}_2\\}$ is a plane through $\\mathbf{0}$, with infinitely many vectors.",
+    ref: "Tutorial 1 Q3; PYP AY21/22 S1 Q1(b)",
   },
   {
     subtopic: "Existence & uniqueness",
@@ -277,6 +320,7 @@ export const systemsExam: ConceptQuestion[] = [
     answer: 1,
     solution:
       "As $A$ is square and some $\\mathbf{y}$ is unreachable, $A$ has fewer than 3 pivots, so there is a free variable. Every **consistent** equation $A\\mathbf{x} = \\mathbf{z}$ (e.g. $\\mathbf{z} = \\mathbf{0}$) then has infinitely many solutions, and the others have none. No $\\mathbf{z}$ gives exactly one: **False**.",
+    ref: "Tutorial 1 Q7",
   },
   {
     subtopic: "Existence & uniqueness",
@@ -285,7 +329,8 @@ export const systemsExam: ConceptQuestion[] = [
     options: TFN_OPTIONS,
     answer: 2,
     solution:
-      "A consistent system has a unique solution iff $A$ has a pivot in every column (3 pivots). A $4\\times3$ matrix can have 3 pivots (e.g. the first three columns of $I_4$) or fewer (e.g. the zero matrix with $\\mathbf{b} = \\mathbf{0}$, which has infinitely many solutions). The rank is not given, so this **cannot be determined**.",
+      "A consistent system has exactly one solution iff $A$ has a pivot in every column (3 pivots). A $4\\times3$ matrix can have 3 pivots (e.g. the first three columns of $I_4$) or fewer (e.g. the zero matrix with $\\mathbf{b} = \\mathbf{0}$, which has infinitely many solutions). The pivots are not given, so this **cannot be determined**.",
+    ref: "Tutorial 1 Q12",
   },
   {
     subtopic: "Linear independence",
@@ -295,11 +340,12 @@ export const systemsExam: ConceptQuestion[] = [
       "Any set of vectors in $\\mathbb{R}^n$ that contains $\\mathbf{0}$ is linearly dependent.",
       "Any four vectors in $\\mathbb{R}^3$ are linearly dependent.",
       "The columns of $A$ are linearly independent if and only if $A\\mathbf{x} = \\mathbf{0}$ has only the trivial solution.",
-      "Two vectors are linearly dependent if and only if one of them is a scalar multiple of the other.",
+      "Two vectors are linearly dependent if and only if one of them is a multiple of the other.",
       "If $\\{\\mathbf{v}_1, \\mathbf{v}_2, \\mathbf{v}_3\\}$ is linearly dependent, then each $\\mathbf{v}_i$ is a linear combination of the other two.",
     ],
     answer: 4,
     solution:
-      "Dependence only guarantees that **at least one** vector is a combination of the others. Take $\\mathbf{v}_1 = \\mathbf{e}_1$, $\\mathbf{v}_2 = 2\\mathbf{e}_1$, $\\mathbf{v}_3 = \\mathbf{e}_3$: dependent, but $\\mathbf{v}_3 \\notin \\operatorname{Span}\\{\\mathbf{v}_1,\\mathbf{v}_2\\}$. The other four are standard facts (for (d): if $c_1\\mathbf{u} + c_2\\mathbf{v} = \\mathbf{0}$ with, say, $c_1\\ne0$, then $\\mathbf{u} = -(c_2/c_1)\\mathbf{v}$).",
+      "Dependence only guarantees that **some** vector is a combination of the vectors before it (Theorem 4.4). Take $\\mathbf{v}_1 = \\mathbf{e}_1$, $\\mathbf{v}_2 = 2\\mathbf{e}_1$, $\\mathbf{v}_3 = \\mathbf{e}_3$: dependent, but $\\mathbf{v}_3 \\notin \\operatorname{Span}\\{\\mathbf{v}_1,\\mathbf{v}_2\\}$. The other four are facts from the notes: (a), (d) slide 4.7 p30; (b) at most 3 pivots for 4 columns; (c) the definition of independence applied to the columns.",
+    ref: "Slides 4.7 (vsp p29–30); Additional practice problems Q.19",
   },
 ];

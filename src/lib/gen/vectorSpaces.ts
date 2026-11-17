@@ -1,5 +1,5 @@
 import {
-  cross, det, F, Frac, identity, inverse, isZeroVec, mat, matmul, matTex, matvec, rank, rowTex, transpose, vec, type Mat,
+  det, F, Frac, identity, inverse, isZeroVec, mat, matmul, matTex, matvec, rank, rowTex, transpose, vec, type Mat,
   type Vec,
 } from "@/lib/math/frac";
 import { mcq, NONE, retry, tfn, type Draft, type Rng } from "./common";
@@ -293,7 +293,7 @@ function changeOfBasisRelation(rng: Rng): Draft {
       prompt: `${head} Find the change-of-coordinates matrix $P_{\\mathcal{B}\\leftarrow\\mathcal{A}}$.`,
       correct: matTex(M, false),
       distractors: [matTex(MT, false), matTex(Minv), matTex(transpose(Minv)), matTex(M.map((r) => r.map((x) => x.neg())), false)],
-      solution: `$P_{\\mathcal{B}\\leftarrow\\mathcal{A}} = \\big[\\,[\\mathbf{a}_1]_{\\mathcal{B}}\\ [\\mathbf{a}_2]_{\\mathcal{B}}\\ [\\mathbf{a}_3]_{\\mathcal{B}}\\,\\big]$: the $\\mathcal{B}$-coordinates of each $\\mathbf{a}_j$ go in **column** $j$.\n${transpose(M).map((col, j) => `$[${bf("a", j + 1)}]_{\\mathcal{B}} = ${rowTex(col)}$`).join(", ")}, so\n$$P_{\\mathcal{B}\\leftarrow\\mathcal{A}} = ${matTex(M, false)}.$$\nWriting the coefficients as rows gives the transpose, the most common mistake. The inverse is $P_{\\mathcal{A}\\leftarrow\\mathcal{B}}$.`,
+      solution: `$P_{\\mathcal{B}\\leftarrow\\mathcal{A}} = \\big[\\,[\\mathbf{a}_1]_{\\mathcal{B}}\\ [\\mathbf{a}_2]_{\\mathcal{B}}\\ [\\mathbf{a}_3]_{\\mathcal{B}}\\,\\big]$: the $\\mathcal{B}$-coordinates of each $\\mathbf{a}_j$ go in **column** $j$.\n${transpose(M).map((col, j) => `$[${bf("a", j + 1)}]_{\\mathcal{B}} = ${rowTex(col)}$`).join(", ")}, so\n$$P_{\\mathcal{B}\\leftarrow\\mathcal{A}} = ${matTex(M, false)}.$$\nWriting the coefficients as rows gives the transpose, the most common mistake.`,
     });
   }
   const c = randIntVec(rng, 3, -3, 4);
@@ -318,14 +318,15 @@ function changeOfBasisR2(rng: Rng): Draft {
   const bs = transpose(B);
   const cs = transpose(C);
   const head = `Let $\\mathcal{B} = \\{\\mathbf{b}_1, \\mathbf{b}_2\\}$ and $\\mathcal{C} = \\{\\mathbf{c}_1, \\mathbf{c}_2\\}$ be bases of $\\mathbb{R}^2$ with $\\mathbf{b}_1 = ${rowTex(bs[0])}$, $\\mathbf{b}_2 = ${rowTex(bs[1])}$, $\\mathbf{c}_1 = ${rowTex(cs[0])}$, $\\mathbf{c}_2 = ${rowTex(cs[1])}$.`;
-  const sol = `The columns of $P_{\\mathcal{C}\\leftarrow\\mathcal{B}}$ are $[\\mathbf{b}_1]_{\\mathcal{C}}, [\\mathbf{b}_2]_{\\mathcal{C}}$, so $P_{\\mathcal{C}\\leftarrow\\mathcal{B}} = P_{\\mathcal{C}}^{-1}P_{\\mathcal{B}}$ (row reduce $[\\,\\mathbf{c}_1\\ \\mathbf{c}_2 \\mid \\mathbf{b}_1\\ \\mathbf{b}_2\\,]$):\n$$P_{\\mathcal{C}\\leftarrow\\mathcal{B}} = ${matTex(Cinv)}${matTex(B)} = ${matTex(P)}.$$`;
+  const pc = transpose(P);
+  const sol = `The columns of $P_{\\mathcal{C}\\leftarrow\\mathcal{B}}$ are the $\\mathcal{C}$-coordinate vectors $[\\mathbf{b}_1]_{\\mathcal{C}}, [\\mathbf{b}_2]_{\\mathcal{C}}$ (Theorem 4.9, slide 70). With $P_{\\mathcal{C}} = ${matTex(C)}$ and $P_{\\mathcal{C}}^{-1} = ${matTex(Cinv)}$, each column is $[\\mathbf{b}_j]_{\\mathcal{C}} = P_{\\mathcal{C}}^{-1}\\mathbf{b}_j$: $[\\mathbf{b}_1]_{\\mathcal{C}} = ${rowTex(pc[0])}$ and $[\\mathbf{b}_2]_{\\mathcal{C}} = ${rowTex(pc[1])}$. So\n$$P_{\\mathcal{C}\\leftarrow\\mathcal{B}} = ${matTex(P)}.$$\nCheck: $(${pc[0][0].tex()})\\mathbf{c}_1 + (${pc[0][1].tex()})\\mathbf{c}_2 = ${rowTex(bs[0])} = \\mathbf{b}_1$.`;
   if (rng.chance(0.5)) {
     return mcq(rng, {
       subtopic: "Change of basis",
       prompt: `${head} Find $P_{\\mathcal{C}\\leftarrow\\mathcal{B}}$.`,
       correct: matTex(P),
       distractors: [matTex(Pinv), matTex(transpose(P)), matTex(matmul(B, Cinv)), matTex(matmul(Cinv, transpose(B))), matTex(matmul(inverse(B)!, C))],
-      solution: `${sol}\nIts inverse $${matTex(Pinv)}$ is $P_{\\mathcal{B}\\leftarrow\\mathcal{C}}$; order matters.`,
+      solution: `${sol}\nWriting the coordinate vectors as rows gives the transpose; using $[\\mathbf{c}_1]_{\\mathcal{B}}, [\\mathbf{c}_2]_{\\mathcal{B}}$ as columns converts the other way.`,
     });
   }
   const xB = randIntVec(rng, 2, -3, 3);
@@ -520,7 +521,6 @@ function bInColumnSpace(rng: Rng): Draft {
     const b = a1.map((x, i) => x.mul(s).add(a2[i].mul(u)));
     const A = transpose([a1, a2, a3]);
     if (maxAbsM(A) > 9 || Math.max(...b.map((x) => Math.abs(x.valueOf()))) > 15) continue;
-    const nrm = cross(a1, a2);
     const p0 = b[2];
     if (p0.isZero()) continue;
     return mcq(rng, {
@@ -528,7 +528,7 @@ function bInColumnSpace(rng: Rng): Draft {
       prompt: `Let $A = ${matTex(A)}$ and $\\mathbf{b} = [${b[0].tex()},\\ ${b[1].tex()},\\ p]^T$. For which value of $p$ is $A\\mathbf{x} = \\mathbf{b}$ consistent?`,
       correct: `p = ${p0.tex()}`,
       distractors: [p0.neg(), p0.add(1), p0.sub(2), b[0].add(b[1]), F(0)].map((x) => `p = ${x.tex()}`).concat(["\\text{every real } p"]),
-      solution: `$A\\mathbf{x} = \\mathbf{b}$ is consistent **iff** $\\mathbf{b} \\in C(A)$. Column 3 is $${al}\\mathbf{a}_1 + (${be})\\mathbf{a}_2$, so $C(A) = \\operatorname{Span}\\{\\mathbf{a}_1, \\mathbf{a}_2\\}$, a plane with normal $\\mathbf{a}_1\\times\\mathbf{a}_2 = ${rowTex(nrm)}$.\n$\\mathbf{b}$ lies on it iff $(${nrm[0].tex()})(${b[0].tex()}) + (${nrm[1].tex()})(${b[1].tex()}) + (${nrm[2].tex()})p = 0$, i.e. $p = ${p0.tex()}$. (Row reducing $[A \\mid \\mathbf{b}]$ gives the same condition in the last row.) Indeed $\\mathbf{b} = ${s}\\mathbf{a}_1 + (${u})\\mathbf{a}_2$.`,
+      solution: `$A\\mathbf{x} = \\mathbf{b}$ is consistent **iff** $\\mathbf{b} \\in C(A)$. Column 3 is $\\mathbf{a}_3 = ${lin([F(al), F(be)], ["\\mathbf{a}_1", "\\mathbf{a}_2"])}$, so by the Spanning Set Theorem $C(A) = \\operatorname{Span}\\{\\mathbf{a}_1, \\mathbf{a}_2\\}$ (rank 2, so not every $\\mathbf{b}$ works).\nSo we need $x\\mathbf{a}_1 + y\\mathbf{a}_2 = \\mathbf{b}$. The first two entries give $${lin([a1[0], a2[0]], ["x", "y"])} = ${b[0].tex()}$ and $${lin([a1[1], a2[1]], ["x", "y"])} = ${b[1].tex()}$, whose only solution is $x = ${s}$, $y = ${u}$. The third entry then forces $p = (${a1[2].tex()})(${s}) + (${a2[2].tex()})(${u}) = ${p0.tex()}$. (Row reducing $[\\,A\\ \\ \\mathbf{b}\\,]$ gives the same condition in the last row.)`,
     });
   }
   retry();
@@ -579,33 +579,113 @@ function solutionToRank(rng: Rng): Draft {
   });
 }
 
-/** Dimensions of standard subspaces of M_{n×n} and P_n. */
+/** Dimensions of P_n, symmetric matrices and subspaces of P_n cut out by p(a) = 0 conditions. */
 function spaceDims(rng: Rng): Draft {
-  const n = rng.int(2, 5);
-  const m = rng.pick([2, 3, 4].filter((x) => x !== n));
-  const cases: { tex: string; d: number; why: string }[] = [
-    { tex: `\\text{the } ${n}\\times${n} \\text{ symmetric matrices}`, d: (n * (n + 1)) / 2, why: `A symmetric matrix is fixed by its diagonal and the entries above it: $${n} + ${(n * (n - 1)) / 2} = ${(n * (n + 1)) / 2}$ free entries, i.e. $n(n+1)/2$.` },
-    { tex: `\\text{the } ${n}\\times${n} \\text{ skew-symmetric matrices } (A^T = -A)`, d: (n * (n - 1)) / 2, why: `The diagonal must be $0$ ($a_{ii} = -a_{ii}$) and the entries below are minus those above: $n(n-1)/2 = ${(n * (n - 1)) / 2}$ free entries.` },
-    { tex: `\\text{the } ${n}\\times${n} \\text{ upper triangular matrices}`, d: (n * (n + 1)) / 2, why: `Free entries on and above the diagonal: $n(n+1)/2 = ${(n * (n + 1)) / 2}$.` },
-    { tex: `\\text{the } ${n}\\times${n} \\text{ diagonal matrices}`, d: n, why: `One free entry per diagonal position: $${n}$.` },
-    { tex: `\\{A \\in M_{${n}\\times${n}} : \\operatorname{tr}A = 0\\}`, d: n * n - 1, why: `One linear condition on the $${n * n}$ entries of $M_{${n}\\times${n}}$ removes one dimension: $${n * n} - 1 = ${n * n - 1}$.` },
-    { tex: `\\mathbb{P}_{${n + 1}}`, d: n + 2, why: `A basis is $\\{1, t, \\dots, t^{${n + 1}}\\}$: $${n + 2}$ polynomials (one more than the degree).` },
-    { tex: `\\{\\mathbf{p} \\in \\mathbb{P}_{${n}} : \\mathbf{p}(1) = 0\\}`, d: n, why: `One independent linear condition on $\\mathbb{P}_{${n}}$ (dimension $${n + 1}$) leaves $${n}$. A basis is $\\{t-1, t^2-1, \\dots\\}$.` },
-    { tex: `\\{\\mathbf{p} \\in \\mathbb{P}_{${n + 1}} : \\mathbf{p}(0) = \\mathbf{p}(1) = 0\\}`, d: n, why: `$\\dim\\mathbb{P}_{${n + 1}} = ${n + 2}$ and the two conditions are independent, leaving $${n}$.` },
-    { tex: `M_{${m}\\times${n}}`, d: m * n, why: `One basis matrix $E_{ij}$ per entry: $${m}\\cdot${n} = ${m * n}$.` },
+  const n = rng.int(2, 6);
+  const k = rng.int(2, 4);
+  const a = rng.nz(-3, 3);
+  const at = (x: number) => (x < 0 ? `(${x})` : `${x}`);
+  const cases: { ref: string; tex: string; d: number; why: string }[] = [
+    {
+      ref: "Slides 4.7 Exercise 4.7.2 (vsp p35); Slides 4.11 (vsp p50); older PYP fill-in (dim P₄ = 5)",
+      tex: `\\mathbb{P}_{${n}}`,
+      d: n + 1,
+      why: `The standard basis $\\{1, t, \\dots, t^{${n}}\\}$ of $\\mathbb{P}_{${n}}$ has $${n + 1}$ polynomials (one more than the degree, because of the constant term $1$).`,
+    },
+    {
+      ref: "PYP AY25/26 S1 Q5; Tutorial 4 Q1",
+      tex: `\\text{all } ${k}\\times${k} \\text{ symmetric matrices}`,
+      d: (k * (k + 1)) / 2,
+      why: `In a symmetric matrix each entry below the diagonal equals the one above it, so the matrix is fixed by its $${k}$ diagonal entries and the $${(k * (k - 1)) / 2}$ entries above the diagonal: $${(k * (k + 1)) / 2}$ free entries. Each free entry gives one basis matrix (a $1$ in that position and its mirror image), so the dimension is $${(k * (k + 1)) / 2}$.`,
+    },
+    {
+      ref: "Slides 4.4 (vsp p21–22); Slides 4.12 (vsp p52); Slides 4.11 (vsp p50)",
+      tex: `\\{\\mathbf{p} \\in \\mathbb{P}_{${n}} : \\mathbf{p}(${a}) = 0\\}`,
+      d: n,
+      why: `With $\\mathbf{p}(t) = a_0 + a_1t + \\dots + a_{${n}}t^{${n}}$, the condition $\\mathbf{p}(${a}) = 0$ is one homogeneous equation $a_0 + ${at(a)}a_1 + \\dots + ${at(a)}^{${n}}a_{${n}} = 0$ in the $${n + 1}$ coordinates. It has one pivot ($a_0$) and $${n}$ free variables, so the dimension is $${n}$.`,
+    },
+    {
+      ref: "Slides 4.4 (vsp p21–22); Slides 4.12 (vsp p52); Slides 4.11 (vsp p50)",
+      tex: `\\{\\mathbf{p} \\in \\mathbb{P}_{${n}} : \\mathbf{p}(0) = 0 \\text{ and } \\mathbf{p}(1) = 0\\}`,
+      d: n - 1,
+      why: `With $\\mathbf{p}(t) = a_0 + a_1t + \\dots + a_{${n}}t^{${n}}$: $\\mathbf{p}(0) = 0$ gives $a_0 = 0$ and $\\mathbf{p}(1) = 0$ gives $a_0 + a_1 + \\dots + a_{${n}} = 0$. This homogeneous system has 2 pivots ($a_0$, $a_1$) among $${n + 1}$ unknowns, so there are $${n - 1}$ free variables: dimension $${n - 1}$.`,
+    },
   ];
   const c = rng.pick(cases);
-  const pool = [n * n, (n * (n + 1)) / 2, (n * (n - 1)) / 2, n, n + 1, n - 1, n * n - 1, n + 2, m * n, m + n].filter((x) => x !== c.d && x > 0);
-  return mcq(rng, {
-    subtopic: "Dimension",
-    prompt: `What is the dimension of the vector space of $${c.tex}$?`,
-    correct: String(c.d),
-    distractors: [...new Set(pool)].map(String),
-    solution: `${c.why}\nCount the free parameters once all the defining conditions are used; that count is the number of vectors in a basis.`,
-  });
+  const pool = [n, n + 1, n + 2, n - 1, 2 * n, k * k, (k * (k - 1)) / 2, k, k + 1, (k * (k + 1)) / 2 + 1].filter((x) => x !== c.d && x > 0);
+  return {
+    ...mcq(rng, {
+      subtopic: "Dimension",
+      prompt: `What is the dimension of the vector space of $${c.tex}$?`,
+      correct: String(c.d),
+      distractors: [...new Set(pool)].map(String),
+      solution: `${c.why}\nThe dimension is the number of vectors in a basis, i.e. the number of free parameters once all the defining conditions are used.`,
+    }),
+    ref: c.ref,
+  };
 }
 
+/** Dimension of a parametric subspace of R^4 (Exercise 4.11.1 style). */
+function dimParam(rng: Rng): Draft {
+  for (let t = 0; t < 200; t++) {
+    const r = rng.pick([2, 3, 3]);
+    const base: Vec[] = [];
+    for (let s = 0; s < 40 && base.length < r; s++) {
+      const v = vec(Array.from({ length: 4 }, () => (rng.chance(0.35) ? 0 : rng.int(-3, 4))));
+      if (!isZeroVec(v) && rank([...base, v]) === base.length + 1) base.push(v);
+    }
+    if (base.length < r) continue;
+    // 4 parameter vectors: the base vectors plus combinations of them, shuffled.
+    const vs: Vec[] = [...base];
+    while (vs.length < 4) {
+      const cs = base.map(() => rng.int(-2, 2));
+      if (cs.filter((x) => x !== 0).length < 1) continue;
+      vs.push(base.reduce((acc, b, i) => acc.map((x, j) => x.add(b[j].mul(cs[i]))), zeros(4)));
+    }
+    const order = rng.shuffle([0, 1, 2, 3]);
+    const cols = order.map((i) => vs[i]);
+    if (cols.some((v) => isZeroVec(v) || Math.max(...v.map((x) => Math.abs(x.valueOf()))) > 9)) continue;
+    if (rank(cols) !== r) continue;
+    const params = ["a", "b", "c", "d"];
+    const entry = (i: number) => lin(cols.map((v) => v[i]), params);
+    if ([0, 1, 2, 3].some((i) => entry(i) === "0")) continue;
+    const Htex = `\\left\\{\\begin{bmatrix} ${[0, 1, 2, 3].map(entry).join(" \\\\ ")} \\end{bmatrix} : a, b, c, d \\in \\mathbb{R}\\right\\}`;
+    const { R } = rref(transpose(cols));
+    return {
+      ...mcq(rng, {
+        subtopic: "Dimension",
+        prompt: `Find the dimension of the subspace $H = ${Htex}$.`,
+        correct: String(r),
+        distractors: ["1", "2", "3", "4", "0"].filter((x) => x !== String(r)),
+        solution: `As in Exercise 4.11.1, $H$ is the span of the vectors multiplying $a, b, c, d$:\n$$${cols.map((v, i) => `\\mathbf{v}_${i + 1} = ${rowTex(v)}`).join(",\\quad ")}.$$\nSo $H = C(A)$ for $A = [\\,\\mathbf{v}_1\\ \\mathbf{v}_2\\ \\mathbf{v}_3\\ \\mathbf{v}_4\\,]$, and $\\dim H$ is the number of pivot columns. Row reducing $A$ gives the reduced echelon form $${matTex(R, false)}$ with ${r} pivots, so $\\dim H = ${r}$. The other vectors are linear combinations of the pivot columns and can be dropped (Spanning Set Theorem); 4 parameters do not mean dimension 4.`,
+      }),
+      ref: "Slides 4.11 Exercise 4.11.1 (vsp p50); Slides 4.8 Theorem 4.5 (vsp p37); Slides 4.12 (vsp p52)",
+    };
+  }
+  retry();
+}
+
+/** Attach the course-material reference (unless the generator set a more specific one). */
+const cite = (ref: string, g: (rng: Rng) => Draft) => (rng: Rng): Draft => {
+  const d = g(rng);
+  return { ...d, ref: d.ref ?? ref };
+};
+
 export const vectorSpacesGens: ((rng: Rng) => Draft)[] = [
-  nullBasis, fundamentalBasis, rankParam, coordsInverse, coordsPoly, changeOfBasisRelation, changeOfBasisR2,
-  subspaceTfn, subspaceMcq, polyDependent, extendBasis, bInColumnSpace, rankNullity, solutionToRank, spaceDims,
+  cite("Slides 4.4 Exercise 4.4.3 (vsp p21–22); Slides 4.9 (vsp p38); Slides 4.13 Exercise 4.13.1 (vsp p61)", nullBasis),
+  cite("Slides 4.9 Theorem 4.6 (vsp p42–43); Slides 4.13 Theorem 4.7, Exercise 4.13.1 (vsp p58–60)", fundamentalBasis),
+  cite("Slides 4.14 Theorem 4.9 (vsp p66); Theorem 2.4 (vsp p67); PYP AY25/26 S1 Q9", rankParam),
+  cite("Tutorial 4 Q10; Slides 4.10 Exercise 4.10.2 (vsp p47–48)", coordsInverse),
+  cite("Slides 4.10 (vsp p44, p49); older PYP (coordinates in P2)", coordsPoly),
+  cite("Tutorial 4 Q15; Slides 4.15 Theorem 4.9, Exercise 4.15.1 (vsp p69–70)", changeOfBasisRelation),
+  cite("Slides 4.15 Theorem 4.9 (vsp p70); Slides 4.10 (vsp p48)", changeOfBasisR2),
+  cite("Slides 4.2 Subspaces (vsp p12–14); Tutorial 4 Q2, Q4; PYP AY25/26 S2 Q7; Additional practice problems", subspaceTfn),
+  cite("Slides 4.2 Subspaces (vsp p12–14); Tutorial 4 Q2, Q4; PYP AY25/26 S2 Q7; Additional practice problems", subspaceMcq),
+  cite("Tutorial 4 Q9; Slides 4.7 (vsp p31); Slides 4.10 (vsp p49); PYP AY25/26 S1 Q9", polyDependent),
+  cite("Older PYP (extend a basis of W to a basis of R⁴); Slides 4.14 Theorem 4.9 (vsp p66)", extendBasis),
+  cite("Slides 4.5 (vsp p26); Slides 4.14 (vsp p62); older PYP (p for which Ax = [3, 9, p] is consistent)", bInColumnSpace),
+  cite("PYP AY25/26 S2 Q9; Tutorial 4 Q12, Q13; Slides 4.14 Theorem 4.8 (vsp p63–64)", rankNullity),
+  cite("PYP AY24/25 S2 Q8; PYP AY25/26 S1 Q8; Slides 4.14 Theorem 4.8 (vsp p64)", solutionToRank),
+  cite("Slides 4.11 (vsp p50)", spaceDims),
+  cite("Slides 4.11 Exercise 4.11.1 (vsp p50)", dimParam),
 ];

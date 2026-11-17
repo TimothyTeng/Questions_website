@@ -26,12 +26,9 @@ const det3 = (a: V3, b: V3, c: V3) =>
 const toneOf = (d: number) => (Math.abs(d) < 1e-9 ? "warn" : d > 0 ? "good" : "bad");
 const colorOf = (d: number): VizColor => (Math.abs(d) < 1e-9 ? "warn" : d > 0 ? "good" : "bad");
 
-// A small "F" inside the unit square: its image shows whether orientation is kept or flipped.
-const LETTER_F: V2[] = [[0.2, 0.15], [0.35, 0.15], [0.35, 0.45], [0.6, 0.45], [0.6, 0.58], [0.35, 0.58], [0.35, 0.72], [0.75, 0.72], [0.75, 0.85], [0.2, 0.85]];
-
 const PRESETS_2D: { label: string; a: V2; b: V2 }[] = [
   { label: "Stretch", a: [2, 0.5], b: [0.5, 1.5] },
-  { label: "Shear", a: [1, 0], b: [1.5, 1] },
+  { label: "Add col 1 to col 2", a: [1, 0], b: [1.5, 1] },
   { label: "Reflection", a: [0, 1], b: [1, 0] },
   { label: "Rotation", a: [0.5, 1], b: [-1, 0.5] },
   { label: "Singular", a: [2, 1], b: [1, 0.5] },
@@ -53,16 +50,14 @@ function AreaScaling() {
   const c = colorOf(d);
   return (
     <VizFrame
-      title="det A = signed area of the image of the unit square"
+      title="Theorem 3.1: area of the parallelogram determined by the columns = abs(|A|)"
       hint="Drag the tips of Ae₁ and Ae₂ (the columns of A). Snaps to 0.5."
       onReset={() => { setA(PRESETS_2D[0].a); setB(PRESETS_2D[0].b); }}
       figure={
         <Plane2D x={[-4, 4]} y={[-3.5, 3.5]}>
           <g opacity={0.35}>{gridLines}</g>
           <Poly2 pts={[[0, 0], [1, 0], [1, 1], [0, 1]]} color="muted" fill dashed />
-          <Poly2 pts={LETTER_F} color="muted" fill />
           <Poly2 pts={[[0, 0], a, [a[0] + b[0], a[1] + b[1]], b]} color={c} fill />
-          <Poly2 pts={LETTER_F.map(ap)} color={c} fill />
           <Arrow2 to={a} color="accent" label="Ae₁" />
           <Arrow2 to={b} color="eig" label="Ae₂" />
           <Handle2 at={a} onChange={setA} />
@@ -82,20 +77,17 @@ function AreaScaling() {
       readout={
         <>
           <Read tex={`$A = \\begin{bmatrix} ${fmt(a[0])} & ${fmt(b[0])} \\\\ ${fmt(a[1])} & ${fmt(b[1])} \\end{bmatrix}$`} />
-          <Read tex={`$\\det A = (${fmt(a[0])})(${fmt(b[1])}) - (${fmt(b[0])})(${fmt(a[1])}) = ${fmt(d)}$`} tone={toneOf(d)} />
-          <Read tex={`area of the image of the unit square $= |\\det A| = ${fmt(Math.abs(d))}$`} />
-          <Read
-            tone={toneOf(d)}
-            tex={Math.abs(d) < 1e-9 ? "**Flattened**: the image is a segment, $A$ is singular" : d > 0 ? "**Orientation kept**: the F reads the same way" : "**Orientation flipped**: the F is mirrored"}
-          />
-          <Read tex={`every region's area is multiplied by $${fmt(Math.abs(d))}$ (each grid cell has that area)`} />
+          <Read tex={`$|A| = ad - bc = (${fmt(a[0])})(${fmt(b[1])}) - (${fmt(b[0])})(${fmt(a[1])}) = ${fmt(d)}$`} tone={toneOf(d)} />
+          <Read tex={`area of the parallelogram (image of the unit square) $= \\text{abs}(|A|) = ${fmt(Math.abs(d))}$`} />
+          {Math.abs(d) < 1e-9 && <Read tone="warn" tex="**Flattened**: the parallelogram has no area, $|A| = 0$ and $A$ is singular (Rule 8)" />}
+          <Read tex={`Theorem 3.2: every area is multiplied by $\\text{abs}(|A|) = ${fmt(Math.abs(d))}$ (each grid cell has that area)`} />
         </>
       }
       tasks={[
-        "Predict: the Shear preset slides the top of the square sideways. Does the area change? Check $\\det A$.",
+        "Predict: the **Add col 1 to col 2** preset slides the top of the square sideways. Does the area change? Check $\\det A$.",
         "Drag $A\\mathbf{e}_2$ until it lies on the line through $A\\mathbf{e}_1$. What happens to the parallelogram and to $\\det A$?",
-        "Swap the roles: drag the vectors so that $A\\mathbf{e}_2$ is clockwise from $A\\mathbf{e}_1$. What happens to the sign and to the F?",
-        "Double $A\\mathbf{e}_1$ only (one column scaled by 2). By what factor does the area change? Now imagine doubling both: that is $|2A| = 2^2|A|$.",
+        "Load **Reflection**: the columns of $I$ in the other order. $|A| = -1$ (one column exchange, Rule 2), but the area is still $\\text{abs}(|A|) = 1$.",
+        "Double $A\\mathbf{e}_1$ only (one column scaled by 2). By what factor does the area change (Rule 3)? Now imagine doubling both: that is $|2A| = 2^2|A|$.",
       ]}
     />
   );
@@ -136,8 +128,8 @@ function RowOpsArea() {
   const kTex = fmt(k);
   return (
     <VizFrame
-      title="What each row operation does to the determinant"
-      hint="The rows of A are drawn as vectors; the shaded parallelogram has area |det A|. Drag a row to start over from a new matrix."
+      title="Rules 2, 3, 5: what each row operation does to |A|"
+      hint="The rows of A are drawn as vectors; since |Aᵀ| = |A| (Rule 10) the shaded parallelogram has area abs(|A|). Drag a row to start over from a new matrix."
       onReset={reset}
       figure={
         <Plane2D x={[-5, 5]} y={[-4, 4]}>
@@ -180,10 +172,10 @@ function RowOpsArea() {
         </>
       }
       tasks={[
-        "Predict, then press **R₂ → R₂ + kR₁** a few times with different $k$. $R_2$ slides parallel to $R_1$: why can't the area change?",
-        "Press **R₁ ↔ R₂**. The shape is identical, so why does the sign of $\\det$ change? (Look at which row comes first going counter-clockwise.)",
-        "Set $k = 2$ and press **R₁ → kR₁**. Only one side of the parallelogram doubled, so the area doubles, not quadruples.",
-        "Set $k = 0$ and scale. What does a zero row do to the parallelogram?",
+        "Predict, then press **R₂ → R₂ + kR₁** a few times with different $k$. $R_2$ slides parallel to $R_1$, so base and height stay the same (Rule 5: $|A|$ unchanged).",
+        "Press **R₁ ↔ R₂**. The parallelogram is identical, so its area $\\text{abs}(|A|)$ is unchanged, but Rule 2 flips the sign of $|A|$.",
+        "Set $k = 2$ and press **R₁ → kR₁**. Only one side of the parallelogram doubled, so the area doubles, not quadruples (Rule 3).",
+        "Set $k = 0$ and scale. What does a zero row do to the parallelogram (Rule 6)?",
       ]}
     />
   );
@@ -223,7 +215,7 @@ function Box({ u, v, w, color, dashed, faces }: { u: V3; v: V3; w: V3; color: Vi
 const PRESETS_3D: { label: string; cols: [V3, V3, V3] }[] = [
   { label: "Identity", cols: [[1, 0, 0], [0, 1, 0], [0, 0, 1]] },
   { label: "Stretch", cols: [[2, 0, 0], [0, 1, 0], [0, 0, 1.5]] },
-  { label: "Shear", cols: [[1, 0, 0], [1, 1, 0], [0.5, 0, 1]] },
+  { label: "Add columns", cols: [[1, 0, 0], [1, 1, 0], [0.5, 0, 1]] },
   { label: "Mirror", cols: [[1, 0, 0], [0, 1, 0], [0, 0, -1]] },
   { label: "Tutorial 3 Q4", cols: [[1, 3, 0], [-2, 0, 2], [-1, 3, -1]] },
   { label: "Flat", cols: [[1, 0, 1], [0, 1, 1], [1, 1, 2]] },
@@ -243,7 +235,7 @@ function VolumeScaling() {
   const ext = Math.max(2, Math.ceil(Math.max(...cols.flat().map(Math.abs)) + 0.5));
   return (
     <VizFrame
-      title="Volume of the image of the unit cube = |det A|"
+      title="Theorems 3.1–3.2: volume of the image of the unit cube = abs(|A|)"
       hint="Drag empty space to rotate. Drag the column tips (they move parallel to the screen), or type them in."
       onReset={() => { setCols(PRESETS_3D[2].cols); setPreset(2); }}
       figure={
@@ -272,18 +264,15 @@ function VolumeScaling() {
           <Read
             tex={`$A = \\begin{bmatrix} ${fmt(u[0])} & ${fmt(v[0])} & ${fmt(w[0])} \\\\ ${fmt(u[1])} & ${fmt(v[1])} & ${fmt(w[1])} \\\\ ${fmt(u[2])} & ${fmt(v[2])} & ${fmt(w[2])} \\end{bmatrix}$`}
           />
-          <Read tex={`$\\det A = ${fmt(d)}$`} tone={toneOf(d)} />
-          <Read tex={`volume of the image of the unit cube $= |\\det A| = ${fmt(Math.abs(d))}$`} />
-          <Read
-            tone={toneOf(d)}
-            tex={Math.abs(d) < 1e-9 ? "**Flat**: the columns are dependent, the box has no volume, $A$ is singular" : d > 0 ? "**Orientation kept** (right-handed)" : "**Orientation reversed** (a mirror is involved)"}
-          />
-          <Read tex={`a solid of volume $V$ is mapped to volume $${fmt(Math.abs(d))}V$`} />
+          <Read tex={`$|A| = ${fmt(d)}$`} tone={toneOf(d)} />
+          <Read tex={`volume of the parallelepiped (image of the unit cube) $= \\text{abs}(|A|) = ${fmt(Math.abs(d))}$`} />
+          {Math.abs(d) < 1e-9 && <Read tone="warn" tex="**Flat**: the box has no volume, $|A| = 0$ and $A$ is singular (Rule 8)" />}
+          <Read tex={`Theorem 3.2: a parallelepiped of volume $V$ is mapped to volume $${fmt(Math.abs(d))}V$`} />
         </>
       }
       tasks={[
-        "Load **Tutorial 3 Q4** (columns $(1,3,0), (-2,0,2), (-1,3,-1)$). Is the volume 18? Why is $\\det A$ negative?",
-        "Load **Shear**. The box leans over but its volume stays 1. Which row operation does a shear correspond to?",
+        "Load **Tutorial 3 Q4** (columns $(1,3,0), (-2,0,2), (-1,3,-1)$). $|A| = -18$, so the volume is $\\text{abs}(-18) = 18$.",
+        "Load **Add columns**. The box leans over but its volume stays 1: column 2 is $\\mathbf{e}_1 + \\mathbf{e}_2$, a multiple of one column added to another (slide 3.2).",
         "Load **Flat**: $A\\mathbf{e}_3 = A\\mathbf{e}_1 + A\\mathbf{e}_2$. Rotate until you see the box is squashed into a plane.",
         "Predict: if every column is doubled, by what factor does the volume grow? ($|2A| = 2^3|A|$.) Type it in to check.",
       ]}

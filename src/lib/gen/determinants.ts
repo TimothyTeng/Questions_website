@@ -1,19 +1,26 @@
 // Randomised determinant questions at final-exam difficulty. Exact Frac arithmetic throughout.
-import { det, F, Frac, inverse, mat, matmul, matTex, transpose, type Mat } from "@/lib/math/frac";
+// Methods are restricted to the Ch 3 notes: Rules 1–10 (det p3–10), elimination to U and the product of pivots,
+// the tutorial 3×3 formula, Theorem 3.1 (area/volume) and Theorem 3.2 (linear transformations).
+import { det, F, Frac, mat, matmul, matTex, transpose, type Mat } from "@/lib/math/frac";
 import { mcq, retry, tfn, type Draft, type Rng } from "./common";
 
 // ---------------------------------------------------------------- local helpers
+
+const cite = (ref: string, g: (rng: Rng) => Draft) => (rng: Rng): Draft => ({ ...g(rng), ref });
+
+const RULES16 = "Slides 3.1 Rules 1–6 (det p3–5); PYP AY25/26 S2 Q2";
+const PIVOTS = "Slides 3.1 Rules 5, 7, 8 (det p5–8); Tutorial 3 Q2";
+const RULE8 = "Slides 3.1 Rule 8 (det p8); Slides 2.2 Theorem 2.4 (alg p10)";
+const RULES910 = "Slides 3.1 Rules 3, 9–10 (det p4, p9–10); Tutorial 3 Q1";
+const F3 = "Tutor slides, 3×3 formula (tut5 p3, p12)";
+const COLS = "Slides 3.1 \"all the above properties apply to columns also\" (det p10)";
 
 const vm = (A: Mat) => `\\begin{vmatrix} ${A.map((r) => r.map((x) => x.tex()).join(" & ")).join(" \\\\ ")} \\end{vmatrix}`;
 const bm = (A: Mat) => matTex(A, false);
 const randMat = (rng: Rng, n: number, lo: number, hi: number): Mat =>
   Array.from({ length: n }, () => Array.from({ length: n }, () => F(rng.int(lo, hi))));
-const minor = (A: Mat, i: number, j: number): Mat => A.filter((_, r) => r !== i).map((r) => r.filter((_, c) => c !== j));
-const sgn = (i: number, j: number) => ((i + j) % 2 === 0 ? 1 : -1);
-const cof = (A: Mat, i: number, j: number) => det(minor(A, i, j)).mul(sgn(i, j));
 const prodDiag = (A: Mat) => A.reduce((p, r, i) => p.mul(r[i]), F(1));
 const maxEntry = (A: Mat) => Math.max(...A.flat().map((x) => Math.abs(x.valueOf())));
-const sub = (i: number, j: number) => `${i + 1}${j + 1}`;
 /** "+ 3" / "- 3" for joining terms; with `first` no leading plus. */
 const coefTerm = (c: Frac, sym: string, first: boolean) => {
   if (c.isZero()) return "";
@@ -31,38 +38,20 @@ function comb(coefs: Frac[], sym: (i: number) => string): string {
   });
   return s || "0";
 }
-function bestLine(A: Mat): { row: boolean; k: number } {
-  let best = { row: true, k: 0 };
-  let bz = -1;
-  for (let k = 0; k < A.length; k++) {
-    const zr = A[k].filter((x) => x.isZero()).length;
-    if (zr > bz) [bz, best] = [zr, { row: true, k }];
-    const zc = A.filter((r) => r[k].isZero()).length;
-    if (zc > bz) [bz, best] = [zc, { row: false, k }];
-  }
-  return best;
-}
-/** Worked cofactor expansion of a 3x3 (or 2x2-minor) determinant along its sparsest line. */
-function expansion(A: Mat, name = "|A|"): string {
-  const line = bestLine(A);
-  const parts: string[] = [];
-  const nums: string[] = [];
-  const minors: string[] = [];
-  for (let t = 0; t < A.length; t++) {
-    const i = line.row ? line.k : t;
-    const j = line.row ? t : line.k;
-    if (A[i][j].isZero()) continue;
-    const M = minor(A, i, j);
-    const m = det(M);
-    parts.push(`a_{${sub(i, j)}}C_{${sub(i, j)}}`);
-    nums.push(`(${A[i][j].tex()})(${m.mul(sgn(i, j)).tex()})`);
-    minors.push(`$M_{${sub(i, j)}} = ${vm(M)} = ${m.tex()}$, so $C_{${sub(i, j)}} = (-1)^{${i + j + 2}}M_{${sub(i, j)}} = ${m.mul(sgn(i, j)).tex()}$.`);
-  }
-  if (!parts.length) return `${line.row ? "Row" : "Column"} ${line.k + 1} is all zeros, so $${name} = 0$.`;
+const p = (x: Frac) => `(${x.tex()})`;
+/** The three bracketed terms of the tutorial 3×3 formula a(ei − fh) − b(di − fg) + c(dh − eg). */
+const terms3 = (A: Mat): [Frac, Frac, Frac] => {
+  const [, [d, e, f], [g, h, i]] = A;
+  return [e.mul(i).sub(f.mul(h)), d.mul(i).sub(f.mul(g)), d.mul(h).sub(e.mul(g))];
+};
+/** Worked 3×3 determinant with the tutorial formula along row 1. */
+function formula3(A: Mat, name = "|A|"): string {
+  const [[a, b, c], [d, e, f], [g, h, i]] = A;
+  const [t1, t2, t3] = terms3(A);
   return [
-    `Expand along ${line.row ? "row" : "column"} ${line.k + 1} (it has the most zeros), using $C_{ij} = (-1)^{i+j}M_{ij}$.`,
-    ...minors.map((m) => `- ${m}`),
-    `$${name} = ${parts.join(" + ")} = ${nums.join(" + ")} = ${det(A).tex()}$.`,
+    `Use $a(ei - fh) - b(di - fg) + c(dh - eg)$ with row 1 $= (${a.tex()}, ${b.tex()}, ${c.tex()})$:`,
+    `$${name} = ${p(a)}\\big(${p(e)}${p(i)} - ${p(f)}${p(h)}\\big) - ${p(b)}\\big(${p(d)}${p(i)} - ${p(f)}${p(g)}\\big) + ${p(c)}\\big(${p(d)}${p(h)} - ${p(e)}${p(g)}\\big)$`,
+    `$= ${p(a)}${p(t1)} - ${p(b)}${p(t2)} + ${p(c)}${p(t3)} = ${det(A).tex()}$.`,
   ].join("\n");
 }
 const pw = (x: Frac, e: number) => (e === 1 ? x.tex() : `(${x.tex()})^{${e}}`);
@@ -70,7 +59,7 @@ const fracPow = (x: Frac, e: number) => (e >= 0 ? x.pow(e) : F(1).div(x.pow(-e))
 
 // ---------------------------------------------------------------- generators
 
-/** 3x3 determinant by cofactor expansion along a line with zeros. */
+/** 3x3 determinant with the tutorial formula. */
 function det3(rng: Rng): Draft {
   const A = randMat(rng, 3, -4, 5);
   const row = rng.chance(0.5);
@@ -81,71 +70,16 @@ function det3(rng: Rng): Draft {
   }
   const d = det(A);
   if (d.isZero() || Math.abs(d.valueOf()) > 150) retry();
+  const [t1, t2, t3] = terms3(A);
+  const allPlus = A[0][0].mul(t1).add(A[0][1].mul(t2)).add(A[0][2].mul(t3));
   const down = prodDiag(A).add(A[0][1].mul(A[1][2]).mul(A[2][0])).add(A[0][2].mul(A[1][0]).mul(A[2][1]));
   const up = A[0][2].mul(A[1][1]).mul(A[2][0]).add(A[0][0].mul(A[1][2]).mul(A[2][1])).add(A[0][1].mul(A[1][0]).mul(A[2][2]));
-  const allPlus = [0, 1, 2].reduce((s, j) => s.add(A[0][j].mul(det(minor(A, 0, j)))), F(0));
   return mcq(rng, {
-    subtopic: "Cofactor expansion",
+    subtopic: "3×3 formula",
     prompt: `Evaluate $|A|$ for $A = ${bm(A)}$.`,
     correct: d.tex(),
     distractors: [d.neg(), allPlus, down, down.add(up), prodDiag(A)].map((x) => x.tex()),
-    solution: `${expansion(A)}\nTraps: forgetting the checkerboard sign $(-1)^{i+j}$, or keeping only the three "downward" diagonal products of Sarrus' rule.`,
-  });
-}
-
-/** 4x4 determinant: one row/column with a single nonzero entry, then a 3x3. */
-function det4(rng: Rng): Draft {
-  const A = randMat(rng, 4, -3, 4);
-  const r = rng.int(0, 3);
-  const c = rng.int(0, 3);
-  const asRow = rng.chance(0.5);
-  for (let t = 0; t < 4; t++) {
-    if (asRow) A[r][t] = F(0);
-    else A[t][c] = F(0);
-  }
-  A[r][c] = F(rng.nz(-3, 4));
-  // a second zero inside the minor so the 3x3 is quick too
-  const c2 = rng.pick([0, 1, 2, 3].filter((x) => x !== c));
-  const r2 = rng.pick([0, 1, 2, 3].filter((x) => x !== r));
-  A[r2][c2] = F(0);
-  const d = det(A);
-  if (d.isZero() || Math.abs(d.valueOf()) > 300) retry();
-  const M = minor(A, r, c);
-  const m = det(M);
-  const s = sgn(r, c);
-  return mcq(rng, {
-    subtopic: "Cofactor expansion",
-    prompt: `Evaluate $\\det A$ for $A = ${bm(A)}$.`,
-    correct: d.tex(),
-    distractors: [d.neg(), m, m.mul(s), prodDiag(A), d.mul(2)].map((x) => x.tex()),
-    solution:
-      `${asRow ? "Row" : "Column"} ${asRow ? r + 1 : c + 1} has a single nonzero entry $a_{${sub(r, c)}} = ${A[r][c].tex()}$, so expand along it: $\\det A = a_{${sub(r, c)}}C_{${sub(r, c)}} = (${A[r][c].tex()})(-1)^{${r + c + 2}}M_{${sub(r, c)}}$.\n` +
-      `$M_{${sub(r, c)}} = ${vm(M)}$.\n${expansion(M, `M_{${sub(r, c)}}`)}\n` +
-      `Hence $\\det A = (${A[r][c].tex()})(${s})(${m.tex()}) = ${d.tex()}$. The sign $(-1)^{i+j}$ is the usual slip.`,
-  });
-}
-
-/** A single cofactor C_ij (sign + correct deletion). */
-function cofactorEntry(rng: Rng): Draft {
-  const n = rng.pick([3, 3, 4]);
-  const A = randMat(rng, n, n === 4 ? -3 : -4, n === 4 ? 3 : 5);
-  const i = rng.int(0, n - 1);
-  const j = rng.int(0, n - 1);
-  if (i === j && rng.chance(0.6)) retry();
-  const M = minor(A, i, j);
-  const m = det(M);
-  const C = m.mul(sgn(i, j));
-  if (C.isZero()) retry();
-  const Cji = cof(A, j, i);
-  return mcq(rng, {
-    subtopic: "Minors & cofactors",
-    prompt: `Let $A = ${bm(A)}$. Find the cofactor $C_{${sub(i, j)}}$.`,
-    correct: C.tex(),
-    distractors: [C.neg(), m, Cji, Cji.neg(), A[i][j].mul(C), C.add(A[i][j])].map((x) => x.tex()),
-    solution:
-      `Delete row ${i + 1} and column ${j + 1}: $M_{${sub(i, j)}} = ${vm(M)} = ${m.tex()}$.\n` +
-      `$C_{${sub(i, j)}} = (-1)^{${i + 1}+${j + 1}}M_{${sub(i, j)}} = ${sgn(i, j) > 0 ? "" : "-"}(${m.tex()}) = ${C.tex()}$.\n` +
-      `Traps: the minor $M_{ij}$ has no sign${i === j ? "" : `; $C_{${sub(j, i)}}$ (delete row ${j + 1}, column ${i + 1}) is a different number in general`}; $a_{ij}C_{ij}$ is one term of the expansion, not the cofactor.`,
+    solution: `${formula3(A)}\nTraps: forgetting the minus sign in front of $b(di - fg)$, or multiplying only the diagonal entries (that works only for a triangular matrix).`,
   });
 }
 
@@ -170,23 +104,25 @@ function rowOpSeq(rng: Rng): Draft {
     if (k === "swap") {
       sign = -sign;
       steps.push(`$${L}_${i + 1} \\leftrightarrow ${L}_${j + 1}$`);
-      why.push(`interchange: $\\times(-1)$`);
+      why.push(`exchange (Rule 2): $\\times(-1)$`);
     } else if (k === "scale") {
       const s = rng.pick(SCALES);
       scaleP = scaleP.mul(s);
       steps.push(`$${L}_${i + 1} \\to ${s.eq(-1) ? "-" : s.tex()}${L}_${i + 1}$`);
-      why.push(`scaling one ${word} by $${s.tex()}$: $\\times(${s.tex()})$`);
+      why.push(`scaling one ${word} by $${s.tex()}$ (Rule 3): $\\times(${s.tex()})$`);
     } else {
       const m = F(rng.nz(-5, 7));
       repP = repP.mul(m);
       steps.push(`$${L}_${i + 1} \\to ${L}_${i + 1}${coefTerm(m, `${L}_${j + 1}`, false)}$`);
-      why.push(`replacement: $\\times 1$ (no change)`);
+      why.push(`replacement (Rule 5): $\\times 1$ (no change)`);
     }
   }
   const correct = d.mul(sign).mul(scaleP);
   const reverse = rng.chance(0.3);
   const head = `$A$ is a $${n}\\times${n}$ matrix. $B$ is obtained from $A$ by the ${word} operations (in this order): ${steps.join(", then ")}.`;
-  const sol = `Effect of each operation on the determinant: ${why.join("; ")}.\nOverall $|B| = (${sign})(${scaleP.tex()})\\,|A|$.`;
+  const sol =
+    `Effect of each operation on the determinant${col ? " (the rules apply to columns as well as rows)" : ""}: ${why.join("; ")}.\n` +
+    `Overall $|B| = (${sign})(${scaleP.tex()})\\,|A|$.`;
   if (!reverse) {
     return mcq(rng, {
       subtopic: "Row & column operations",
@@ -200,7 +136,7 @@ function rowOpSeq(rng: Rng): Draft {
         d.mul(sign).mul(scaleP.pow(n)),
         correct.mul(repP).neg(),
       ].map((x) => x.tex()),
-      solution: `${sol}\n$|B| = (${sign})(${scaleP.tex()})(${d.tex()}) = ${correct.tex()}$. Replacements never change the determinant; only one ${word} is scaled, so the factor is $k$, not $k^{${n}}$.`,
+      solution: `${sol}\n$|B| = (${sign})(${scaleP.tex()})(${d.tex()}) = ${correct.tex()}$. Replacements never change the determinant; only one ${word} is scaled, so the factor is $t$, not $t^{${n}}$.`,
     });
   }
   return mcq(rng, {
@@ -252,7 +188,7 @@ function algebraExpr(rng: Rng): Draft {
       k.pow(n).mul(absE).neg(),
     ].map((x) => x.tex()),
     solution:
-      `Use $|XY| = |X||Y|$, $|X^T| = |X|$, $|X^{-1}| = 1/|X|$, $|X^m| = |X|^m$ and, for an $n\\times n$ matrix, $|kX| = k^n|X|$.\n` +
+      `Use $|XY| = |X||Y|$ (Rule 9), $|X^T| = |X|$ (Rule 10), $|X^{-1}| = 1/|X|$ (from $|XX^{-1}| = |I| = 1$), $|X^m| = |X|^m$ and, for an $n\\times n$ matrix, $|kX| = k^n|X|$ (Rule 3 once per row).\n` +
       `$\\left|${expr}\\right| = ${k.eq(1) ? "" : `${pw(k, n)}\\cdot `}${pw(a, eA)}${useB ? `\\cdot ${pw(b, eB)}` : ""} = ${correct.tex()}$.` +
       (k.eq(1) ? "" : `\nThe scalar comes out as $k^{${n}}$ because it multiplies all ${n} rows; $|kA| = k|A|$ is the classic trap.`),
   });
@@ -272,14 +208,16 @@ function entryScaling(rng: Rng): Draft {
     return Math.abs(dd) === 1 ? `${s}${c}^{${ex}}` : `${s}${c}^{${ex}}\\cdot ${Math.abs(dd)}`;
   };
   const rule = kind === "i+j" ? `${c}^{i+j}a_{ij}` : kind === "i-j" ? `${c}^{i-j}a_{ij}` : kind === "i" ? `${c}^{i}a_{ij}` : `${c}^{j}a_{ij}`;
+  const rowsF = `factor $${c}^i$ out of row $i$ (Rule 3): $${c}^{1+2+\\dots+${n}} = ${c}^{${tri}}$`;
+  const colsF = `factor $${c}^j$ out of column $j$ (Rule 3 for columns): $${c}^{${tri}}$`;
   const why =
     kind === "i+j"
-      ? `$b_{ij} = ${c}^i a_{ij} ${c}^j$, so $B = DAD$ with $D = \\operatorname{diag}(${c}, ${c}^2, \\dots, ${c}^{${n}})$. $|D| = ${c}^{1+2+\\dots+${n}} = ${c}^{${tri}}$, hence $|B| = |D|^2|A| = ${c}^{${2 * tri}}|A|$.`
+      ? `$b_{ij} = ${c}^i\\cdot ${c}^j\\cdot a_{ij}$. First ${rowsF}; then ${colsF} again. Hence $|B| = ${c}^{${tri}}\\cdot ${c}^{${tri}}|A| = ${c}^{${2 * tri}}|A|$.`
       : kind === "i-j"
-        ? `$b_{ij} = ${c}^i a_{ij} ${c}^{-j}$, so $B = DAD^{-1}$ with $D = \\operatorname{diag}(${c}, \\dots, ${c}^{${n}})$. Then $|B| = |D||A|/|D| = |A|$.`
+        ? `$b_{ij} = ${c}^i\\cdot ${c}^{-j}\\cdot a_{ij}$. First ${rowsF}; then factor $${c}^{-j}$ out of column $j$: $${c}^{-${tri}}$. The factors cancel, so $|B| = |A|$.`
         : kind === "i"
-          ? `Row $i$ of $A$ is multiplied by $${c}^i$: $B = DA$ with $D = \\operatorname{diag}(${c}, \\dots, ${c}^{${n}})$, so $|B| = ${c}^{1+2+\\dots+${n}}|A| = ${c}^{${tri}}|A|$.`
-          : `Column $j$ of $A$ is multiplied by $${c}^j$: $B = AD$ with $D = \\operatorname{diag}(${c}, \\dots, ${c}^{${n}})$, so $|B| = ${c}^{1+2+\\dots+${n}}|A| = ${c}^{${tri}}|A|$.`;
+          ? `Row $i$ of $A$ is multiplied by $${c}^i$, so ${rowsF}. Hence $|B| = ${c}^{${tri}}|A|$.`
+          : `Column $j$ of $A$ is multiplied by $${c}^j$, so ${colsF}. Hence $|B| = ${c}^{${tri}}|A|$.`;
   const cands = [2 * tri, tri, 2 * n, n, n * n, 0].filter((x) => x !== e);
   return mcq(rng, {
     subtopic: "Special patterns",
@@ -297,7 +235,7 @@ function columnCombo(rng: Rng): Draft {
   const rows = rng.chance(0.35);
   const perm = rng.shuffle([...Array(n).keys()]);
   const M: Mat = Array.from({ length: n }, () => Array.from({ length: n }, () => F(0)));
-  perm.forEach((p, j) => (M[p][j] = F(rng.pick([1, 1, 2, 3, -1, -2]))));
+  perm.forEach((pp, j) => (M[pp][j] = F(rng.pick([1, 1, 2, 3, -1, -2]))));
   const extra = rng.int(1, 2);
   for (let t = 0; t < extra; t++) {
     const j = rng.int(0, n - 1);
@@ -307,7 +245,7 @@ function columnCombo(rng: Rng): Draft {
   const dm = det(M);
   if (dm.isZero() && rng.chance(0.75)) retry();
   const correct = d.mul(dm);
-  const main = perm.reduce((p, r, j) => p.mul(M[r][j]), F(1));
+  const main = perm.reduce((pp, r, j) => pp.mul(M[r][j]), F(1));
   const sym = rows ? (i: number) => `\\mathbf{r}_{${i + 1}}` : (i: number) => `\\mathbf{a}_{${i + 1}}`;
   const parts = Array.from({ length: n }, (_, j) => comb(M.map((r) => r[j]), sym));
   const prompt = rows
@@ -322,8 +260,10 @@ function columnCombo(rng: Rng): Draft {
       (rows
         ? `Row $i$ of $B$ is a combination of the rows of $A$, so $B = MA$ where row $i$ of $M$ holds the coefficients: $M = ${bm(transpose(M))}$.`
         : `Column $j$ of $B$ is a combination of the columns of $A$, so $B = AM$ where column $j$ of $M$ holds the coefficients: $M = ${bm(M)}$.`) +
-      `\n$|M| = ${dm.tex()}$, so $|B| = |A|\\,|M| = (${d.tex()})(${dm.tex()}) = ${correct.tex()}$.` +
-      (dm.isZero() ? " The new columns are linearly dependent, so the determinant is 0." : " Multiplying the leading coefficients only works when the extra terms are pure replacements and the order is not permuted; $|M|$ handles both.") ,
+      `\nBy Rule 9 (and Rule 10 for $|M^T| = |M|$), $|M| = ${dm.tex()}$ gives $|B| = |A|\\,|M| = (${d.tex()})(${dm.tex()}) = ${correct.tex()}$.` +
+      (dm.isZero()
+        ? " Here $|M| = 0$, so $|B| = 0$."
+        : " Multiplying the leading coefficients only works when the extra terms are pure replacements and no exchange is involved; $|M|$ handles both."),
   });
 }
 
@@ -335,11 +275,11 @@ const linTex = ([c0, c1]: Lin) => {
 };
 const polyTex = (cs: Frac[], v = "k") => {
   let s = "";
-  for (let p = cs.length - 1; p >= 0; p--) {
-    const sym = p === 0 ? "" : p === 1 ? v : `${v}^{${p}}`;
-    if (cs[p].isZero()) continue;
-    if (p === 0) s += s ? ` ${cs[p].n < 0 ? "-" : "+"} ${cs[p].abs().tex()}` : cs[p].tex();
-    else s += coefTerm(cs[p], sym, s === "");
+  for (let q = cs.length - 1; q >= 0; q--) {
+    const sym = q === 0 ? "" : q === 1 ? v : `${v}^{${q}}`;
+    if (cs[q].isZero()) continue;
+    if (q === 0) s += s ? ` ${cs[q].n < 0 ? "-" : "+"} ${cs[q].abs().tex()}` : cs[q].tex();
+    else s += coefTerm(cs[q], sym, s === "");
   }
   return s || "0";
 };
@@ -410,89 +350,20 @@ function singularK(rng: Rng): Draft {
     correct,
     distractors,
     solution:
-      `$A$ is singular $\\iff |A| = 0$ (equivalently $A\\mathbf{x} = \\mathbf{0}$ has nontrivial solutions, the columns are dependent).\n` +
-      `Expanding (cofactors, or simplify with row replacements first, which do not change $|A|$): $|A| = ${polyTex(poly)} = ${al.eq(1) ? "" : al.eq(-1) ? "-" : al.tex()}${fac(lo)}${fac(hi)}$.\n` +
+      `By Rule 8, $A$ is singular exactly when $|A| = 0$; by the Invertible Matrix Theorem this is also when $A\\mathbf{x} = \\mathbf{0}$ has nontrivial solutions and when the columns are dependent.\n` +
+      `With the $3\\times3$ formula $a(ei - fh) - b(di - fg) + c(dh - eg)$ (or simplify with row replacements first, which do not change $|A|$): $|A| = ${polyTex(poly)} = ${al.eq(1) ? "" : al.eq(-1) ? "-" : al.tex()}${fac(lo)}${fac(hi)}$.\n` +
       `So $|A| = 0$ exactly when $k = ${lo}$ or $k = ${hi}$` +
       (mode === "invertible" ? `, and $A$ is invertible for every other $k$.` : "."),
   });
 }
 
-const eqTex = (row: Frac[], b: Frac) => `${comb(row, (j) => `x_{${j + 1}}`)} = ${b.tex()}`;
-
-/** Cramer's rule for one unknown. */
-function cramer(rng: Rng): Draft {
-  const n = rng.pick([2, 3, 3]);
-  const A = randMat(rng, n, -3, 4);
-  if (n === 3) A[rng.int(0, 2)][rng.int(0, 2)] = F(0);
-  const d = det(A);
-  if (d.isZero() || Math.abs(d.valueOf()) > 15) retry();
-  let b: Frac[];
-  if (rng.chance(0.5)) {
-    const x0 = Array.from({ length: n }, () => F(rng.int(-3, 4)));
-    b = A.map((r) => r.reduce((s, a, j) => s.add(a.mul(x0[j])), F(0)));
-  } else b = Array.from({ length: n }, () => F(rng.int(-6, 8)));
-  if (b.every((x) => x.isZero()) || b.some((x) => Math.abs(x.valueOf()) > 20)) retry();
-  const inv = inverse(A)!;
-  const x = inv.map((r) => r.reduce((s, a, j) => s.add(a.mul(b[j])), F(0)));
-  const i = rng.int(0, n - 1);
-  const Ai = A.map((r, q) => r.map((a, j) => (j === i ? b[q] : a)));
-  const Ri = A.map((r, q) => (q === i ? b : r));
-  const di = det(Ai);
-  if (!di.div(d).eq(x[i])) throw new Error("cramer mismatch");
-  const other = x[(i + 1) % n];
-  return mcq(rng, {
-    subtopic: "Cramer's rule & adjugate",
-    prompt: `Use Cramer's rule to find $x_{${i + 1}}$ for the system\n$$\\begin{aligned} ${A.map((r, q) => eqTex(r, b[q]).replace(" = ", " &= ")).join(" \\\\ ")} \\end{aligned}$$`,
-    correct: `x_{${i + 1}} = ${x[i].tex()}`,
-    distractors: [di, di.isZero() ? x[i].add(2) : d.div(di), other, x[i].neg(), det(Ri).div(d), x[i].add(1)].map((v) => `x_{${i + 1}} = ${v.tex()}`),
-    solution:
-      `$|A| = ${vm(A)} = ${d.tex()} \\ne 0$, so Cramer's rule applies.\n` +
-      `Replace **column** ${i + 1} of $A$ by $\\mathbf{b}$: $|A_{${i + 1}}(\\mathbf{b})| = ${vm(Ai)} = ${di.tex()}$.\n` +
-      `$x_{${i + 1}} = \\dfrac{|A_{${i + 1}}(\\mathbf{b})|}{|A|} = \\dfrac{${di.tex()}}{${d.tex()}} = ${x[i].tex()}$. (Replacing a row instead of a column, or forgetting to divide by $|A|$, are the usual slips.)`,
-  });
-}
-
-/** Entry of A^{-1} (or adj A) via cofactors. */
-function adjEntry(rng: Rng): Draft {
-  const A = randMat(rng, 3, -3, 4);
-  A[rng.int(0, 2)][rng.int(0, 2)] = F(0);
-  const d = det(A);
-  if (d.isZero() || Math.abs(d.valueOf()) > 20) retry();
-  const i = rng.int(0, 2);
-  const j = rng.int(0, 2);
-  if (i === j) retry();
-  const Cji = cof(A, j, i);
-  const Cij = cof(A, i, j);
-  const Mji = det(minor(A, j, i));
-  if (Cji.isZero()) retry();
-  const inv = inverse(A)!;
-  if (!inv[i][j].eq(Cji.div(d))) throw new Error("adjugate mismatch");
-  const asInv = rng.chance(0.6);
-  const target = asInv ? `(A^{-1})_{${sub(i, j)}}` : `(\\operatorname{adj}A)_{${sub(i, j)}}`;
-  const correct = asInv ? Cji.div(d) : Cji;
-  const distractors = asInv
-    ? [Cij.div(d), Cji.neg().div(d), Mji.div(d), Cji, d.div(Cji), Cij.neg().div(d)]
-    : [Cij, Cji.neg(), Mji, Cji.div(d), Cij.neg()];
-  return mcq(rng, {
-    subtopic: "Cramer's rule & adjugate",
-    prompt: `Let $A = ${bm(A)}$. Find the entry $${target}$.`,
-    correct: correct.tex(),
-    distractors: distractors.map((x) => x.tex()),
-    solution:
-      `$\\operatorname{adj}A$ is the **transpose** of the cofactor matrix, so $(\\operatorname{adj}A)_{${sub(i, j)}} = C_{${sub(j, i)}}$ (delete row ${j + 1}, column ${i + 1}).\n` +
-      `$C_{${sub(j, i)}} = (-1)^{${i + j + 2}}${vm(minor(A, j, i))} = (${sgn(i, j)})(${Mji.tex()}) = ${Cji.tex()}$.` +
-      (asInv ? `\n$|A| = ${d.tex()}$, and $A^{-1} = \\dfrac{1}{|A|}\\operatorname{adj}A$, so $(A^{-1})_{${sub(i, j)}} = \\dfrac{${Cji.tex()}}{${d.tex()}} = ${correct.tex()}$.` : "") +
-      `\nUsing $C_{${sub(i, j)}}$ (no transpose) is the classic trap.`,
-  });
-}
-
-/** Areas of parallelograms / triangles and volumes of parallelepipeds. */
+/** Areas of parallelograms and volumes of parallelepipeds (Theorem 3.1). */
 function areaVolume(rng: Rng): Draft {
-  const mode = rng.pick(["para2", "tri2", "ppd3", "ppd0"] as const);
+  const mode = rng.pick(["para2", "para2", "ppd3", "ppd0"] as const);
   const pt = (n: number) => Array.from({ length: n }, () => F(rng.int(-3, 4)));
-  const subv = (p: Frac[], q: Frac[]) => p.map((x, i) => x.sub(q[i]));
-  const ptTex = (p: Frac[]) => `(${p.map((x) => x.tex()).join(", ")})`;
-  if (mode === "para2" || mode === "tri2") {
+  const subv = (a: Frac[], b: Frac[]) => a.map((x, i) => x.sub(b[i]));
+  const ptTex = (q: Frac[]) => `(${q.map((x) => x.tex()).join(", ")})`;
+  if (mode === "para2") {
     const P = pt(2);
     const Q = pt(2);
     const R = pt(2);
@@ -501,22 +372,15 @@ function areaVolume(rng: Rng): Draft {
     const D = det(transpose([u, v]));
     if (D.isZero() || P.every((x) => x.isZero())) retry();
     const Dpos = det(transpose([Q, R]));
-    if (mode === "para2") {
-      const S = Q.map((x, i) => x.add(v[i]));
-      return mcq(rng, {
-        subtopic: "Area & volume",
-        prompt: `Find the area of the parallelogram with vertices $${ptTex(P)}$, $${ptTex(Q)}$, $${ptTex(S)}$ and $${ptTex(R)}$.`,
-        correct: D.abs().tex(),
-        distractors: [D.abs().div(2), D.abs().mul(2), Dpos.abs(), D.abs().add(1), det(transpose([Q, S])).abs()].map((x) => x.tex()),
-        solution: `Translate so that $${ptTex(P)}$ is at the origin: the edges from it are $\\mathbf{u} = ${ptTex(u)}$ and $\\mathbf{v} = ${ptTex(v)}$.\nArea $= |\\det[\\mathbf{u}\\ \\mathbf{v}]| = \\left|${vm(transpose([u, v]))}\\right| = |${D.tex()}| = ${D.abs().tex()}$. Using the position vectors of the vertices directly is wrong unless one vertex is the origin.`,
-      });
-    }
+    const S = Q.map((x, i) => x.add(v[i]));
     return mcq(rng, {
       subtopic: "Area & volume",
-      prompt: `Find the area of the triangle with vertices $${ptTex(P)}$, $${ptTex(Q)}$ and $${ptTex(R)}$.`,
-      correct: D.abs().div(2).tex(),
-      distractors: [D.abs(), Dpos.abs().div(2), D.abs().div(6), D.abs().div(3), D.abs().mul(2)].map((x) => x.tex()),
-      solution: `Edges from $${ptTex(P)}$: $\\mathbf{u} = ${ptTex(u)}$, $\\mathbf{v} = ${ptTex(v)}$. They span a parallelogram of area $|\\det[\\mathbf{u}\\ \\mathbf{v}]| = |${D.tex()}| = ${D.abs().tex()}$, and the triangle is half of it: $${D.abs().div(2).tex()}$.`,
+      prompt: `Calculate the area of the parallelogram with vertices $${ptTex(P)}$, $${ptTex(Q)}$, $${ptTex(S)}$ and $${ptTex(R)}$.`,
+      correct: D.abs().tex(),
+      distractors: [D.abs().div(2), D.abs().mul(2), Dpos.abs(), D.abs().add(1), det(transpose([Q, S])).abs()].map((x) => x.tex()),
+      solution:
+        `Translate so that $${ptTex(P)}$ is at the origin (translation does not change area): subtract it from every vertex. The vertices adjacent to it become $\\mathbf{u} = ${ptTex(u)}$ and $\\mathbf{v} = ${ptTex(v)}$.\n` +
+        `Theorem 3.1: area $= \\text{abs}\\left(|[\\mathbf{u}\\ \\mathbf{v}]|\\right) = \\text{abs}\\left(${vm(transpose([u, v]))}\\right) = \\text{abs}(${D.tex()}) = ${D.abs().tex()}$. Using the position vectors of the vertices directly is wrong unless one vertex is the origin.`,
     });
   }
   const origin = mode === "ppd0";
@@ -529,7 +393,7 @@ function areaVolume(rng: Rng): Draft {
   const D = det(E);
   if (D.isZero() || Math.abs(D.valueOf()) > 60) retry();
   const Dpos = det(transpose(V));
-  const ds = [D.abs().div(6), D.abs().div(2), D.abs().mul(2), D.abs().add(1)];
+  const ds = [D.abs().div(2), D.abs().mul(2), D.abs().add(1), D.abs().mul(3)];
   if (!origin) ds.unshift(Dpos.abs());
   if (D.n < 0) ds.unshift(D);
   return mcq(rng, {
@@ -540,12 +404,12 @@ function areaVolume(rng: Rng): Draft {
     correct: D.abs().tex(),
     distractors: ds.map((x) => x.tex()),
     solution:
-      (origin ? "" : `Edge vectors from $${ptTex(P)}$: subtract it from each adjacent vertex.\n`) +
-      `Volume $= |\\det[\\mathbf{u}\\ \\mathbf{v}\\ \\mathbf{w}]| = \\left|${vm(E)}\\right| = |${D.tex()}| = ${D.abs().tex()}$.\nVolume is the **absolute value** of the determinant; $\\tfrac16|\\det|$ would be the tetrahedron.`,
+      (origin ? "" : `Translate $${ptTex(P)}$ to the origin: subtract it from each adjacent vertex.\n`) +
+      `Theorem 3.1 with the adjacent vertices as columns: volume $= \\text{abs}\\left(${vm(E)}\\right) = \\text{abs}(${D.tex()}) = ${D.abs().tex()}$.\nA volume is the **absolute value** of the determinant.`,
   });
 }
 
-/** Area / volume scaling under x -> Ax. */
+/** Area / volume scaling under x -> Ax (Theorem 3.2). */
 function transformScale(rng: Rng): Draft {
   const three = rng.chance(0.45);
   const n = three ? 3 : 2;
@@ -559,21 +423,22 @@ function transformScale(rng: Rng): Draft {
   const ad = d.abs();
   const word = three ? "volume" : "area";
   const shape = three
-    ? rng.pick([{ t: "the unit cube $[0,1]^3$", v: F(1) }, { t: "a solid $S$ of volume $5$", v: F(5) }, { t: "a solid $S$ of volume $\\tfrac{1}{2}$", v: F(1, 2) }])
-    : rng.pick([{ t: "the unit square", v: F(1) }, { t: "a triangle of area $3$", v: F(3) }, { t: "a region $S$ of area $4$", v: F(4) }, { t: "the unit disk", v: F(1), pi: true }]);
+    ? rng.pick([{ t: "the unit cube $[0,1]^3$", v: F(1) }, { t: "a parallelepiped of volume $5$", v: F(5) }, { t: "a parallelepiped of volume $\\tfrac{1}{2}$", v: F(1, 2) }])
+    : rng.pick([{ t: "the unit square", v: F(1) }, { t: "a parallelogram of area $3$", v: F(3) }, { t: "a parallelogram of area $4$", v: F(4) }, { t: "the unit disk", v: F(1), pi: true }]);
   const pi = "pi" in shape && shape.pi ? "\\pi" : "";
   const mode = rng.pick(["image", "image", "pre", "twice"] as const);
   const tr = A.reduce((s, r, i) => s.add(r[i]), F(0)).abs();
   const T = `T(\\mathbf{x}) = A\\mathbf{x}$ with $A = ${bm(A)}`;
   const show = (x: Frac) => (pi ? (x.eq(1) ? "\\pi" : `${x.tex()}\\pi`) : x.tex());
+  const detWork = three ? formula3(A) : `$|A| = ad - bc = ${d.tex()}$.`;
   if (mode === "pre" && !pi) {
     const img = ad.mul(shape.v);
     return mcq(rng, {
       subtopic: "Area & volume",
-      prompt: `Let $${T}$. A region $S$ in $\\mathbb{R}^${n}$ is mapped to $T(S)$, which has ${word} $${img.tex()}$. Find the ${word} of $S$.`,
+      prompt: `Let $${T}$. A ${three ? "parallelepiped" : "parallelogram"} $S$ in $\\mathbb{R}^${n}$ is mapped to $T(S)$, which has ${word} $${img.tex()}$. Find the ${word} of $S$.`,
       correct: shape.v.tex(),
       distractors: [img.mul(ad), img, img.div(d.mul(d)), tr.isZero() ? img.mul(2) : img.div(tr), shape.v.mul(2)].map((x) => x.tex()),
-      solution: `$\\text{${word}}(T(S)) = |\\det A|\\cdot \\text{${word}}(S)$ with $\\det A = ${d.tex()}$. So $\\text{${word}}(S) = ${img.tex()}/${ad.tex()} = ${shape.v.tex()}$. (Multiplying by $|\\det A|$ instead of dividing is the trap.)`,
+      solution: `${detWork}\nTheorem 3.2: ${word} of $T(S) = \\text{abs}(|A|)\\times$ ${word} of $S$. So the ${word} of $S$ is $${img.tex()}/${ad.tex()} = ${shape.v.tex()}$. (Multiplying by $\\text{abs}(|A|)$ instead of dividing is the trap.)`,
     });
   }
   const twice = mode === "twice";
@@ -591,13 +456,13 @@ function transformScale(rng: Rng): Draft {
       shape.v.mul(ad).mul(2),
     ].map(show),
     solution:
-      `$\\det A = ${d.tex()}$${three ? ` (expand along a line with zeros)` : ""}. A linear map multiplies every ${word} by $|\\det A| = ${ad.tex()}$` +
-      (twice ? `; applying it twice multiplies by $|\\det A|^2 = ${factor.tex()}$ (indeed $|\\det(A^2)| = |\\det A|^2$).` : ".") +
+      `${detWork}\nTheorem 3.2: $T$ multiplies every ${word} by $\\text{abs}(|A|) = ${ad.tex()}$${pi ? " (the theorem applies to arbitrary shapes, as in the ellipse example)" : ""}` +
+      (twice ? `; applying it twice multiplies by $\\text{abs}(|A|)^2 = ${factor.tex()}$ (indeed $|A^2| = |A|^2$ by Rule 9).` : ".") +
       `\n${word === "area" ? "Area" : "Volume"} $= ${factor.tex()}\\times ${show(shape.v)} = ${show(correct)}$. Areas and volumes are never negative, so use the absolute value.`,
   });
 }
 
-/** det via row reduction: A = (P)LU, det = ± product of pivots. */
+/** det via elimination: |A| = ± product of pivots. */
 function luDet(rng: Rng): Draft {
   const n = rng.pick([3, 4, 4]);
   const Lm: Mat = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => F(i === j ? 1 : i > j ? rng.int(-2, 2) : 0)));
@@ -621,32 +486,35 @@ function luDet(rng: Rng): Draft {
     correct: d.tex(),
     distractors: [prodDiag(A), d.neg(), d.mul(2), pivSum, d.div(2)].map((x) => x.tex()),
     solution:
-      (swap ? `Interchange $R_${si + 1} \\leftrightarrow R_${sj + 1}$ (one swap: sign $\\times(-1)$). ` : "") +
-      `Row replacements only (they do not change the determinant) reduce it to the echelon form\n$$U = ${bm(U)}$$\n` +
-      `$U$ is triangular, so $|U|$ = product of the pivots $= ${U.map((r, i) => `(${r[i].tex()})`).join("")} = ${piv.tex()}$.\n` +
+      (swap ? `Exchange $R_${si + 1} \\leftrightarrow R_${sj + 1}$ (one exchange: sign $\\times(-1)$, Rule 2). ` : "") +
+      `Row replacements only (Rule 5: they do not change the determinant) reduce it to the upper triangular\n$$U = ${bm(U)}$$\n` +
+      `By Rule 7, $|U|$ = product of the pivots $= ${U.map((r, i) => `(${r[i].tex()})`).join("")} = ${piv.tex()}$.\n` +
       `$\\det A = ${swap ? "-" : ""}|U| = ${d.tex()}$. (The product of the diagonal of $A$ itself means nothing unless $A$ is triangular.)`,
   });
 }
 
-/** Vandermonde determinants. */
-function vandermonde(rng: Rng): Draft {
+/** Determinants with rows (1, x, x^2): elimination, and "singular for which x" (two equal rows). */
+function powerRows(rng: Rng): Draft {
   const [a, b, c] = rng.shuffle([-3, -2, -1, 0, 1, 2, 3, 4, 5]).slice(0, 3);
+  const n = (x: number) => (x < 0 ? `(${x})` : `${x}`);
   if (rng.chance(0.55)) {
     const rowsForm = rng.chance(0.5);
     const V = mat([[1, 1, 1], [a, b, c], [a * a, b * b, c * c]]);
     const A = rowsForm ? V : transpose(V);
     const d = det(A);
     const check = F((b - a) * (c - a) * (c - b));
-    if (!d.eq(check)) throw new Error("vdm mismatch");
+    if (!d.eq(check)) throw new Error("powerRows mismatch");
+    const m = F(c - a, b - a);
     return mcq(rng, {
-      subtopic: "Special patterns",
+      subtopic: "Row reduction & triangular",
       prompt: `Evaluate $\\det A$ for $A = ${bm(A)}$.`,
       correct: d.tex(),
       distractors: [d.neg(), F((b - a) * (c - a)), F((b - a) + (c - a) + (c - b)), F(a * b * c), F((b - a) * (c - b)), d.mul(2)].map((x) => x.tex()),
       solution:
-        `This is a Vandermonde determinant with nodes $${a}, ${b}, ${c}$: $\\det = (x_2 - x_1)(x_3 - x_1)(x_3 - x_2)$.\n` +
-        `$= (${b} - ${a < 0 ? `(${a})` : a})(${c} - ${a < 0 ? `(${a})` : a})(${c} - ${b < 0 ? `(${b})` : b}) = (${b - a})(${c - a})(${c - b}) = ${d.tex()}$.\n` +
-        `Mind the order: $(x_1 - x_2)(x_1 - x_3)(x_2 - x_3)$ has the opposite sign.${A === V ? "" : " This matrix is the transpose of the usual layout, which does not change the determinant."}`,
+        (rowsForm ? `By Rule 10, $|A| = |A^T|$; work with the rows of $A^T$: $(1, ${a}, ${a * a})$, $(1, ${b}, ${b * b})$, $(1, ${c}, ${c * c})$.\n` : "") +
+        `$R_2 - R_1 = (0, ${b - a}, ${b * b - a * a})$ and $R_3 - R_1 = (0, ${c - a}, ${c * c - a * a})$ (Rule 5, no change).\n` +
+        `$R_3 - ${p(m)}R_2$: the last entry becomes $${c * c - a * a} - ${p(m)}${p(F(b * b - a * a))} = ${F(c * c - a * a).sub(m.mul(b * b - a * a)).tex()}$.\n` +
+        `Upper triangular with pivots $1, ${b - a}, ${(c - a) * (c - b)}$ (Rule 7): $\\det A = ${d.tex()}$.`,
     });
   }
   // singular for which x: rows [1 x x^2],[1 a a^2],[1 b b^2]
@@ -656,36 +524,37 @@ function vandermonde(rng: Rng): Draft {
   const [lo, hi] = a < b ? [a, b] : [b, a];
   const pr = (x: number, y: number) => (x === y ? `x = ${x}` : `x = ${Math.min(x, y)} \\text{ or } x = ${Math.max(x, y)}`);
   return mcq(rng, {
-    subtopic: "Special patterns",
+    subtopic: "Invertibility",
     prompt: `For which value(s) of $x$ is the matrix $${Mtex}$ singular?`,
     correct: pr(lo, hi),
     distractors: [pr(-lo, -hi), pr(lo, lo), pr(hi, hi), ...(lo !== 0 && hi !== 0 ? [`x = 0,\\ ${lo} \\text{ or } ${hi}`] : []), pr(lo + hi, lo * hi), "\\text{no real } x"],
     solution:
-      `Up to a row interchange (which only flips the sign) this is a Vandermonde matrix with nodes $x, ${a}, ${b}$, so $\\det = \\pm(${a} - x)(${b} - x)(${b} - ${a < 0 ? `(${a})` : a})$.\n` +
-      `It is zero exactly when two rows coincide: $x = ${a}$ or $x = ${b}$ (and $${a} \\ne ${b}$). So $${pr(lo, hi)}$.`,
+      `Exchange rows so that they read $(1, ${a}, ${a * a})$, $(1, ${b}, ${b * b})$, $(1, x, x^2)$ (exchanges only change the sign).\n` +
+      `$R_2 - R_1 = (0, ${b - a}, ${b * b - a * a})$, $R_3 - R_1 = (0,\\ x - ${n(a)},\\ x^2 - ${n(a * a)})$. Then $R_3 - \\tfrac{x - ${n(a)}}{${b - a}}R_2$ has last entry $(x - ${n(a)})(x + ${n(a)}) - (x - ${n(a)})(${a + b}) = (x - ${n(a)})(x - ${n(b)})$.\n` +
+      `So $|A| = \\pm(${b - a})(x - ${n(a)})(x - ${n(b)})$, and by Rule 8 $A$ is singular exactly when $x = ${a}$ or $x = ${b}$ (then two rows are equal, Rule 4). So $${pr(lo, hi)}$.`,
   });
 }
 
-/** Structured determinants: t I + (rank one), and [[x,a,a],[a,x,a],[a,a,x]]. */
+/** Structured determinants: same row sum patterns (PYP AY24/25 S2 Q9 style). */
 function structured(rng: Rng): Draft {
   if (rng.chance(0.5)) {
     const n = rng.pick([3, 4]);
     const t = rng.pick([1, 1, 2, 3]);
     const v = Array.from({ length: n }, () => rng.nz(-3, 4));
     const A = mat(Array.from({ length: n }, (_, i) => v.map((x, j) => (i === j ? t + x : x))));
-    const s = v.reduce((p, q) => p + q, 0);
+    const s = v.reduce((pp, q) => pp + q, 0);
     const d = det(A);
     if (!d.eq(F(t ** (n - 1) * (t + s)))) throw new Error("structured mismatch");
     if (d.isZero()) retry();
-    const prodDi = v.reduce((p, x) => p * (t + x), 1);
+    const prodDi = v.reduce((pp, x) => pp * (t + x), 1);
     return mcq(rng, {
       subtopic: "Special patterns",
       prompt: `Evaluate $\\det A$ for $A = ${bm(A)}$.`,
       correct: d.tex(),
       distractors: [F(t + s), F(prodDi), F(t ** n + s), F(t ** (n - 1) + s), d.neg(), F(t ** (n - 1) * s)].map((x) => x.tex()),
       solution:
-        `Every row is $(${v.join(", ")})$ plus $${t}$ in the diagonal position. Add all the other columns to column 1 (replacements, no change): every entry of column 1 becomes $${t} + (${v.map((x, i) => (i === 0 ? `${x}` : x < 0 ? `- ${-x}` : `+ ${x}`)).join(" ")}) = ${t + s}$.\n` +
-        `Factor out $${t + s}$, then subtract row 1 from every other row: the result is upper triangular with diagonal $1, ${Array(n - 1).fill(t).join(", ")}$.\n` +
+        `Every row is $(${v.join(", ")})$ plus $${t}$ in the diagonal position. Add all the other columns to column 1 (Rule 5 for columns, no change): every entry of column 1 becomes $${t} + (${v.map((x, i) => (i === 0 ? `${x}` : x < 0 ? `- ${-x}` : `+ ${x}`)).join(" ")}) = ${t + s}$.\n` +
+        `Factor out $${t + s}$ (Rule 3), then subtract row 1 from every other row: the result is upper triangular with diagonal $1, ${Array(n - 1).fill(t).join(", ")}$ (Rule 7).\n` +
         `$\\det A = ${t + s}\\cdot ${t}^{${n - 1}} = ${d.tex()}$. (With $t = 1$ this is the past-paper pattern $\\det = 1 + a + b + c + \\dots$)`,
     });
   }
@@ -702,9 +571,9 @@ function structured(rng: Rng): Draft {
     correct: d.tex(),
     distractors: [F((x + 2 * a) * (x - a)), F(x ** 3 - 3 * a * a * x), F((x - 2 * a) * (x + a) ** 2), F(x ** 3 + 2 * a ** 3), d.neg()].map((q) => q.tex()),
     solution:
-      `Add columns 2 and 3 to column 1: column 1 becomes $(${x + 2 * a}, ${x + 2 * a}, ${x + 2 * a})$. Factor out $${x + 2 * a}$ and subtract row 1 from rows 2 and 3:\n` +
+      `Add columns 2 and 3 to column 1 (no change): column 1 becomes $(${x + 2 * a}, ${x + 2 * a}, ${x + 2 * a})$. Factor out $${x + 2 * a}$ (Rule 3) and subtract row 1 from rows 2 and 3:\n` +
       `$$\\det A = ${x + 2 * a}\\begin{vmatrix} 1 & ${a} & ${a} \\\\ 0 & ${x - a} & 0 \\\\ 0 & 0 & ${x - a} \\end{vmatrix} = (${x + 2 * a})(${x - a})^2 = ${d.tex()}$$\n` +
-      `In general $\\det = (x + 2a)(x - a)^2$.`,
+      `(Rule 7 for the triangular determinant.)`,
   });
 }
 
@@ -728,7 +597,7 @@ function tfnProps(rng: Rng): Draft {
       subtopic: "Determinant algebra",
       prompt: `$A$ and $B$ are $${n}\\times${n}$ matrices with $|A| = ${a}$ and $|B| = ${b}$. Then $|${expr}| = ${claim.tex()}$.`,
       answer: truth ? 0 : 1,
-      solution: `$|${expr}| = ${val.tex()}$ (a scalar $k$ comes out as $k^{${n}}$; $|A^{-1}| = 1/|A|$; $|B^T| = |B|$). The claim is ${truth ? "**True**" : `${claim.tex()}, so **False**`}.`,
+      solution: `$|${expr}| = ${val.tex()}$ (a scalar $k$ comes out as $k^{${n}}$ by Rule 3; $|XY| = |X||Y|$; $|A^{-1}| = 1/|A|$; $|B^T| = |B|$). The claim is ${truth ? "**True**" : `${claim.tex()}, so **False**`}.`,
     });
   }
   if (kind === "sum") {
@@ -739,7 +608,7 @@ function tfnProps(rng: Rng): Draft {
       subtopic: "Determinant algebra",
       prompt: `$A$ and $B$ are $${n}\\times${n}$ matrices with $|A| = ${a}$ and $|B| = ${b}$. Then $|A ${minus ? "-" : "+"} B| = ${minus ? a - b : a + b}$.`,
       answer: 2,
-      solution: `The determinant is **not** additive: $|A ${minus ? "-" : "+"} B|$ depends on the matrices themselves, not only on $|A|$ and $|B|$ (e.g. $A = I$, $B = -I$ in even size gives $|A| = |B| = 1$ but $|A + B| = 0$). Different matrices with these determinants give different values, so **Not enough information**.`,
+      solution: `There is no sum rule: Rule 3 splits only one row while the other rows stay the same. $|A ${minus ? "-" : "+"} B|$ depends on the matrices themselves, not only on $|A|$ and $|B|$ (e.g. different diagonal matrices with these determinants give different values of $|A ${minus ? "-" : "+"} B|$ by Rule 7). **Not enough information**.`,
     });
   }
   if (kind === "power") {
@@ -751,7 +620,7 @@ function tfnProps(rng: Rng): Draft {
         subtopic: "Determinant algebra",
         prompt: `$A$ is a $${n}\\times${n}$ matrix with $A^2 = ${c * c}I$. Then $|A| = ${claim}$.`,
         answer: 2,
-        solution: `$|A|^2 = |${c * c}I| = ${c * c}^{${n}}$, so $|A| = \\pm ${Math.abs(c) ** n}$. Both signs occur (e.g. $A = ${Math.abs(c)}I$ and $A = ${Math.abs(c)}\\operatorname{diag}(-1, 1, \\dots, 1)$), so the sign cannot be decided: **Not enough information**.`,
+        solution: `$|A|^2 = |${c * c}I| = ${c * c}^{${n}}$ (Rules 9, 3), so $|A| = \\pm ${Math.abs(c) ** n}$. Both signs occur: $A = ${Math.abs(c)}I$, and $${Math.abs(c)}I$ with its first row multiplied by $-1$ (both square to $${c * c}I$; by Rule 7 their determinants differ in sign). The sign cannot be decided: **Not enough information**.`,
       });
     }
     const truth = rng.chance(0.5);
@@ -761,7 +630,7 @@ function tfnProps(rng: Rng): Draft {
       subtopic: "Determinant algebra",
       prompt: `$A$ is a $${n}\\times${n}$ matrix with $A^3 = ${c ** 3}I$. Then $|A| = ${claim}$.`,
       answer: truth ? 0 : 1,
-      solution: `$|A|^3 = |${c ** 3}I| = (${c ** 3})^{${n}} = (${c ** n})^3$. A real number has exactly one real cube root, so $|A| = ${c ** n}$. The claim is ${truth ? "**True**" : "**False**"}.`,
+      solution: `$|A|^3 = |${c ** 3}I| = (${c ** 3})^{${n}} = (${c ** n})^3$ (Rules 9, 3). A real number has exactly one real cube root, so $|A| = ${c ** n}$. The claim is ${truth ? "**True**" : "**False**"}.`,
     });
   }
   if (kind === "ops") {
@@ -777,7 +646,7 @@ function tfnProps(rng: Rng): Draft {
       subtopic: "Row & column operations",
       prompt: `$A$ is $3\\times 3$ with $|A| = ${d}$. $B$ is obtained from $A$ by $R_${i} \\to R_${i} ${m < 0 ? "-" : "+"} ${Math.abs(m)}R_${j}$, then $R_${j} \\leftrightarrow R_${l}$, then $R_${l} \\to ${k}R_${l}$. Then $|B| = ${claim}$.`,
       answer: truth ? 0 : 1,
-      solution: `Replacement: no change; interchange: $\\times(-1)$; scaling one row by $${k}$: $\\times ${k}$. So $|B| = (-1)(${k})(${d}) = ${val}$. The claim is ${truth ? "**True**" : "**False**"}.`,
+      solution: `Replacement: no change (Rule 5); exchange: $\\times(-1)$ (Rule 2); scaling one row by $${k}$: $\\times ${k}$ (Rule 3). So $|B| = (-1)(${k})(${d}) = ${val}$. The claim is ${truth ? "**True**" : "**False**"}.`,
     });
   }
   if (kind === "solve") {
@@ -785,32 +654,44 @@ function tfnProps(rng: Rng): Draft {
     if (a !== 0) {
       return tfn({
         subtopic: "Invertibility",
-        prompt: `$A$ is a $${n}\\times${n}$ matrix with $|A| = ${a}$. Then $A\\mathbf{x} = \\mathbf{b}$ has exactly one solution for every $\\mathbf{b}\\in\\mathbb{R}^${n}$.`,
+        prompt: `$A$ is a $${n}\\times${n}$ matrix with $|A| = ${a}$. Then $A\\mathbf{x} = \\mathbf{0}$ has only the trivial solution.`,
         answer: 0,
-        solution: `$|A| \\ne 0$, so $A$ is invertible and $\\mathbf{x} = A^{-1}\\mathbf{b}$ is the unique solution for every $\\mathbf{b}$. **True**.`,
+        solution: `$|A| \\ne 0$, so $A$ is invertible (Rule 8), and by the Invertible Matrix Theorem $A\\mathbf{x} = \\mathbf{0}$ has only the trivial solution. **True**.`,
       });
     }
     return tfn({
       subtopic: "Invertibility",
-      prompt: `$A$ is a $${n}\\times${n}$ matrix with $|A| = 0$, and $\\mathbf{b}\\in\\mathbb{R}^${n}$ is nonzero. Then $A\\mathbf{x} = \\mathbf{b}$ has no solution.`,
-      answer: 2,
-      solution: `$|A| = 0$ means $A$ is singular: $A\\mathbf{x} = \\mathbf{b}$ is either inconsistent or has infinitely many solutions, depending on whether $\\mathbf{b}\\in C(A)$. Since $\\mathbf{b}$ is not specified, **Not enough information**.`,
+      prompt: `$A$ is a $${n}\\times${n}$ matrix with $|A| = 0$. Then the columns of $A$ are linearly independent.`,
+      answer: 1,
+      solution: `$|A| = 0$ means $A$ is singular (Rule 8), so by the Invertible Matrix Theorem its columns are linearly **dependent**. **False**.`,
     });
   }
-  // skew
+  // skew (A = -A^T), Tutorial 3 Q3 argument
   const odd = n % 2 === 1;
   const c = rng.pick([2, 3, -1]);
   return tfn({
     subtopic: "Determinant algebra",
-    prompt: `$A$ is a $${n}\\times${n}$ matrix with $A^T = -A$. Then $|${c === -1 ? "-" : c}A| = 0$.`,
+    prompt: `$A$ is a $${n}\\times${n}$ matrix with $A = -A^T$. Then $|${c === -1 ? "-" : c}A| = 0$.`,
     answer: odd ? 0 : 2,
     solution: odd
-      ? `$|A| = |A^T| = |-A| = (-1)^{${n}}|A| = -|A|$, so $|A| = 0$ and $|${c === -1 ? "-" : c}A| = (${c})^{${n}}\\cdot 0 = 0$. **True** (odd order).`
-      : `For even order the argument gives $|A| = (-1)^{${n}}|A| = |A|$, which says nothing. Some even skew-symmetric matrices are singular (the zero matrix), others are not (e.g. $\\begin{bmatrix}0&1\\\\-1&0\\end{bmatrix}$ blocks give $|A| = 1$). **Not enough information**.`,
+      ? `As in Tutorial 3 Q3: $|A| = |-A^T| = (-1)^{${n}}|A^T| = -|A|$, so $|A| = 0$ and $|${c === -1 ? "-" : c}A| = (${c})^{${n}}\\cdot 0 = 0$. **True** (odd size).`
+      : `For even size the Tutorial 3 Q3 argument gives $|A| = (-1)^{${n}}|A^T| = |A|$, which says nothing. The zero matrix gives $0$, but placing copies of $\\begin{bmatrix}0&1\\\\-1&0\\end{bmatrix}$ along the diagonal (zeros elsewhere) gives $|A| = 1$: one row exchange per pair of rows (Rule 2) leaves a diagonal matrix with entries $\\pm1$ (Rule 7). **Not enough information**.`,
   });
 }
 
 export const determinantsGens: ((rng: Rng) => Draft)[] = [
-  det3, det4, cofactorEntry, rowOpSeq, algebraExpr, entryScaling, columnCombo, singularK, cramer, adjEntry,
-  areaVolume, transformScale, luDet, vandermonde, structured, tfnProps, det3, rowOpSeq,
+  cite(F3, det3),
+  cite(RULES16, rowOpSeq),
+  cite(RULES910, algebraExpr),
+  cite(`${COLS}; older PYP: b_ij = 2^{i+j}a_ij`, entryScaling),
+  cite(`${COLS}; Slides 3.1 Rule 9 (det p9); Slides 0B multiplication by columns`, columnCombo),
+  cite(`${RULE8}; ${F3}`, singularK),
+  cite("Slides 3.2 Theorem 3.1 and Exercise 3.2.1 (det p11–16); Tutorial 3 Q4", areaVolume),
+  cite("Slides 3.3 Theorem 3.2 (det p17–20); PYP AY25/26 S2 Q4", transformScale),
+  cite(PIVOTS, luDet),
+  cite(`${PIVOTS}; older PYP: independence of [1,1,1], [a,b,c], [a²,b²,c²]`, powerRows),
+  cite(`${COLS}; PYP AY24/25 S2 Q9`, structured),
+  cite("Slides 3.1 Rules 1–10 (det p3–10); Tutorial 3 Q1, Q3; Slides 2.2 Theorem 2.4 (alg p10)", tfnProps),
+  cite(F3, det3),
+  cite(RULES16, rowOpSeq),
 ];

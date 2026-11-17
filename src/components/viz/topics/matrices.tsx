@@ -74,9 +74,9 @@ function AxColumns() {
         </>
       }
       tasks={[
-        "Set $x_1 = 1$, $x_2 = 0$. Which vector is $A\\mathbf{x}$? (This is why $A\\mathbf{e}_j = \\mathbf{a}_j$.)",
-        "Predict: if $\\mathbf{a}_2$ is dragged onto the line through $\\mathbf{a}_1$, which points can $A\\mathbf{x}$ still reach?",
-        "Find weights with $A\\mathbf{x} = \\mathbf{0}$ while $\\mathbf{x} \\ne \\mathbf{0}$. What must be true about the columns?",
+        "Set $x_1 = 1$, $x_2 = 0$. Which vector is $A\\mathbf{x}$? (It is the first column of $A$.)",
+        "Predict $A\\mathbf{x}$ for $x_1 = 2$, $x_2 = -1$ with the column picture, then check it against the row-by-row readout.",
+        "Drag $\\mathbf{a}_1$ and $\\mathbf{a}_2$ anywhere: do the two readouts (columns and rows) ever disagree?",
         "Make $x_2$ negative. Does the orange piece now point against $\\mathbf{a}_2$?",
       ]}
     />
@@ -243,8 +243,8 @@ function ProductExplorer() {
 const PRESETS: { v: string; label: string; M: [number, number, number, number] }[] = [
   { v: "rot", label: "rotate 90°", M: [0, -1, 1, 0] },
   { v: "refx", label: "reflect in x-axis", M: [1, 0, 0, -1] },
-  { v: "shear", label: "shear", M: [1, 1, 0, 1] },
-  { v: "stretch", label: "stretch x by 2", M: [2, 0, 0, 1] },
+  { v: "refyx", label: "reflect in y = x", M: [0, 1, 1, 0] },
+  { v: "neg", label: "N(v) = −v", M: [-1, 0, 0, -1] },
   { v: "px", label: "project onto x-axis", M: [1, 0, 0, 0] },
   { v: "py", label: "project onto y-axis", M: [0, 0, 0, 1] },
 ];
@@ -304,15 +304,15 @@ function OrderMatters() {
           <Read tex={`$AB = ${bm2(AB)},\\ BA = ${bm2(BA)}$`} />
           <Read tone={same ? "good" : "bad"} tex={same ? "**$AB = BA$**: these two commute." : "**$AB \\ne BA$**: the order matters."} />
           {(zeroAB || zeroBA) && (
-            <Read tone="warn" tex={`${zeroAB ? "$AB = 0$" : "$BA = 0$"} although $A \\ne 0$ and $B \\ne 0$: **zero divisors**${zeroAB !== zeroBA ? `, and ${zeroAB ? "$BA$" : "$AB$"} is not zero` : ""}.`} />
+            <Read tone="warn" tex={`${zeroAB ? "$AB = 0$" : "$BA = 0$"} although $A \\ne 0$ and $B \\ne 0$: a **zero product**${zeroAB !== zeroBA ? `, and ${zeroAB ? "$BA$" : "$AB$"} is not zero` : ""}.`} />
           )}
         </>
       }
       tasks={[
         "Predict: rotate 90° and reflect in the x-axis. Do the green and red F's coincide? Check, then explain with $AB$ and $BA$.",
-        "Find two different choices that **do** commute (hint: two stretches/projections along the axes, or a matrix with itself).",
-        "Choose A = project onto x-axis, B = project onto y-axis. What does $AB$ do to every point?",
-        "Choose A = project onto x-axis, B = shear. Is $AB = 0$? Is $BA = 0$? Which one squashes the F onto a line, and which line?",
+        "Find two different choices that **do** commute (hint: try N(v) = −v with anything).",
+        "Choose A = project onto x-axis, B = project onto y-axis. What is $AB$, although neither factor is zero?",
+        "A past paper asks which of rotate 90°, reflect in y = x and N(v) = −v commute in pairs. Test all three pairs here.",
       ]}
     />
   );

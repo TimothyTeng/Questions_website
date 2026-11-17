@@ -58,10 +58,9 @@ function GridImage({ A, N = 6, color = "muted" }: { A: M2; N?: number; color?: V
 
 const GRID_PRESETS: { v: string; label: string; c1: V2; c2: V2 }[] = [
   { v: "id", label: "$I$", c1: [1, 0], c2: [0, 1] },
-  { v: "shear", label: "shear", c1: [1, 0], c2: [1.5, 1] },
   { v: "rot", label: "rotate $90^\\circ$", c1: [0, 1], c2: [-1, 0] },
   { v: "refl", label: "reflect $y=x$", c1: [0, 1], c2: [1, 0] },
-  { v: "lesson", label: "lesson $A$", c1: [2, -1], c2: [1, 1] },
+  { v: "ex", label: "$\\begin{bmatrix}2&1\\\\-1&1\\end{bmatrix}$", c1: [2, -1], c2: [1, 1] },
   { v: "flat", label: "collapse", c1: [1, 0.5], c2: [2, 1] },
 ];
 
@@ -124,43 +123,37 @@ function MatrixGrid() {
           {zero ? (
             <Read tone="bad" tex="Zero map: every vector goes to $\mathbf{0}$ (kernel $= \mathbb{R}^2$)." />
           ) : flat ? (
-            <Read tone="bad" tex="Columns are parallel: the plane collapses onto a line. $T$ is **not one-to-one** and **not onto**." />
+            <Read tone="bad" tex="Columns are parallel: the plane collapses onto a line. $|A| = 0$, so $A$ is **not invertible**." />
           ) : (
-            <Read tone="good" tex="Columns independent: the grid still fills the plane. $T$ is **one-to-one and onto** (invertible)." />
+            <Read tone="good" tex="Columns independent: the grid still fills the plane. $|A| \ne 0$, so $A$ is **invertible**." />
           )}
-          <Read tex={`green square = image of the unit square; orange = image of the letter F${!flat && d < 0 ? " (mirrored: orientation flipped)" : ""}`} />
+          <Read tex={`area of the green square (image of the unit square) $= abs(|A|) = ${fmt(Math.abs(d))}$ (Theorem 3.2)`} />
+          <Read tex="orange = image of the letter F" />
         </>
       }
       tasks={[
         "Predict: where will the point $\\mathbf{x} = (1,0)$ land? Drag $\\mathbf{x}$ there and check that $A\\mathbf{x}$ sits on the tip of $T(\\mathbf{e}_1)$.",
-        "Pick **lesson $A$**. Move $\\mathbf{x}$ to $(1,2)$, then to $(1,-1)$. Do you get the images $(4,1)$ and $(1,-2)$ from the worked example?",
-        "Drag $T(\\mathbf{e}_2)$ onto the line through $T(\\mathbf{e}_1)$. What happens to the grid, and which vectors now share the same image?",
-        "Make the F appear mirror-reversed. What did you have to do to the two columns?",
+        "Pick **rotate $90^\\circ$**. Read off $T(\\mathbf{e}_1)$ and $T(\\mathbf{e}_2)$ and compare them with the columns of $\\begin{bmatrix}0&-1\\\\1&0\\end{bmatrix}$.",
+        "Drag $T(\\mathbf{e}_2)$ onto the line through $T(\\mathbf{e}_1)$. What happens to the grid and to the area of the green square?",
+        "Pick the matrix $\\begin{bmatrix}2&1\\\\-1&1\\end{bmatrix}$. Predict the area of the green square from $|A|$, then check the readout.",
       ]}
     />
   );
 }
 
 // ---------------------------------------------------------------------------------------------
-// 2. Gallery of the standard geometric maps of R².
+// 2. Gallery of the geometric maps used in Tutorial 1 Q10 and the past papers.
 
-type Kind = "rot" | "refl" | "proj" | "shear" | "scale";
-const REFLS: { v: string; label: string; M: M2; line?: V2 }[] = [
-  { v: "x", label: "$x_1$-axis", M: [1, 0, 0, -1], line: [1, 0] },
-  { v: "y", label: "$x_2$-axis", M: [-1, 0, 0, 1], line: [0, 1] },
-  { v: "yx", label: "$y = x$", M: [0, 1, 1, 0], line: [1, 1] },
-  { v: "ymx", label: "$y = -x$", M: [0, -1, -1, 0], line: [1, -1] },
-  { v: "o", label: "origin", M: [-1, 0, 0, -1] },
+type Kind = "rot" | "refl" | "neg" | "proj";
+const REFLS: { v: string; label: string; M: M2; line: V2 }[] = [
+  { v: "x", label: "the horizontal $x$-axis", M: [1, 0, 0, -1], line: [1, 0] },
+  { v: "yx", label: "the line $y = x$", M: [0, 1, 1, 0], line: [1, 1] },
 ];
 
 function GeometricGallery() {
   const [kind, setKind] = useState<Kind>("rot");
   const [deg, setDeg] = useState(60);
   const [refl, setRefl] = useState("yx");
-  const [axis, setAxis] = useState<"x" | "y">("x");
-  const [dir, setDir] = useState<"h" | "v">("h");
-  const [k, setK] = useState(1);
-  const [s, setS] = useState(2);
   const th = (deg * Math.PI) / 180;
   const R = REFLS.find((r) => r.v === refl)!;
   let A: M2;
@@ -170,30 +163,25 @@ function GeometricGallery() {
   switch (kind) {
     case "rot":
       A = [Math.cos(th), -Math.sin(th), Math.sin(th), Math.cos(th)];
-      name = `rotation by $${deg}^\\circ$ ${deg >= 0 ? "counter-clockwise" : "clockwise"}`;
+      name = `rotation by $${Math.abs(deg)}^\\circ$ ${deg >= 0 ? "counter-clockwise" : "clockwise"}`;
       formula = "$\\begin{bmatrix}\\cos\\theta & -\\sin\\theta\\\\ \\sin\\theta & \\cos\\theta\\end{bmatrix}$ (clockwise: $\\theta < 0$)";
       break;
     case "refl":
       A = R.M;
       line = R.line;
-      name = `reflection across the ${R.label}`;
-      formula = "columns = mirror images of $\\mathbf{e}_1, \\mathbf{e}_2$";
+      name = `reflection through ${R.label}`;
+      formula = "columns = images of $\\mathbf{e}_1, \\mathbf{e}_2$";
       break;
-    case "proj":
-      A = axis === "x" ? [1, 0, 0, 0] : [0, 0, 0, 1];
-      line = axis === "x" ? [1, 0] : [0, 1];
-      name = `projection onto the $x_${axis === "x" ? 1 : 2}$-axis`;
-      formula = `kernel = the $x_${axis === "x" ? 2 : 1}$-axis, range = the $x_${axis === "x" ? 1 : 2}$-axis`;
-      break;
-    case "shear":
-      A = dir === "h" ? [1, k, 0, 1] : [1, 0, k, 1];
-      name = dir === "h" ? `horizontal shear $x_1 \\mapsto x_1 + (${fmt(k)})x_2$` : `vertical shear $x_2 \\mapsto x_2 + (${fmt(k)})x_1$`;
-      formula = dir === "h" ? "$\\mathbf{e}_1$ fixed, $\\mathbf{e}_2$ tilts" : "$\\mathbf{e}_2$ fixed, $\\mathbf{e}_1$ tilts";
+    case "neg":
+      A = [-1, 0, 0, -1];
+      name = "$N(\\mathbf{v}) = -\\mathbf{v}$";
+      formula = "matrix $-I$, the same as rotation by $180^\\circ$";
       break;
     default:
-      A = [s, 0, 0, s];
-      name = s > 1 ? `dilation by $${fmt(s)}$` : s < 1 ? `contraction by $${fmt(s)}$` : "identity";
-      formula = "$kI$: every vector scaled by $k$";
+      A = [1, 0, 0, 0];
+      line = [1, 0];
+      name = "projection onto the $x$-axis";
+      formula = "kernel = the $y$-axis, range = the $x$-axis";
   }
   const d = det2(A);
   const e1: V2 = [A[0], A[2]];
@@ -201,7 +189,7 @@ function GeometricGallery() {
   return (
     <VizFrame
       title="Standard matrices of geometric maps"
-      hint="Pick a map and adjust it. The grey F is the input, the orange F its image; the arrows are T(e₁) and T(e₂), the columns."
+      hint="Pick a map. The grey F is the input, the orange F its image; the arrows are T(e₁) and T(e₂), the columns."
       onReset={() => {
         setKind("rot");
         setDeg(60);
@@ -225,21 +213,12 @@ function GeometricGallery() {
             options={[
               { v: "rot", label: "rotation" },
               { v: "refl", label: "reflection" },
-              { v: "proj", label: "projection" },
-              { v: "shear", label: "shear" },
-              { v: "scale", label: "dilation" },
+              { v: "neg", label: "$N(\\mathbf{v}) = -\\mathbf{v}$" },
+              { v: "proj", label: "projection onto $x$-axis" },
             ]}
           />
           {kind === "rot" && <Slider label="angle $\theta$ (degrees, negative = clockwise)" value={deg} min={-180} max={180} step={15} onChange={setDeg} />}
           {kind === "refl" && <Choice value={refl} onChange={setRefl} options={REFLS.map(({ v, label }) => ({ v, label }))} />}
-          {kind === "proj" && <Choice value={axis} onChange={setAxis} options={[{ v: "x", label: "onto $x_1$-axis" }, { v: "y", label: "onto $x_2$-axis" }]} />}
-          {kind === "shear" && (
-            <>
-              <Choice value={dir} onChange={setDir} options={[{ v: "h", label: "horizontal" }, { v: "v", label: "vertical" }]} />
-              <Slider label="$k$" value={k} min={-2} max={2} step={0.5} onChange={setK} />
-            </>
-          )}
-          {kind === "scale" && <Slider label="$k$" value={s} min={0.5} max={2.5} step={0.25} onChange={setS} />}
         </>
       }
       readout={
@@ -249,15 +228,15 @@ function GeometricGallery() {
           <Read tex={formula} />
           <Read
             tone={Math.abs(d) < 1e-9 ? "bad" : "good"}
-            tex={Math.abs(d) < 1e-9 ? "not invertible: a whole line is squashed to $\\mathbf{0}$" : `invertible${d < 0 ? " (orientation reversed: the F is mirrored)" : ""}`}
+            tex={Math.abs(d) < 1e-9 ? "$|A| = 0$: not invertible (the whole $y$-axis is sent to $\\mathbf{0}$)" : "$|A| \\ne 0$: invertible"}
           />
         </>
       }
       tasks={[
         "Predict the matrix of rotation by $-90^\\circ$ (clockwise), then set the slider and check. How is it related to the $+90^\\circ$ matrix?",
-        "Compare reflection across $y = x$ and across $y = -x$. Where does $\\mathbf{e}_1$ go in each case?",
-        "Choose projection onto the $x_1$-axis. Which points end up at the origin? (That set is the kernel.)",
-        "Which choices mirror the F, and which only turn or slant it?",
+        "Compare reflection through the $x$-axis and through $y = x$. Where does $\\mathbf{e}_1$ go in each case?",
+        "Choose projection onto the $x$-axis. Which points end up at the origin? (That set is the kernel.)",
+        "Set the rotation to $180^\\circ$ and compare its matrix with $N(\\mathbf{v}) = -\\mathbf{v}$.",
       ]}
     />
   );
@@ -269,13 +248,10 @@ function GeometricGallery() {
 const MAPS: { v: string; label: string; M: M2 }[] = [
   { v: "r90", label: "rotate $90^\\circ$", M: [0, -1, 1, 0] },
   { v: "rm90", label: "rotate $-90^\\circ$", M: [0, 1, -1, 0] },
-  { v: "r180", label: "rotate $180^\\circ$", M: [-1, 0, 0, -1] },
-  { v: "fx", label: "reflect $x_1$-axis", M: [1, 0, 0, -1] },
-  { v: "fy", label: "reflect $x_2$-axis", M: [-1, 0, 0, 1] },
+  { v: "r180", label: "$N(\\mathbf{v}) = -\\mathbf{v}$", M: [-1, 0, 0, -1] },
+  { v: "fx", label: "reflect $x$-axis", M: [1, 0, 0, -1] },
   { v: "fyx", label: "reflect $y=x$", M: [0, 1, 1, 0] },
-  { v: "px", label: "project $x_1$-axis", M: [1, 0, 0, 0] },
-  { v: "sh", label: "shear $k=1$", M: [1, 1, 0, 1] },
-  { v: "d2", label: "dilate $\\times2$", M: [2, 0, 0, 2] },
+  { v: "px", label: "project $x$-axis", M: [1, 0, 0, 0] },
 ];
 
 function Composition() {
@@ -330,9 +306,9 @@ function Composition() {
         </>
       }
       tasks={[
-        "Start with reflect $x_1$-axis then reflect $y = x$ (the lesson example). Which rotation is $BA$? Which rotation is $AB$?",
+        "Start with reflect $x$-axis then reflect $y = x$ (Tutorial 1 Q10(b)). Which rotation is $BA$? Which rotation is $AB$?",
         "Find two maps from the list that commute. Can you explain why from their matrices?",
-        "Make $T$ a projection. Can $S\\circ T$ ever be invertible now? Why not?",
+        "Past paper: $L$ = rotate $90^\\circ$, $M$ = reflect $y = x$, $N(\\mathbf{v}) = -\\mathbf{v}$. Which of the pairs $L, M$ and $N, M$ commute?",
         "Predict: rotate $90^\\circ$ then rotate $-90^\\circ$. What is $BA$?",
       ]}
     />
@@ -343,10 +319,9 @@ function Composition() {
 // 4. Kernel and range of a singular 2×2 map.
 
 const SINGULAR: { v: string; label: string; M: M2; ker: V2; ran: V2 }[] = [
-  { v: "px", label: "project $x_1$-axis", M: [1, 0, 0, 0], ker: [0, 1], ran: [1, 0] },
+  { v: "px", label: "project $x$-axis", M: [1, 0, 0, 0], ker: [0, 1], ran: [1, 0] },
   { v: "a", label: "$\\begin{bmatrix}1&2\\\\2&4\\end{bmatrix}$", M: [1, 2, 2, 4], ker: [-2, 1], ran: [1, 2] },
   { v: "b", label: "$\\begin{bmatrix}1&-1\\\\-2&2\\end{bmatrix}$", M: [1, -1, -2, 2], ker: [1, 1], ran: [1, -2] },
-  { v: "pyx", label: "project onto $y=x$", M: [0.5, 0.5, 0.5, 0.5], ker: [1, -1], ran: [1, 1] },
   { v: "inv", label: "invertible $\\begin{bmatrix}2&1\\\\1&1\\end{bmatrix}$", M: [2, 1, 1, 1], ker: [0, 0], ran: [0, 0] },
 ];
 
@@ -392,15 +367,15 @@ function KernelRange() {
           <Read tex={`$A = ${texM(A)}$`} />
           {singular ? (
             <>
-              <Read tone="bad" tex={`$\\ker T = \\operatorname{Span}\\{${fmtV(P.ker)}\\}$ (nullity 1)`} />
-              <Read tone="good" tex={`$\\operatorname{range}T = \\operatorname{Span}\\{${fmtV(P.ran)}\\}$ (rank 1)`} />
+              <Read tone="bad" tex={`kernel $= N(A) = \\operatorname{Span}\\{${fmtV(P.ker)}\\}$ (nullity 1)`} />
+              <Read tone="good" tex={`range $= C(A) = \\operatorname{Span}\\{${fmtV(P.ran)}\\}$ (rank 1)`} />
               <Read tex={`$A\\mathbf{x} = ${fmtV(Ax)}$ and $A(\\mathbf{x}+t\\mathbf{k}) = ${fmtV(Ax2)}$ — same image`} />
-              <Read tex="rank + nullity $= 1 + 1 = 2 = \dim\mathbb{R}^2$. Not one-to-one, not onto." />
+              <Read tex="Rank Theorem: rank of $A$ + $\dim N(A) = 1 + 1 = 2$ columns. $N(A) \ne \{\mathbf{0}\}$ and $C(A) \ne \mathbb{R}^2$." />
             </>
           ) : (
             <>
-              <Read tone="good" tex="$\ker T = \{\mathbf{0}\}$ and range $= \mathbb{R}^2$: rank 2, nullity 0." />
-              <Read tex={`$A\\mathbf{x} = ${fmtV(Ax)}$: every output comes from exactly one input.`} />
+              <Read tone="good" tex="kernel $= N(A) = \{\mathbf{0}\}$ and range $= C(A) = \mathbb{R}^2$: rank 2, $\dim N(A) = 0$." />
+              <Read tex={`$A\\mathbf{x} = ${fmtV(Ax)}$, and $A^{-1}$ transforms $A\\mathbf{x}$ back to $\\mathbf{x}$.`} />
             </>
           )}
         </>
@@ -408,8 +383,8 @@ function KernelRange() {
       tasks={[
         "Predict, then check: drag $\\mathbf{x}$ onto the red line. Where does $A\\mathbf{x}$ go?",
         "Drag $\\mathbf{x}$ anywhere. Does $A\\mathbf{x}$ ever leave the green line? What does that say about which $\\mathbf{b}$ make $A\\mathbf{x} = \\mathbf{b}$ consistent?",
-        "Slide $t$. Why does the image stay fixed? (Hint: $T(\\mathbf{u}) = T(\\mathbf{v})\\iff\\mathbf{u}-\\mathbf{v}\\in\\ker T$.)",
-        "For **project $x_1$-axis**, read off the kernel. Is it the $x_1$-axis?",
+        "Slide $t$. Why does the image stay fixed? (Hint: by linearity $A(\\mathbf{x}+t\\mathbf{k}) = A\\mathbf{x}+tA\\mathbf{k}$, and $A\\mathbf{k} = \\mathbf{0}$.)",
+        "For **project $x$-axis**, read off the kernel. Is it the $x$-axis? (A past-paper true/false.)",
       ]}
     />
   );

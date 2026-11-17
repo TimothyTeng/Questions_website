@@ -75,7 +75,7 @@ const eqTex = (e: Eq, i: number) => {
 function classify(eqs: Eq[]): { tone: "good" | "bad" | "warn"; text: string; pt: V2 | null } {
   const rA = rankOf(eqs.map((e) => [e[0], e[1]]));
   const rAb = rankOf(eqs.map((e) => [...e]));
-  if (rAb > rA) return { tone: "bad", text: `rank $A = ${rA}$ < rank $[A\\mid\\mathbf{b}] = ${rAb}$: a row $[0\\ 0 \\mid c\\ne0]$ appears → **no solution**`, pt: null };
+  if (rAb > rA) return { tone: "bad", text: `the echelon form of $[A\\mid\\mathbf{b}]$ has a row $[0\\ 0 \\mid c\\ne0]$ → **no solution**`, pt: null };
   if (rA === 2) {
     const pt = intersect(eqs);
     return { tone: "good", text: `pivot in both columns → **exactly one solution** $(x, y) = (${fmt(pt![0])}, ${fmt(pt![1])})$`, pt };
@@ -92,11 +92,10 @@ function SystemLines() {
   const cls = classify(eqs);
   const colors: VizColor[] = ["accent", "eig", "warn"];
   const preset = (k: string) => {
-    if (k !== "prism") setThree(false);
+    setThree(false);
     if (k === "unique") setE([[1, 2, 4], [3, -1, 5], e[2]]);
     if (k === "parallel") setE([[1, 2, 4], [2, 4, 9], e[2]]);
     if (k === "same") setE([[1, 2, 4], [2, 4, 8], e[2]]);
-    if (k === "prism") { setE([[1, 2, 4], [3, -1, 5], [2, -3, 3]]); setThree(true); }
   };
   const set = (i: number) => (v: number[]) => setE(e.map((x, j) => (j === i ? (v as Eq) : x)));
   return (
@@ -118,7 +117,6 @@ function SystemLines() {
               { v: "unique", label: "crossing" },
               { v: "parallel", label: "parallel" },
               { v: "same", label: "same line" },
-              { v: "prism", label: "3 lines, no common point" },
             ]}
             onChange={preset}
           />
@@ -136,9 +134,9 @@ function SystemLines() {
         </>
       }
       tasks={[
-        "Predict, then check: with two equations, how can you make the lines parallel? What happens to the determinant $a_1b_2 - a_2b_1$?",
+        "Predict, then check: with two equations, how can you make the lines parallel? What happens to $|A| = a_1b_2 - a_2b_1$?",
         "Make line (2) exactly twice line (1), then change only its $c$. Watch the count jump from infinitely many to none.",
-        "Add a third line that misses the crossing point. Every pair still meets, yet the system has no solution.",
+        "Add a third equation (3 equations, 2 unknowns). Make it pass through the crossing point, then move it off: one solution becomes none.",
         "Can you ever get exactly two intersection points? Why not?",
       ]}
     />
@@ -158,7 +156,7 @@ function RowOpLines() {
   return (
     <VizFrame
       title="Row operations keep the solution"
-      hint="Slide k to replace R₂ by c(R₂ + kR₁). The faded line is the original equation (2)."
+      hint="Slide k to replace r₂ by c(r₂ + k r₁). The faded line is the original equation (2)."
       onReset={() => { setE(init); setK(0); setC(1); }}
       figure={
         <Plane2D x={[-5, 5]} y={[-4, 4]}>
@@ -170,15 +168,15 @@ function RowOpLines() {
       }
       controls={
         <>
-          <VecInput label="$R_1$: $a, b, c$" value={r1} onChange={(v) => setE([v as Eq, r2])} />
-          <VecInput label="$R_2$: $a, b, c$" value={r2} onChange={(v) => setE([r1, v as Eq])} />
+          <VecInput label="$r_1$: $a, b, c$" value={r1} onChange={(v) => setE([v as Eq, r2])} />
+          <VecInput label="$r_2$: $a, b, c$" value={r2} onChange={(v) => setE([r1, v as Eq])} />
           <Slider label="replacement $k$" value={k} min={-5} max={5} step={0.25} onChange={setK} />
           <Slider label="then scale by $c$" value={c} min={-2} max={2} step={0.25} onChange={(v) => setC(Math.abs(v) < 1e-9 ? 0.25 : v)} />
         </>
       }
       readout={
         <>
-          <Read tex={`$R_2 \\leftarrow ${fmt(c)}\\,\\big(R_2 + (${fmt(k)})R_1\\big)$`} />
+          <Read tex={`$r_2 \\leftarrow ${fmt(c)}\\,\\big(r_2 + (${fmt(k)})r_1\\big)$`} />
           <Read tex={`$\\left[\\begin{array}{cc|c} ${r1.map((x) => fmt(x)).join(" & ")} \\\\ ${newR2.map((x) => fmt(x)).join(" & ")} \\end{array}\\right]$`} />
           {pt ? (
             <Read tone="good" tex={`both systems are solved by $(${fmt(pt[0])}, ${fmt(pt[1])})$: the new line still passes through it`} />
@@ -188,13 +186,13 @@ function RowOpLines() {
           {elim ? (
             <Read tone="good" tex={`$x$ eliminated: echelon form, $y = ${fmt(newR2[2] / newR2[1])}$ (horizontal line)`} />
           ) : (
-            kill !== null && <Read tex={`to eliminate $x$ from $R_2$ use $k = ${fmt(kill)}$`} />
+            kill !== null && <Read tex={`to eliminate $x$ from $r_2$ use $k = ${fmt(kill)}$`} />
           )}
         </>
       }
       tasks={[
         "Predict: as $k$ changes, the blue line turns. About which point does it pivot?",
-        "Find the $k$ that makes the new equation (2) horizontal. That is the forward-elimination step.",
+        "Find the $k$ that makes the new equation (2) horizontal. That is the elimination step $r_2 \leftarrow r_2 + k\,r_1$ that clears $x$ below the pivot.",
         "Scaling by $c$ never moves the line at all. Why? (Same equation, multiplied through.)",
         "Make the original lines parallel. Can any $k$ create a crossing point?",
       ]}

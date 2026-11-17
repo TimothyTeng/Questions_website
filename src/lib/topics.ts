@@ -11,12 +11,12 @@ export interface TopicMeta {
 }
 
 export const TOPICS: TopicMeta[] = [
-  { id: "vectors", name: "Vectors, Lines & Planes", chapter: "Ch 0A", half: 1, blurb: "Vector algebra, dot & cross products, angles, lines and planes", color: "var(--t-vec)" },
-  { id: "matrices", name: "Matrices", chapter: "Ch 0B", half: 1, blurb: "Matrix operations, transpose, trace, row/column methods, special matrices", color: "var(--t-mat)" },
+  { id: "vectors", name: "Vectors, Lines & Planes", chapter: "Ch 0A", half: 1, blurb: "Vector algebra, norm, dot product, angles, lines and planes", color: "var(--t-vec)" },
+  { id: "matrices", name: "Matrices", chapter: "Ch 0B", half: 1, blurb: "Matrix operations, transpose, trace, row/column methods, inverse", color: "var(--t-mat)" },
   { id: "systems", name: "Linear Systems", chapter: "Ch 1", half: 1, blurb: "Row reduction, RREF, consistency with parameters, span, linear independence", color: "var(--t-sys)" },
   { id: "transformations", name: "Linear Transformations", chapter: "Ch 1, 4", half: 1, blurb: "Standard matrices, rotations & reflections, composition, kernel and range", color: "var(--t-ltr)" },
   { id: "matrix-algebra", name: "Matrix Algebra", chapter: "Ch 2", half: 1, blurb: "Inverses, Invertible Matrix Theorem, elementary matrices, LU factorization", color: "var(--t-alg)" },
-  { id: "determinants", name: "Determinants", chapter: "Ch 3", half: 1, blurb: "Cofactor expansion, row operations, properties, area & volume", color: "var(--t-det)" },
+  { id: "determinants", name: "Determinants", chapter: "Ch 3", half: 1, blurb: "Properties of determinants, pivots, area & volume, linear transformations", color: "var(--t-det)" },
   { id: "vector-spaces", name: "Vector Spaces", chapter: "Ch 4", half: 1, blurb: "Subspaces, N(A) & C(A), basis, dimension, rank, coordinates, change of basis", color: "var(--t-vsp)" },
   { id: "orthogonality", name: "Orthogonality", chapter: "Ch 6", half: 2, blurb: "Dot products, projections, orthogonal bases, Gram–Schmidt, QR", color: "var(--t-orth)" },
   { id: "least-squares", name: "Least Squares", chapter: "Ch 7", half: 2, blurb: "Normal equations, projection matrices, QR solve, linear models", color: "var(--t-ls)" },
