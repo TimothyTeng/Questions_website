@@ -95,14 +95,15 @@ export const numberCodesQuestions: Draft[] = [
   },
   {
     kind: "short",
-    subtopic: "Hex to binary",
+    subtopic: "Decimal to binary via hex",
     difficulty: "medium",
-    prompt: "Convert $3A7.C_{16}$ to binary. Leading and trailing zeros may be omitted.",
-    accept: ["1110100111.11", "001110100111.1100", "1110100111.1100", "001110100111.11"],
+    prompt: "Convert $1467_{10}$ to binary. (Hint: repeated division by 16 is much faster than by 2.) Leading zeros may be omitted.",
+    accept: ["10110111011", "010110111011", "0101 1011 1011", "101 1011 1011"],
     match: "text",
-    placeholder: "e.g. 101.01",
-    solution: "Replace each hex digit by 4 bits: $3 = 0011$, $A = 1010$, $7 = 0111$, $C = 1100$.\n$3A7.C_{16} = 0011\\,1010\\,0111.1100_2 = $ **1110100111.11**$_2$ (= 935.75).",
-    source: "Original",
+    placeholder: "binary",
+    solution:
+      "Divide by 16 and read the remainders bottom-up:\n- $1467 \\div 16 = 91$ r $11$ (B)\n- $91 \\div 16 = 5$ r $11$ (B)\n- $5 \\div 16 = 0$ r $5$\nSo $1467_{10} = 5BB_{16}$. Expand each hex digit to 4 bits: $5 = 0101$, $B = 1011$, $B = 1011$, giving $0101\\,1011\\,1011_2$ = **10110111011**$_2$.\nCheck: $1024 + 256 + 128 + 32 + 16 + 8 + 2 + 1 = 1467$.",
+    source: "Style: Week 1 summary F0-16 to F0-17",
   },
   {
     kind: "short",

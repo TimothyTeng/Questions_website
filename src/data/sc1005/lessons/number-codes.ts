@@ -55,6 +55,7 @@ export const numberCodesLesson: Lesson = {
         "A fraction terminates only if it is a sum of powers of $1/r$. For example, $0.1_{10}$ in binary is $0.000110011\\ldots$ (repeating), so stop after the number of digits asked for.",
         "\"$k$ significant digits\" counts from the first non-zero digit, across the point: $10011.0110111_2$ has 12 significant bits. Unless told to round, keep the digits the method generates (truncate).",
         "Between binary, octal and hex never go via decimal: use grouping (next section). From octal/hex to decimal, use the weighted sum.",
+        "**Shortcut for decimal → binary**: repeated division by 2 is tedious, so divide by **16** instead and expand each hex digit to 4 bits. $898 \\div 16 = 56$ r 2, $56 \\div 16 = 3$ r 8, so $898_{10} = 382_{16} = 0011\\,1000\\,0010_2$.",
       ],
       example: {
         problem: "Convert $157.39_{10}$ to hexadecimal with 5 significant digits.",
@@ -75,6 +76,7 @@ export const numberCodesLesson: Lesson = {
         { q: "Convert $1435_{10}$ to hex.", a: "$1435 = 5\\times256 + 9\\times16 + 11$ → $59B_{16}$." },
         { q: "First three bits of $0.8254_{10}$ in binary?", a: "$1.6508 → 1$, $1.3016 → 1$, $0.6032 → 0$: $0.110\\ldots_2$." },
         { q: "Does $0.2_{10}$ terminate in binary?", a: "No: $0.0011\\,0011\\ldots_2$ (repeating)." },
+        { q: "Which is largest: $24_8$, $20_{16}$ or $22_{10}$?", a: "$24_8 = 20$, $20_{16} = 32$, $22_{10} = 22$, so $20_{16}$ is largest." },
       ],
     },
     {
@@ -197,6 +199,7 @@ export const numberCodesLesson: Lesson = {
         "The wrap-around step (last code back to the first) also changes only one bit; use it when filling gaps in a cyclic sequence.",
       ],
       recall: [
+        { q: "Is 010 → 110 → 100 → 000 (then repeating) a Gray-code sequence?", a: "Yes: every step, including 000 → 010 on wrap-around, changes exactly one bit." },
         { q: "Gray code for binary $0111$ and $1000$?", a: "$0100$ and $1100$: they differ only in the MSB." },
         { q: "Why are Gray codes used on rotary shaft encoders?", a: "Only one track changes at each sector boundary, so a misaligned sensor can only give the position on one side of the boundary, never a far-away value." },
         { q: "Fill the gap: 00, 01, ?, 10 (2-bit Gray).", a: "11." },
@@ -259,6 +262,7 @@ export const numberCodesLesson: Lesson = {
         "**Even parity**: the parity bit is chosen so that the total number of 1s (data + parity) is **even**. **Odd parity**: total is **odd**.",
         "Generation: count the 1s in the data. Even parity bit = 1 if that count is odd; odd parity bit = 1 if that count is even. Equivalently, even parity bit $= d_0 \\oplus d_1 \\oplus \\dots \\oplus d_{n-1}$ (an XOR tree), odd parity bit is its complement.",
         "Checking: the receiver counts the 1s of the whole received word (or XORs all bits). For even parity a result of 0 (even count) means no error detected.",
+        "As in the lecture example, the parity bit is sent as the **MSB** in front of the 7-bit ASCII code: 'A' $= 100\\,0001$ (two 1s) is sent as **1**100 0001 with odd parity and **0**100 0001 with even parity.",
         "Parity detects any **odd** number of bit errors, but **misses any even number** (2, 4, …). It cannot tell which bit is wrong, so it cannot correct errors.",
         "Given a word that includes its parity bit and was received correctly, the total number of 1s tells you which parity is in use: even total → even parity, odd total → odd parity.",
         "Hex data: count 1s per hex digit (0:0, 1:1, 2:1, 3:2, 4:1, 5:2, 6:2, 7:3, 8:1, 9:2, A:2, B:3, C:2, D:3, E:3, F:4).",

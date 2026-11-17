@@ -329,16 +329,21 @@ export const introQuestions: Draft[] = [
     source: "Original",
   },
   {
-    kind: "short",
-    subtopic: "Sampling and data rate",
-    difficulty: "medium",
-    prompt:
-      "A mono audio signal is sampled 48 000 times per second with 16 bits per sample, and the samples are sent over a serial link at one bit per clock period with no extra bits. What is the minimum serial clock frequency, in **kHz**?",
-    accept: ["768"],
-    match: "number",
-    placeholder: "kHz",
-    solution: "Bit rate $= 48\\,000 \\times 16 = 768\\,000$ bit/s. One bit per clock period, so the clock must be at least **768 kHz** (period ≈ 1.30 µs).",
-    source: "Original",
+    kind: "mcq",
+    subtopic: "Serial vs parallel interfaces",
+    difficulty: "easy",
+    prompt: "Which statement about common data interfaces is correct?",
+    options: [
+      "USB is a parallel interface: each byte travels over 8 data wires at once.",
+      "The traditional printer port is serial, which is why it needed only a few pins.",
+      "The traditional printer port is parallel, while RS-232, Ethernet, FireWire and USB are serial: they trade bits per clock period for fewer, cheaper wires.",
+      "A serial link is always slower than a parallel one, so USB must be slower than the printer port.",
+      "RS-232 and the printer port are both parallel; only USB and FireWire are serial.",
+    ],
+    answer: 2,
+    solution:
+      "The lecture's examples: the traditional (Centronics/LPT) **printer port** sends 8 data bits side by side on separate lines, so it is **parallel**. **RS-232, Ethernet, FireWire and USB** send one bit after another on a single data path, so they are **serial**.\nThe trade-off is **speed versus cost**: at the same clock, parallel moves $N$ bits per period, but needs $N$ lines, bulky cables and suffers skew between lines. Serial needs few wires, so it is cheap and can be clocked much faster over long cables, which is why USB easily outruns the old printer port. So D is wrong (\"always slower\" only holds at the **same** clock), and A, B, E misclassify the interfaces.",
+    source: "Style: Week 1 summary F0-7 to F0-9",
   },
   // ---------------------------------------------------------------- ICs, PLDs, software
   {

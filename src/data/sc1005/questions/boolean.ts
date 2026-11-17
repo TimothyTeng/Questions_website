@@ -93,17 +93,21 @@ export const booleanQuestions: Draft[] = [
     source: "Style: Tutorial 2 Q2(b)",
   },
   {
-    kind: "short",
-    subtopic: "Truth tables",
+    kind: "mcq",
+    subtopic: "Boolean theorems",
     difficulty: "medium",
-    prompt:
-      "Give the output column of the truth table of $Y = [(A' + C)(BC')']'$ for $ABC = 000, 001, \\dots, 111$ (in that order) as an 8-bit string, e.g. `01101001`.",
-    accept: ["00101010"],
-    match: "text",
-    placeholder: "8 bits, row 000 first",
+    prompt: "Which one of the following statements is **true**?",
+    options: [
+      "Replacing every AND, OR and NOT gate with its NAND-only equivalent never increases the number of gates.",
+      "$A(B + C)' = AB' + AC'$",
+      "There are 16 different truth tables for a circuit with 2 inputs and 1 output.",
+      "An OR gate built only from 2-input NOR gates needs 3 gates.",
+      "$AB + A'C + BC = AB + BC$",
+    ],
+    answer: 2,
     solution:
-      "De Morgan on the outer bar: $Y = (A' + C)' + [(BC')']' = AC' + BC' = C'(A + B)$.\nSo $Y = 1$ exactly when $C = 0$ and at least one of $A, B$ is 1: rows 010, 100, 110.\nColumn (rows 000 → 111): 0 0 1 0 1 0 1 0 = `00101010`.",
-    source: "Style: L1 practice Q1",
+      "**C is true**: a 2-input table has $2^2 = 4$ rows and each row's output is 0 or 1, so there are $2^4 = 16$ possible output columns.\n- A is false: OR from NANDs takes 3 gates (two inverters and a NAND), so a gate-by-gate replacement can **grow** a circuit. Universal gates do not always reduce the gate count.\n- B is false: $(B + C)' = B'C'$, so $A(B + C)' = AB'C'$. At $A = 1, B = 1, C = 0$ the left side is 0 but $AB' + AC' = 0 + 1 = 1$.\n- D is false: OR from NORs is a NOR followed by a NOR inverter, **2** gates. (AND from NORs is the one that needs 3.)\n- E is false: consensus removes the **$BC$** term, giving $AB + A'C$. Dropping $A'C$ instead is wrong: at $A = 0, B = 0, C = 1$ the left side is 1 and $AB + BC = 0$.",
+    source: "Style: L1/L2 summary F12-10, F12-27, F12-29, F12-32",
   },
   {
     kind: "short",

@@ -18,6 +18,9 @@ export const booleanLesson: Lesson = {
         "**Buffer** ($X = A$): no change in logic; used to boost drive strength or add delay.",
         "A truth table lists all $2^N$ input combinations in **binary counting order** (first input = MSB), so the row number equals the input pattern read as a binary number.",
         "Multi-input AND/OR work the same way: a 3-input AND is 1 only on row 111, a 3-input OR is 0 only on row 000.",
+        "A 2-input truth table has 4 rows and each row's output can be 0 or 1, so there are $2^4 = 16$ different 2-input functions (in general $2^{2^N}$ for $N$ inputs).",
+        "Logic behaviour can be described by a truth table or a timing diagram; a circuit by an expression or a circuit diagram. A timing diagram that visits every input combination gives the whole truth table: read the output during each input pattern.",
+        "An output may drive one or more inputs, but outputs must **not** be connected together unless they are designed for it (open-drain or tri-state outputs).",
       ],
       figures: [
         {
@@ -194,6 +197,9 @@ export const booleanLesson: Lesson = {
         "Distributive: $A(B + C) = AB + AC$ and also (unlike ordinary algebra) $A + BC = (A + B)(A + C)$.",
         "**Absorption**: $A + AB = A$ and $A(A + B) = A$. **Redundant complement**: $A + A'B = A + B$ and $A(A' + B) = AB$.",
         "**Consensus**: $AB + A'C + BC = AB + A'C$ (the term $BC$ is redundant).",
+        "Consensus in words (lecture example): with $A$ = male, $B$ = classmate, $C$ = friend, everyone who is a classmate **and** a friend ($BC$) is already a male classmate ($AB$) or a female friend ($A'C$), so $BC$ adds nothing.",
+        "Absorption in words: \"A must come; B may come with A\" is just \"A must come\" ($A + AB = A$); \"A must come; if A cannot, B must\" is \"A or B must come\" ($A + A'B = A + B$).",
+        "You need to know and **apply** the theorems; you do not need to name or prove them.",
         "**Duality**: any identity stays true if you swap AND ↔ OR and 0 ↔ 1 throughout (do **not** complement the variables). Dual of $A + A'B = A + B$ is $A(A' + B) = AB$.",
         "Strategy: remove outer bars with De Morgan first, multiply out to SOP, then look for $X + X' = 1$ pairs, absorption and consensus. Check the answer on a few truth-table rows.",
       ],
@@ -230,6 +236,7 @@ export const booleanLesson: Lesson = {
       keyIdeas: [
         "De Morgan: $(A + B)' = A'B'$ and $(AB)' = A' + B'$. They generalise: $(A + B + C + \\dots)' = A'B'C'\\cdots$, $(ABC\\cdots)' = A' + B' + C' + \\cdots$.",
         "Recipe for a long bar: **break the bar and change the operator** under it; repeat from the outside in. Double bars cancel.",
+        "De Morgan in words: \"lunch if A **or** B has money\" negates to \"no lunch if A has no money **and** B has no money\"; \"marriage if A **and** B agree\" negates to \"no marriage if A **or** B disagrees\".",
         "**NAND** $X = (AB)'$: output is 0 only when **all** inputs are 1.",
         "**NOR** $X = (A + B)'$: output is 1 only when **all** inputs are 0.",
         "Summary: OR → 1 if any input is 1; AND → 1 if all are 1; NOR → 0 if any input is 1; NAND → 0 if all are 1.",
@@ -258,6 +265,7 @@ export const booleanLesson: Lesson = {
         answer: "$A' + B + C' + D'$.",
       },
       pitfalls: [
+        "$A(B + C)' \\ne AB' + AC'$. De Morgan gives $(B + C)' = B'C'$, so $A(B + C)' = AB'C'$. Row $A = 1, B = 1, C = 0$ tells them apart: the left side is 0, the right side is 1.",
         "$(AB)' \\ne A'B'$ and $(A + B)' \\ne A' + B'$: when you break the bar you **must** change the operator.",
         "Work from the longest bar inwards and keep brackets: $(A + BC)' = A'(BC)' = A'(B' + C')$, not $A'B' + C'$.",
       ],
@@ -320,6 +328,7 @@ export const booleanLesson: Lesson = {
       },
       pitfalls: [
         "A NAND with tied inputs is an inverter, but it still counts as a gate in the total.",
+        "Universal gates do **not** always reduce the gate count. OR from NANDs takes 3 gates and AND from NORs takes 3, so replacing gate by gate can grow a circuit; savings come only from inverter pairs that cancel.",
         "SOP maps neatly onto NAND–NAND; POS maps onto NOR–NOR. Using the other gate type on that form adds inverters.",
         "Check whether an input variable needs complementing: each complemented input costs an extra NAND/NOR used as an inverter.",
       ],

@@ -252,6 +252,7 @@ export const introLesson: Lesson = {
         "**Parallel**: one line per bit, all $N$ bits transferred in **one** clock period $T$.",
         "**Serial**: one data line, one bit per clock period, so an $N$-bit word takes $N \\times T$.",
         "Parallel is faster for the same clock; serial needs far fewer wires/pins, is cheaper over long distances and avoids **skew** between lines, which is why modern links (USB, SATA, PCIe lanes, Ethernet) are serial at very high clock rates.",
+        "The trade-off is **speed versus cost**. Examples from the slides: the traditional **printer port** (Centronics/LPT, 8 parallel data lines) is a **parallel** interface; **RS-232**, **Ethernet**, **FireWire** and **USB** are **serial** interfaces.",
         "Transfer time for a block: serial $= (\\text{total bits}) \\times T$; parallel $= (\\text{total bits}/N) \\times T$.",
         "Bit rate (bits per second) of a serial link $= 1/T$ when one bit is sent per clock period.",
       ],
@@ -274,6 +275,7 @@ export const introLesson: Lesson = {
             ["Time per word", "$T$", "$NT$"],
             ["Strength", "speed at a given clock", "few wires, cheap, long distance"],
             ["Weakness", "many wires, skew, cost", "$N$ times slower at a given clock"],
+            ["Examples", "traditional printer port", "RS-232, Ethernet, FireWire, USB"],
           ],
         },
       ],
@@ -295,6 +297,7 @@ export const introLesson: Lesson = {
         { q: "How many clock periods does a serial transfer of a 12-bit word take?", a: "12." },
         { q: "Main advantage of serial transmission?", a: "Only one data line is needed (cheaper, fewer pins, practical over long distances)." },
         { q: "Bit rate of a serial link clocked at 5 MHz?", a: "5 Mbit/s (one bit per period of 200 ns)." },
+        { q: "Serial or parallel: printer port, RS-232, USB, Ethernet, FireWire?", a: "The traditional printer port is parallel; RS-232, USB, Ethernet and FireWire are serial." },
       ],
     },
     {
