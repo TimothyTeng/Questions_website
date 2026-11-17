@@ -3,7 +3,7 @@ import type { Lesson } from "@/lib/sc1005/types";
 export const kmapsLesson: Lesson = {
   topic: "kmaps",
   bigPicture:
-    "A **combinational** circuit has no memory: its output depends only on the inputs present right now, so a truth table describes it completely. This chapter is the pipeline from that truth table to the cheapest circuit. Every row has a **minterm** (1 on that row only) and a **maxterm** (0 on that row only), so the table can be written down at once as a canonical **sum of minterms** $\\sum m(\\ldots)$ or **product of maxterms** $\\prod M(\\ldots)$. Those canonical forms are long, so we minimise them into a **standard SOP or POS**, by algebra or, much faster, with a **Karnaugh map**: a truth table laid out in Gray-code order so that logically adjacent rows sit next to each other and $xy + xy' = x$ becomes \"draw a loop\". Loops of 1s give a minimum SOP; loops of 0s give a minimum POS; **prime and essential implicants** tell you which loops you must take; **don't cares** let loops grow. A minimum SOP maps straight onto a NAND-NAND circuit and a minimum POS onto NOR-NOR. Finally, real signals are often **active-low** (named with *), so you must translate \"asserted\" and \"negated\" into 0s and 1s and know how an **enable** input forces an output to its inactive level. Exam questions combine all of this: canonical forms, a K-map with loops shown, a gate-level implementation, and a waveform or an active-low specification.",
+    "A **combinational** circuit has no memory: its output depends only on the inputs present right now, so a truth table describes it completely. This chapter is the pipeline from that truth table to the cheapest circuit. Every row has a **minterm** (1 on that row only) and a **maxterm** (0 on that row only), so the table can be written down at once as a canonical **sum of minterms** $\\sum m(\\ldots)$ or **product of maxterms** $\\prod M(\\ldots)$. Those canonical forms are long, so we minimise them into a **standard SOP or POS**, by algebra or, more easily, with a **Karnaugh map**: a truth table laid out (rows and columns in the order 00, 01, 11, 10) so that adjacent squares differ in only one variable and $AB + AB' = A$ becomes \"draw a loop\". Loops of 1s give an SOP; loops of 0s give a POS; using the biggest and fewest loops gives the minimum; **don't cares** let loops grow. A minimum SOP maps straight onto a NAND-NAND circuit and a minimum POS onto NOR-NOR. Finally, signals can be **active-low** (named with *), so you must translate \"asserted\" and \"negated\" into 0s and 1s and know how an **enable** input fixes a disabled output at 0 (active-high output) or 1 (active-low output). Exam questions combine all of this: canonical forms, a K-map with loops shown, a gate-level implementation, and a waveform or an active-low specification.",
   sections: [
     {
       title: "Combinational circuits, minterms and maxterms",
@@ -116,9 +116,10 @@ export const kmapsLesson: Lesson = {
         "**Sum of products (SOP)**: an OR of product terms, each an AND of single literals. A product term need not contain every variable (xy + y'z).",
         "**Product of sums (POS)**: an AND of sum terms, each an OR of single literals: (x + y')(x' + z).",
         "Neither SOP nor POS: (xy)'z + xz' (complement over a product), xy(x' + z)' (complement over a sum), (xy + z)(x' + y) (a product inside a sum term).",
-        "**Minimum cost**: first the fewest terms (gates), then the fewest literals (gate inputs). Several different minimum expressions can exist.",
+        "**Minimisation** aims to minimise the number of gates (fewest product or sum terms) and the number of inputs on each gate (fewest literals in each term). Several different minimum expressions can exist.",
+        "Simplified expressions give simpler circuits: fewer gates, fewer connections, lower cost and improved reliability.",
         "Workhorse theorems: $xy + xy' = x$; $x + x'y = x + y$; $x + xy = x$; consensus $xy + x'z + yz = xy + x'z$; and their duals $(x+y)(x+y') = x$, $x(x' + y) = xy$.",
-        "Methods: algebra (needs skill, no guarantee you found the minimum), Karnaugh maps (up to 4–5 variables by hand), Quine–McCluskey (tabular, exact), heuristics such as Espresso for large functions.",
+        "Methods listed in the lecture: the algebraic method (uses Boolean theorems, requires experience and skill), the Karnaugh map, the Quine–McCluskey (tabulation) method, and heuristic methods such as Espresso-II.",
       ],
       formulas: ["xy + xy' = x \\qquad (x+y)(x+y') = x \\qquad xy + x'z + yz = xy + x'z"],
       example: {
@@ -135,8 +136,8 @@ export const kmapsLesson: Lesson = {
       },
       pitfalls: [
         "(AB)' is not a literal. Expand it with De Morgan (A' + B') before calling an expression SOP.",
-        "Algebra can stop at a local optimum. A K-map shows whether a shorter cover exists.",
-        "A minimum SOP and a minimum POS of the same function usually have different literal counts. Compare them if the question asks for \"the cheaper\" form.",
+        "Algebra needs experience: it is easy to stop before the expression is fully simplified. A K-map is a good check.",
+        "A minimum SOP and a minimum POS of the same function can have different costs (lecture: A + BCD versus (A + B)(A + C)(A + D)). Compare them if the question asks for \"the cheaper\" form.",
       ],
       recall: [
         { q: "Simplify Z = ABC + AB'(A'C')'.", a: "(A'C')' = A + C, so AB'(A + C) = AB' + AB'C = AB'. Z = ABC + AB' = A(BC + B') = AB' + AC." },
@@ -145,12 +146,12 @@ export const kmapsLesson: Lesson = {
       ],
     },
     {
-      title: "Karnaugh maps: Gray-code layout, adjacency and looping rules",
+      title: "Karnaugh maps: layout, adjacency and looping rules",
       intuition:
-        "A K-map is the truth table rearranged so that cells whose minterms differ in exactly one variable are physically next to each other. Then $xy + xy' = x$ is \"draw a loop around two neighbouring 1s\", and bigger loops cancel more variables.",
+        "A K-map gives the same information as the truth table in a different format: squares are labelled so that adjacent squares differ in only one variable. Then $AB + AB' = A$ is \"draw a loop around two neighbouring 1s\", and bigger loops cancel more variables.",
       visuals: ["kmap-adjacency"],
       keyIdeas: [
-        "Rows and columns are labelled in **Gray-code order 00, 01, 11, 10**, so neighbouring cells differ in one variable. Binary order (00, 01, 10, 11) breaks this.",
+        "Rows and columns are labelled in the order **00, 01, 11, 10** (a Gray-code sequence), so neighbouring cells differ in one variable. Binary order (00, 01, 10, 11) breaks this.",
         "4-variable map (rows AB, columns CD), minterm numbers: row 00: 0 1 3 2; row 01: 4 5 7 6; row 11: 12 13 15 14; row 10: 8 9 11 10. Note the swapped last two columns and rows.",
         "The map **wraps around**: the left and right edges are adjacent, the top and bottom edges are adjacent, so the four corners (0, 2, 8, 10) form one group. Every cell of an $n$-variable map has $n$ neighbours.",
         "Looping rules (SOP): loop only 1s; loop sizes are powers of two ($2^k$ cells) and rectangular; no diagonal loops; every 1 must be in at least one loop; use the biggest and the fewest loops; cells may be in several loops.",
@@ -183,69 +184,24 @@ export const kmapsLesson: Lesson = {
         "Missing wrap-around loops, especially the four corners and loops split between the top and bottom rows.",
         "Loops of 3, 5 or 6 cells, L-shapes and diagonals are not allowed. Cover such a region with two overlapping power-of-two loops.",
         "Taking a loop of 2 when a loop of 4 is available leaves an extra literal: always grow loops as far as they go.",
+        "Use the **fewest** loops: if every 1 inside a loop is already covered by other loops, that loop is redundant and should be deleted.",
       ],
       recall: [
         { q: "Which cells are adjacent to m8 in a 4-variable map?", a: "m0, m9, m10 and m12 (flip one bit of 1000 each time). m0 and m10 are wrap-around neighbours." },
         { q: "How many literals does a loop of 8 cells give in a 4-variable map?", a: "4 − 3 = 1 literal." },
-        { q: "Why Gray-code order?", a: "So that physically adjacent cells differ in exactly one variable, which is what $xy + xy' = x$ needs." },
-      ],
-    },
-    {
-      title: "Prime implicants, essential prime implicants and the minimum cover",
-      intuition:
-        "Drawing loops greedily can go wrong. The safe procedure lists every loop that cannot grow (prime implicants), takes the ones you cannot do without (essential), then covers whatever is left as cheaply as possible.",
-      visuals: ["prime-essential"],
-      keyIdeas: [
-        "**Implicant**: a product term (a valid loop) that is 1 only where F is 1 or X.",
-        "**Prime implicant (PI)**: an implicant that cannot be enlarged into a bigger valid loop. A minimum SOP uses only prime implicants.",
-        "**Essential prime implicant (EPI)**: a PI that is the only PI covering some 1-cell. Every minimum SOP must contain every EPI.",
-        "Procedure: (1) find all PIs; (2) take every EPI; (3) cover the remaining 1s with the fewest PIs, breaking ties by fewest literals.",
-        "Look for isolated 1s first: a 1 that can only be looped one way forces that loop.",
-        "Some functions have **no EPIs** (cyclic functions) or several equally cheap covers. Any of them is a correct minimum answer.",
-      ],
-      figures: [
-        {
-          kind: "kmap",
-          vars: ["A", "B", "C", "D"],
-          values: "1000110111000101",
-          groups: ["BD", "A'C'D'", "B'C'D'", "A'BC'", "AB'C'", "AC'D"],
-          caption: "F = Σm(0,4,5,7,8,9,13,15) has six prime implicants. Only BD is essential (it alone covers m7 and m15).",
-        },
-      ],
-      example: {
-        problem: "Find a minimum SOP for F(A, B, C, D) = Σm(0, 4, 5, 7, 8, 9, 13, 15).",
-        figures: [{ kind: "kmap", vars: ["A", "B", "C", "D"], values: "1000110111000101", groups: ["BD", "A'C'D'", "AB'C'"], showIndex: true }],
-        steps: [
-          "Prime implicants: BD (5, 7, 13, 15), A'C'D' (0, 4), B'C'D' (0, 8), A'BC' (4, 5), AB'C' (8, 9), AC'D (9, 13).",
-          "m7 and m15 lie only in BD, so **BD is essential**. Every other 1 lies in two PIs, so no other PI is essential.",
-          "After BD, the 1s at m0, m4, m8, m9 remain.",
-          "A'C'D' covers 0 and 4; AB'C' covers 8 and 9: two more terms finish the cover.",
-          "The tempting B'C'D' (0, 8) leaves 4 and 9 in different places and needs two more terms: 4 terms in total.",
-        ],
-        answer: "F = BD + A'C'D' + AB'C' (3 terms, 8 literals).",
-      },
-      pitfalls: [
-        "Taking a non-essential PI just because it is large or appears first. Always take the essentials first and then check what is left.",
-        "Leaving a redundant loop in the answer: if every 1 of a loop is already covered by others, delete it.",
-        "Assuming the minimum is unique. When the K-map shows two equally cheap covers, both earn full marks.",
-      ],
-      recall: [
-        { q: "Define an essential prime implicant.", a: "A prime implicant that is the only one covering at least one 1 of the function." },
-        { q: "Can a minimum SOP contain a non-prime implicant?", a: "No: any non-prime term could be enlarged to a prime one with fewer literals at no cost." },
-        { q: "F(A,B,C) = Σm(0,1,2,5,6,7): how many EPIs?", a: "None. It is cyclic, with two minimum covers: A'B' + BC' + AC and A'C' + B'C + AB." },
+        { q: "Why are the rows and columns labelled 00, 01, 11, 10?", a: "So that physically adjacent cells differ in exactly one variable, which is what $AB + AB' = A$ needs." },
       ],
     },
     {
       title: "POS by looping 0s, and don't-care conditions",
       intuition:
-        "Looping 0s minimises F' and De Morgan turns that into a POS for F. Don't cares are rows whose output you are free to choose, so you set each one to whatever makes your loops bigger.",
+        "Looping 1s gives an SOP (think minterms); looping 0s in the same way gives a POS (think maxterms). Don't cares are rows whose output you are free to choose, so you use each one only if it makes a loop bigger.",
       visuals: ["kmap-minimiser"],
       keyIdeas: [
         "**POS from a K-map**: loop the 0s with the same rules. Each loop gives a **sum term**: a variable that is 0 over the loop appears **uncomplemented**, one that is 1 appears **complemented**, one that changes is dropped. AND the sum terms.",
-        "Equivalent view: the loops of 0s are a minimum SOP of F'; complementing with De Morgan gives the POS of F.",
         "Compare costs: the lecture's Z = A + BCD (4 literals) versus Z = (A + B)(A + C)(A + D) (6 literals).",
-        "**Don't care** (X or d): an input combination that never occurs (e.g. BCD codes 1010–1111) or whose output does not matter. Notation: F = Σm(…) + d(…).",
-        "SOP: loop an X together with 1s only if it makes a loop bigger; unlooped Xs are treated as 0. POS: an X looped with 0s is treated as 0; the others as 1. Never draw a loop of Xs alone.",
+        "**Don't care** (X or d): an input combination that will not occur (e.g. BCD codes 1010–1111) or for which it does not matter whether the output is 0 or 1. Tutorial notation: F = Σm(…) with d = Σm(…) listing the don't cares.",
+        "SOP: an X looped with 1s is treated as 1; unlooped Xs are treated as 0. POS: an X looped with 0s is treated as 0; the others as 1. Loop an X only if it helps to form a bigger loop (so never draw a loop of Xs alone).",
         "Because each form uses the Xs differently, the minimum SOP and the minimum POS may differ on don't-care rows. Both are correct, and several minimum designs may exist.",
       ],
       figures: [
@@ -271,7 +227,7 @@ export const kmapsLesson: Lesson = {
           { kind: "kmap", vars: ["A", "B", "C", "D"], values: "0111100000xxxxxx", groups: ["(A')", "(B' + C')", "(B' + D')", "(B + C + D)"], showIndex: true, caption: "POS loops" },
         ],
         steps: [
-          "F = Σm(1, 2, 3, 4) + d(10, 11, 12, 13, 14, 15).",
+          "F = Σm(1, 2, 3, 4) with don't cares d = Σm(10, 11, 12, 13, 14, 15).",
           "SOP: B'C covers 2, 3 with the Xs 10, 11 (a 4-cell loop). m4 joins X at 12: BC'D'. m1 joins 3: A'B'D.",
           "Minimum SOP: **F = B'C + BC'D' + A'B'D** (8 literals).",
           "POS: the 0s are at 0, 5, 6, 7, 8, 9. Rows 10 and 11 of the map (A = 1) are 0s and Xs, so (A') is one 8-cell loop.",
@@ -344,9 +300,9 @@ export const kmapsLesson: Lesson = {
         "A signal's name says what it does; its active level says which voltage does it. Exam specifications are written in words like \"asserted\" and \"negated\", so the skill is translating them into 0s and 1s before you build the truth table.",
       visuals: ["active-low-enable"],
       keyIdeas: [
-        "**Active high**: the named effect happens when the signal is 1. **Active low**: when it is 0. Active-low names carry a marker: RESET*, $\\overline{RESET}$, RESET_L, /RESET.",
+        "**Active high**: the named effect happens when the signal is 1. **Active low**: when it is 0. Active-low names carry a marker; the lecture shows several conventions, e.g. RESET*, /RECEIVE, TRANSMIT_L, READY−. This course uses *.",
         "**Asserted** = at its active level (1 for active high, 0 for active low). **Negated** (de-asserted) = the other level.",
-        "The same wire can be named either way: ODD (active high) and EVEN* (active low) are identical signals. Read* = 0 means read; Add* = 0 means add.",
+        "The same wire can be named either way: ODD (active high) and EVEN* (active low) are identical signals. Write* = 0 means write; Add* = 0 means add.",
         "Translate the spec into literals: \"X asserted\" → X; \"Y* asserted\" → Y*' (it is 0); \"Y* negated\" → Y*. For an active-low output, write the condition C for assertion and set F* = C'.",
         "**Bubble-to-bubble**: draw a bubble on every gate pin that connects to an active-low signal, so the gate symbol reads directly in terms of asserted conditions.",
         "**Enable/disable**: when enabled the output follows the inputs; when disabled it is stuck at its **negated** level (0 for an active-high output, 1 for an active-low output). AND an active-high output with EN, or with EN*' for an active-low enable.",
@@ -404,7 +360,7 @@ export const kmapsLesson: Lesson = {
         "Forgetting to apply the enable to every product term when expanding EN*'(…) into an SOP.",
       ],
       recall: [
-        { q: "CS* = 0. Is the chip select asserted?", a: "Yes. CS* is active low, so 0 is its asserted level." },
+        { q: "RESET* = 0. Is the reset asserted?", a: "Yes. RESET* is active low, so 0 is its asserted level." },
         { q: "An active-low output Y* is disabled. What level does it show?", a: "1, its negated level." },
         { q: "Output Z* is asserted when A is asserted and B* is negated. Write Z*.", a: "Asserted condition: A·B* = 1. Z* = (A·B*)' = A' + B*'." },
       ],
@@ -414,7 +370,7 @@ export const kmapsLesson: Lesson = {
     "**\"Write the canonical sum of minterms\"**: list the rows with F = 1 as $\\sum m(\\ldots)$ or as full minterms; for the product of maxterms list the **other** rows, with literals complemented where the row bit is 1.",
     "**\"Simplify using algebra, give SOP\"**: expand any complement over a group with De Morgan, distribute, then apply $xy + xy' = x$, absorption and consensus. Check the result on a K-map.",
     "**\"Use a K-map, show the loops\"**: label rows and columns 00, 01, 11, 10; draw each loop as a power-of-two rectangle (wrap-around allowed); write one term per loop.",
-    "**Minimum SOP**: find the essential prime implicants first (1s with only one possible loop), then cover the rest with the fewest, largest loops. Delete any loop whose 1s are all covered elsewhere.",
+    "**Minimum SOP**: loop every 1 using the biggest loops and the fewest loops (a square may be looped more than once). Delete any loop whose 1s are all covered by other loops.",
     "**Minimum POS**: loop the 0s; variable 0 over the loop → uncomplemented, 1 → complemented. AND the sum terms.",
     "**Don't cares**: use an X only if it enlarges a loop; never loop Xs alone. Mention that other equally minimal answers exist.",
     "**\"NAND only\" / \"NOR only\"**: NAND-NAND from the minimum SOP, NOR-NOR from the minimum POS. Single literals enter the output gate complemented.",

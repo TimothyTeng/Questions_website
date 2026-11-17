@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { gray, type Bit } from "@/lib/sc1005/logic";
+import type { Bit } from "@/lib/sc1005/logic";
 import { BitRow, bitsOf, Choice, Read, Slider, TableView, useStepper, valueOf, VizFrame } from "../kit";
 
 // Interactive figures for the number-codes lesson, chosen by id (see LessonSection.visuals).
@@ -13,12 +13,6 @@ export default function NumberCodesVisual({ id }: { id: string }) {
       return <BitGroupingViz />;
     case "bcd-encoder":
       return <BcdViz />;
-    case "gray-encoder":
-      return <GrayEncoderViz />;
-    case "gray-convert":
-      return <GrayConvertViz />;
-    case "ascii-explorer":
-      return <AsciiViz />;
     case "parity-check":
       return <ParityViz />;
     default:
@@ -396,396 +390,10 @@ function BcdViz() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Rotary encoder: binary vs Gray tracks with misaligned sensors
-
-function GrayEncoderViz() {
-  const [n, setN] = useState<3 | 4>(3);
-  const [code, setCode] = useState<"bin" | "gray">("bin");
-  const [angle, setAngle] = useState(178);
-  const [mis, setMis] = useState(4);
-  const S = 2 ** n;
-  const sector = (a: number) => Math.floor((((a % 360) + 360) % 360) / (360 / S));
-  const enc = (p: number) => (code === "gray" ? gray(p) : p);
-  const dec = (c: number) => {
-    if (code === "bin") return c;
-    let b = 0;
-    for (let x = c; x; x >>= 1) b ^= x;
-    return b;
-  };
-  // track k (bit k, LSB = 0) sensor offset in degrees
-  const off = (k: number) => mis * (k - (n - 1) / 2);
-  const read = (a: number) => {
-    let c = 0;
-    for (let k = 0; k < n; k++) c |= ((enc(sector(a + off(k))) >> k) & 1) << k;
-    return c;
-  };
-  const truePos = sector(angle);
-  const rc = read(angle);
-  const pos = dec(rc);
-  const ok = pos === truePos;
-  // sweep all angles for this misalignment
-  let bad = 0;
-  let worst = 0;
-  const steps = 1440;
-  for (let i = 0; i < steps; i++) {
-    const a = (i * 360) / steps;
-    const t = sector(a);
-    const p = dec(read(a));
-    if (p !== t) {
-      bad++;
-      const d = Math.min((p - t + S) % S, (t - p + S) % S);
-      worst = Math.max(worst, d);
-    }
-  }
-  const W = 280;
-  const cx = 140;
-  const cy = 140;
-  const r0 = 34;
-  const rw = n === 3 ? 30 : 23;
-  const rad = (deg: number) => ((deg - 90) * Math.PI) / 180;
-  const pt = (r: number, deg: number) => [cx + r * Math.cos(rad(deg)), cy + r * Math.sin(rad(deg))];
-  const arc = (ri: number, ro: number, a0: number, a1: number) => {
-    const [x0, y0] = pt(ro, a0);
-    const [x1, y1] = pt(ro, a1);
-    const [x2, y2] = pt(ri, a1);
-    const [x3, y3] = pt(ri, a0);
-    return `M${x0} ${y0} A${ro} ${ro} 0 0 1 ${x1} ${y1} L${x2} ${y2} A${ri} ${ri} 0 0 0 ${x3} ${y3} Z`;
-  };
-  // MSB on the inner ring
-  const ringOf = (k: number) => n - 1 - k;
-  return (
-    <VizFrame
-      title="Rotary encoder: why Gray code never glitches"
-      hint="Each ring is one bit (MSB inside); shaded = 1. The sensors on the radial line are slightly misaligned, so near a boundary different rings can see different sectors."
-      onReset={() => {
-        setN(3);
-        setCode("bin");
-        setAngle(178);
-        setMis(4);
-      }}
-      figure={
-        <svg viewBox={`0 0 ${W} ${W}`} className="viz-svg" role="img" aria-label="Rotary encoder disc">
-          {Array.from({ length: S }, (_, s) =>
-            Array.from({ length: n }, (_, k) => {
-              const ring = ringOf(k);
-              const on = (enc(s) >> k) & 1;
-              return (
-                <path
-                  key={`${s}-${k}`}
-                  d={arc(r0 + ring * rw, r0 + (ring + 1) * rw - 2, (s * 360) / S, ((s + 1) * 360) / S)}
-                  fill={on ? (s === truePos ? "var(--accent)" : "var(--text)") : "var(--surface)"}
-                  opacity={on ? (s === truePos ? 0.9 : 0.55) : 1}
-                  stroke="var(--border)"
-                  strokeWidth={0.8}
-                />
-              );
-            }),
-          )}
-          <path d={arc(r0, r0 + n * rw - 2, (truePos * 360) / S, ((truePos + 1) * 360) / S)} fill="none" stroke="var(--accent)" strokeWidth={2.5} />
-          {Array.from({ length: S }, (_, s) => {
-            const [x, y] = pt(r0 + n * rw + 12, ((s + 0.5) * 360) / S);
-            return (
-              <text key={s} x={x} y={y + 4} textAnchor="middle" style={{ ...TXT, fontSize: 10, fontWeight: s === truePos ? 700 : 400, fill: s === truePos ? "var(--accent)" : "var(--muted)" }}>
-                {s}
-              </text>
-            );
-          })}
-          {Array.from({ length: n }, (_, k) => {
-            const ring = ringOf(k);
-            const a = angle + off(k);
-            const [x, y] = pt(r0 + ring * rw + rw / 2 - 1, a);
-            const bit = (rc >> k) & 1;
-            const [lx0, ly0] = pt(r0 + ring * rw, a);
-            const [lx1, ly1] = pt(r0 + (ring + 1) * rw - 2, a);
-            return (
-              <g key={k}>
-                <line x1={lx0} y1={ly0} x2={lx1} y2={ly1} stroke="var(--bad)" strokeWidth={1.2} />
-                <circle cx={x} cy={y} r={5.5} fill={bit ? "var(--good)" : "var(--surface)"} stroke="var(--bad)" strokeWidth={1.6} />
-              </g>
-            );
-          })}
-          <circle cx={cx} cy={cy} r={r0 - 6} fill="var(--surface-2)" stroke="var(--border)" />
-          <text x={cx} y={cy - 2} textAnchor="middle" style={{ ...TXT, ...MONO, fontWeight: 700, fill: ok ? "var(--good)" : "var(--bad)" }}>
-            {rc.toString(2).padStart(n, "0")}
-          </text>
-          <text x={cx} y={cy + 12} textAnchor="middle" style={{ ...MUTED, fontSize: 9 }}>
-            read
-          </text>
-        </svg>
-      }
-      controls={
-        <>
-          <Choice
-            value={code}
-            onChange={setCode}
-            options={[
-              { v: "bin", label: "Binary disc" },
-              { v: "gray", label: "Gray disc" },
-            ]}
-          />
-          <Choice
-            value={n}
-            onChange={setN}
-            options={[
-              { v: 3, label: "3 bits (8 sectors)" },
-              { v: 4, label: "4 bits (16 sectors)" },
-            ]}
-          />
-          <Slider label="Shaft angle" value={angle} min={0} max={359.5} step={0.5} onChange={setAngle} format={(v) => `${v}°`} />
-          <Slider label="Sensor misalignment" value={mis} min={0} max={8} step={0.5} onChange={setMis} format={(v) => `${v}° per ring`} />
-        </>
-      }
-      readout={
-        <>
-          <Read label="True sector" tex={`$${truePos}$ (code ${enc(truePos).toString(2).padStart(n, "0")})`} />
-          <Read
-            label="Sensors read"
-            tex={`**${rc.toString(2).padStart(n, "0")}** → position $${pos}$ ${ok ? "✓" : `✗ (off by ${Math.min((pos - truePos + S) % S, (truePos - pos + S) % S)})`}`}
-            tone={ok ? "good" : "bad"}
-          />
-          <Read
-            label="Whole revolution"
-            tex={`${((100 * bad) / steps).toFixed(1)}% of angles misread; worst error **${worst}** sector${worst === 1 ? "" : "s"}`}
-            tone={bad === 0 ? "good" : worst <= 1 ? "warn" : "bad"}
-          />
-        </>
-      }
-      tasks={[
-        "Predict: on the binary disc near the 3→4 boundary (≈180°), how many rings change? Drag the angle slowly across 180° and watch the read code.",
-        "Switch to the Gray disc with the same misalignment. What is the worst error over a whole revolution now, and why can it never be more than 1?",
-        "Set misalignment to 0. Do both discs read perfectly? Explain why real encoders still prefer Gray code.",
-      ]}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// Binary ↔ Gray conversion, bit by bit
-
-function GrayConvertViz() {
-  const n = 6;
-  const [dir, setDir] = useState<"b2g" | "g2b">("b2g");
-  const [inp, setInp] = useState<Bit[]>(bitsOf(0b101101, n));
-  const { i: step, setI, controls } = useStepper(n + 1);
-  const out: Bit[] = [];
-  for (let j = 0; j < n; j++) {
-    if (j === 0) out.push(inp[0]);
-    else out.push((dir === "b2g" ? inp[j] ^ inp[j - 1] : inp[j] ^ out[j - 1]) as Bit);
-  }
-  const shown = step; // number of output bits revealed
-  const W = 360;
-  const Hh = 170;
-  const cw = 40;
-  const x = (j: number) => 40 + j * (cw + 8);
-  const yIn = 22;
-  const yOut = 118;
-  const cur = shown >= 1 ? shown - 1 : -1;
-  const inName = dir === "b2g" ? "b" : "g";
-  const outName = dir === "b2g" ? "g" : "b";
-  const v = valueOf(dir === "b2g" ? inp : out);
-  const next = (v + 1) % 2 ** n;
-  const gv = gray(v);
-  const gn = gray(next);
-  const cellNode = (xx: number, y: number, b: Bit | null, label: string, hl: boolean) => (
-    <g>
-      <rect x={xx} y={y} width={cw} height={30} rx={6} fill={b === null ? "var(--surface-2)" : b ? "var(--good)" : "var(--surface)"} stroke={hl ? "var(--accent)" : "var(--border)"} strokeWidth={hl ? 2.4 : 1} />
-      <text x={xx + cw / 2} y={y + 21} textAnchor="middle" style={{ ...TXT, ...MONO, fontSize: 15, fontWeight: 700, fill: b ? "var(--surface)" : "var(--text)" }}>
-        {b === null ? "?" : b}
-      </text>
-      <text x={xx + cw / 2} y={y < 60 ? y - 5 : y + 44} textAnchor="middle" style={{ ...MUTED, fontSize: 9 }}>
-        {label}
-      </text>
-    </g>
-  );
-  return (
-    <VizFrame
-      title="Binary ↔ Gray, one XOR at a time"
-      hint="Click the top bits to set the input, choose a direction and press Next. Arrows show which two bits are XORed for the highlighted output bit."
-      onReset={() => {
-        setDir("b2g");
-        setInp(bitsOf(0b101101, n));
-        setI(0);
-      }}
-      figure={
-        <svg viewBox={`0 0 ${W} ${Hh}`} className="viz-svg" role="img" aria-label="Gray conversion">
-          {inp.map((b, j) => (
-            <g key={`i${j}`} onClick={() => { setInp(inp.map((x2, m) => (m === j ? ((1 - x2) as Bit) : x2))); }} style={{ cursor: "pointer" }}>
-              {cellNode(x(j), yIn, b, `${inName}${n - 1 - j}`, j === cur || (j === cur - 1 && dir === "b2g"))}
-            </g>
-          ))}
-          {out.map((b, j) => (
-            <g key={`o${j}`}>{cellNode(x(j), yOut, j < shown ? b : null, `${outName}${n - 1 - j}`, j === cur || (dir === "g2b" && j === cur - 1))}</g>
-          ))}
-          <text x={6} y={yIn + 20} style={{ ...MUTED, fontSize: 9 }}>
-            in
-          </text>
-          <text x={6} y={yOut + 20} style={{ ...MUTED, fontSize: 9 }}>
-            out
-          </text>
-          {cur >= 0 && (
-            <g stroke="var(--accent)" strokeWidth={1.8} fill="none">
-              {cur === 0 ? (
-                <line x1={x(0) + cw / 2} y1={yIn + 30} x2={x(0) + cw / 2} y2={yOut} />
-              ) : (
-                <>
-                  <circle cx={x(cur) + cw / 2} cy={(yIn + 30 + yOut) / 2} r={9} />
-                  <line x1={x(cur) + cw / 2 - 6} y1={(yIn + 30 + yOut) / 2} x2={x(cur) + cw / 2 + 6} y2={(yIn + 30 + yOut) / 2} />
-                  <line x1={x(cur) + cw / 2} y1={(yIn + 30 + yOut) / 2 - 6} x2={x(cur) + cw / 2} y2={(yIn + 30 + yOut) / 2 + 6} />
-                  <line x1={x(cur) + cw / 2} y1={yIn + 30} x2={x(cur) + cw / 2} y2={(yIn + 30 + yOut) / 2 - 9} />
-                  {dir === "b2g" ? (
-                    <line x1={x(cur - 1) + cw / 2} y1={yIn + 30} x2={x(cur) + cw / 2 - 8} y2={(yIn + 30 + yOut) / 2 - 4} />
-                  ) : (
-                    <line x1={x(cur - 1) + cw} y1={yOut + 6} x2={x(cur) + cw / 2 - 8} y2={(yIn + 30 + yOut) / 2 + 4} />
-                  )}
-                  <line x1={x(cur) + cw / 2} y1={(yIn + 30 + yOut) / 2 + 9} x2={x(cur) + cw / 2} y2={yOut} />
-                </>
-              )}
-            </g>
-          )}
-        </svg>
-      }
-      controls={
-        <>
-          {controls}
-          <Choice
-            value={dir}
-            onChange={(d) => {
-              setDir(d);
-              setI(0);
-            }}
-            options={[
-              { v: "b2g", label: "Binary → Gray" },
-              { v: "g2b", label: "Gray → binary" },
-            ]}
-          />
-        </>
-      }
-      readout={
-        <>
-          <Read
-            label="Rule"
-            tex={dir === "b2g" ? "MSB copied; $g_i = b_i \\oplus b_{i+1}$ (two **input** bits)" : "MSB copied; $b_i = g_i \\oplus b_{i+1}$ (input bit XOR the **output bit just found**)"}
-          />
-          {cur >= 0 && (
-            <Read
-              label={`Step ${cur + 1}`}
-              tex={
-                cur === 0
-                  ? `$${outName}_{${n - 1}} = ${inName}_{${n - 1}} = ${out[0]}$`
-                  : dir === "b2g"
-                    ? `$g_{${n - 1 - cur}} = b_{${n - 1 - cur}} \\oplus b_{${n - cur}} = ${inp[cur]} \\oplus ${inp[cur - 1]} = ${out[cur]}$`
-                    : `$b_{${n - 1 - cur}} = g_{${n - 1 - cur}} \\oplus b_{${n - cur}} = ${inp[cur]} \\oplus ${out[cur - 1]} = ${out[cur]}$`
-              }
-              tone="good"
-            />
-          )}
-          {shown === n && (
-            <Read label="Result" tex={`${inName === "b" ? "binary" : "Gray"} **${inp.join("")}** → ${outName === "g" ? "Gray" : "binary"} **${out.join("")}** (binary value $${v}$)`} tone="good" />
-          )}
-          <Read label="Unit distance" tex={`gray(${v}) = ${gv.toString(2).padStart(n, "0")}, gray(${next}) = ${gn.toString(2).padStart(n, "0")}: **${ones(gv ^ gn)}** bit differs (binary: ${ones(v ^ next)})`} />
-        </>
-      }
-      tasks={[
-        "Predict the Gray code of 101101 before stepping, then step through and compare.",
-        "Switch to Gray → binary with input 110110. At each step, which output bit does the arrow come from? What goes wrong if you XOR with the Gray bit instead?",
-        "Set the binary input to 011111 (31). Compare the bits that change from 31 → 32 in binary and in Gray (bottom line).",
-      ]}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// ASCII
-
-const groupOf = (c: number) => (c < 32 || c === 127 ? "control" : c >= 48 && c <= 57 ? "digit" : c >= 65 && c <= 90 ? "upper case" : c >= 97 && c <= 122 ? "lower case" : c === 32 ? "space" : "symbol");
-
-function AsciiViz() {
-  const [text, setText] = useState("SC1005 Hi");
-  const chars = [...text].slice(0, 10).filter((c) => c.charCodeAt(0) < 128);
-  const codes = chars.map((c) => c.charCodeAt(0));
-  const used = new Set(codes);
-  const flipCase = () => setText([...text].map((c) => (/[A-Za-z]/.test(c) ? String.fromCharCode(c.charCodeAt(0) ^ 0x20) : c)).join(""));
-  const cw = 42;
-  const ch = 15;
-  const x0 = 26;
-  const y0 = 30;
-  const W = x0 + 8 * cw + 6;
-  const Hh = y0 + 16 * ch + 8;
-  const show = (c: number) => (c < 32 ? ["NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF", "VT", "FF", "CR", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US"][c] : c === 32 ? "SP" : c === 127 ? "DEL" : String.fromCharCode(c));
-  return (
-    <VizFrame
-      title="ASCII: 7 bits per character"
-      hint="Type up to 10 characters. The grid is the whole ASCII table: column = high 3 bits (b6 b5 b4), row = low 4 bits (b3…b0). Your characters are highlighted."
-      onReset={() => setText("SC1005 Hi")}
-      figure={
-        <div>
-          <div className="small" style={{ padding: "6px 8px" }}>
-            <label>
-              Text{" "}
-              <input style={{ ...inputStyle, width: 160 }} value={text} maxLength={10} onChange={(e) => setText(e.target.value)} aria-label="Text to encode" />
-            </label>{" "}
-            <button className="btn small" onClick={flipCase}>
-              Flip bit 5 (case)
-            </button>
-          </div>
-          <svg viewBox={`0 0 ${W} ${Hh}`} className="viz-svg" role="img" aria-label="ASCII table">
-            {Array.from({ length: 8 }, (_, col) => (
-              <text key={col} x={x0 + col * cw + cw / 2} y={y0 - 16} textAnchor="middle" style={{ ...MUTED, ...MONO, fontSize: 9 }}>
-                {col.toString(2).padStart(3, "0")}
-              </text>
-            ))}
-            {Array.from({ length: 8 }, (_, col) => (
-              <text key={`h${col}`} x={x0 + col * cw + cw / 2} y={y0 - 5} textAnchor="middle" style={{ ...MUTED, fontSize: 8 }}>
-                {col}x
-              </text>
-            ))}
-            {Array.from({ length: 16 }, (_, row) => (
-              <text key={row} x={x0 - 4} y={y0 + row * ch + ch * 0.72} textAnchor="end" style={{ ...MUTED, ...MONO, fontSize: 8 }}>
-                {H(row)}
-              </text>
-            ))}
-            {Array.from({ length: 128 }, (_, c) => {
-              const col = c >> 4;
-              const row = c & 15;
-              const on = used.has(c);
-              const g = groupOf(c);
-              const tint = g === "digit" ? "var(--warn)" : g === "upper case" ? "var(--accent)" : g === "lower case" ? "var(--good)" : "transparent";
-              return (
-                <g key={c}>
-                  <rect x={x0 + col * cw + 1} y={y0 + row * ch + 1} width={cw - 2} height={ch - 2} rx={3} fill={on ? "var(--bad)" : tint} opacity={on ? 0.85 : 0.13} />
-                  <text x={x0 + col * cw + cw / 2} y={y0 + row * ch + ch * 0.72} textAnchor="middle" style={{ ...TXT, ...MONO, fontSize: c < 33 || c === 127 ? 7 : 10, fill: on ? "var(--surface)" : c < 33 || c === 127 ? "var(--muted)" : "var(--text)", fontWeight: on ? 700 : 400 }}>
-                    {show(c)}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-        </div>
-      }
-      readout={
-        <>
-          <TableView
-            head={["Char", "$b_6b_5b_4$", "$b_3..b_0$", "Hex", "Type"]}
-            rows={codes.map((c) => [show(c), c.toString(2).padStart(7, "0").slice(0, 3), c.toString(2).padStart(7, "0").slice(3), H(c), groupOf(c)])}
-          />
-          <Read label="Size" tex={`${codes.length} chars × 7 bits = **${7 * codes.length} bits** (${8 * codes.length} as bytes)`} />
-          {codes.some((c) => c >= 48 && c <= 57) && <Read label="Digits" tex="'0'–'9' are $011\\,dddd$: the low nibble **is** the BCD digit" />}
-        </>
-      }
-      tasks={[
-        "Predict the hex code of 'k' from 'a' = 61. Type it and check.",
-        "Press 'Flip bit 5'. Which characters change and which stay the same? Why do digits and spaces not change case?",
-        "Type a phone number such as 91234567. How many bits is it in ASCII, in BCD and in straight binary?",
-      ]}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
 // Parity generator and checker
 
 function ParityViz() {
-  const [data, setData] = useState<Bit[]>(bitsOf(0x53, 7)); // 'S'
+  const [data, setData] = useState<Bit[]>(bitsOf(0x41, 7)); // ASCII 'A' = 100 0001 (F0-23)
   const [mode, setMode] = useState<"even" | "odd">("even");
   const [flips, setFlips] = useState<boolean[]>(Array(8).fill(false));
   const dv = valueOf(data);
@@ -802,9 +410,9 @@ function ParityViz() {
   return (
     <VizFrame
       title="Parity: generate, transmit, check"
-      hint="Set the 7 data bits (default: ASCII 'S'), choose even or odd parity, then click bits in the received word to inject errors on the line."
+      hint="Set the 7 data bits (default: ASCII 'A' = 100 0001, the lecture example on F0-23), choose even or odd parity, then click bits in the received word to inject errors on the line."
       onReset={() => {
-        setData(bitsOf(0x53, 7));
+        setData(bitsOf(0x41, 7));
         setMode("even");
         setFlips(Array(8).fill(false));
       }}
@@ -813,7 +421,7 @@ function ParityViz() {
           <div>
             <div className="small muted" style={{ marginBottom: 4 }}>
               Data (7 bits) = {H(dv)}
-              {dv >= 32 && dv < 127 ? ` = '${String.fromCharCode(dv)}'` : ""}
+              {dv === 0x41 ? " = ASCII 'A'" : ""}
             </div>
             <BitRow bits={data} onChange={(b) => { setData(b); setFlips(Array(8).fill(false)); }} labels={labels.slice(1)} />
           </div>
@@ -868,7 +476,7 @@ function ParityViz() {
         </>
       }
       tasks={[
-        "Predict the even parity bit for 'S' (101 0011) before reading it. Then switch to odd parity: what changes?",
+        "Predict the even and odd parity bits for 'A' (100 0001) and compare with the lecture example on F0-23. Then set the data to 0110011 (Tutorial 1 Q7(a)) and predict the even parity bit.",
         "Flip one bit, then a second one. Explain why the checker is fooled by two errors.",
         "Flip the parity bit itself only. Is that detected? Does the receiver know which bit was wrong?",
       ]}

@@ -9,34 +9,34 @@ export const verilogRecapQuestions: Draft[] = [
     difficulty: "easy",
     source: "Style: PYP 2021-22 S1 Q1(1)",
     prompt: "Which of the following Verilog literals is **illegal**?",
-    options: ["`8'b1100_0011`", "`12'hABC`", "`6'o77`", "`4'b1021`", "`-8'd5`"],
+    options: ["`8'b1100_0011`", "`12'hABC`", "`6'o77`", "`4'b1021`", "`5'd19`"],
     answer: 3,
     solution:
-      "A literal is `<size>'<radix><digits>` and every digit must be legal for the radix.\n- `8'b1100_0011`: binary, the underscore is only a separator → legal.\n- `12'hABC`: three hex digits = 12 bits → legal.\n- `6'o77`: two octal digits = 6 bits → legal.\n- `4'b1021`: **2 is not a binary digit** → illegal.\n- `-8'd5`: the minus sign in front of the sized literal negates it (8-bit pattern `11111011`) → legal.",
+      "A literal is `<size>'<radix><digits>` and every digit must be legal for the radix.\n- `8'b1100_0011`: binary, the underscore is only a separator → legal.\n- `12'hABC`: three hex digits = 12 bits → legal.\n- `6'o77`: two octal digits = 6 bits → legal.\n- `4'b1021`: **2 is not a binary digit** → illegal.\n- `5'd19`: decimal 19 = `10011`, which fits in 5 bits → legal.",
   },
   {
     kind: "short",
     subtopic: "Number literals",
     difficulty: "easy",
-    source: "Style: PYP 2021-22 S1 Q1(1)",
-    prompt: "What 4-bit pattern does the Verilog literal `-4'd3` represent? Give the answer in binary.",
-    accept: ["1101", "4'b1101"],
+    source: "Style: Lecture 8A (literals, padding at the MSB)",
+    prompt: "What 8-bit pattern does `w` hold after `wire [7:0] w = 6'o52;`? Give the answer in binary.",
+    accept: ["00101010", "8'b00101010", "0010_1010", "0010 1010"],
     match: "text",
-    placeholder: "e.g. 0101",
+    placeholder: "e.g. 01010101",
     solution:
-      "The minus sign written **before** the size negates the 4-bit value 3 in two's complement:\n- $3 = 0011_2$\n- invert → $1100_2$, add 1 → $1101_2$.\nSo `-4'd3` = `4'b1101`. Forms such as `4'd-3`, `4'-d3` or `4d'-3` are illegal: the sign may not sit inside the literal.",
+      "Each octal digit is 3 bits: $5 = 101$, $2 = 010$, so `6'o52` = `101010` (6 bits).\nAssigning a 6-bit value to the 8-bit wire pads the MSBs with zeros (Lecture 8A: `wire [5:0] x = 4'b1001` gives `001001`), so w = **00101010**.",
   },
   {
     kind: "mcq",
     subtopic: "Vector sizing",
     difficulty: "medium",
-    source: "Style: Lecture 8A (number literals)",
+    source: "Style: Lecture 8A p.52",
     prompt: "What are the values of `x` and `y` after these declarations?",
     code: "wire [5:0] x = 4'b1011;\nwire [2:0] y = 6'b110101;",
     options: ["x = 6'b001011, y = 3'b101", "x = 6'b101100, y = 3'b110", "x = 6'b111011, y = 3'b101", "x = 6'b001011, y = 3'b110", "x = 6'b101100, y = 3'b101"],
     answer: 0,
     solution:
-      "Widths are matched at the **MSB end**:\n- A 4-bit literal into a 6-bit wire is **zero-padded** on the left: `1011` → `001011`. (It is not sign-extended: an unsigned literal never copies its MSB.)\n- A 6-bit literal into a 3-bit wire is **truncated** on the left, keeping the 3 LSBs: `110101` → `101`.\nThe distractors pad/truncate at the wrong end or sign-extend.",
+      "Widths are matched at the **MSB end**:\n- A 4-bit literal into a 6-bit wire is **zero-padded** on the left: `1011` → `001011` (Lecture 8A p.52).\n- A 6-bit literal into a 3-bit wire is **truncated** on the left, keeping the 3 LSBs: `110101` → `101`.\nThe distractors pad/truncate at the wrong end or sign-extend.",
   },
   {
     kind: "mcq",
@@ -66,19 +66,19 @@ export const verilogRecapQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Expression width",
     difficulty: "medium",
-    source: "Style: Lecture 8A (vectors: widths must match)",
+    source: "Style: Lecture 8A p.47-49",
     prompt: "What are the decimal values of `s` and `t`?",
     code: "wire [3:0] a = 4'd12, b = 4'd7;\nwire [3:0] s = a + b;\nwire [4:0] t = a + b;",
     options: ["s = 3, t = 19", "s = 19, t = 19", "s = 3, t = 3", "s = 19, t = 3", "s = 3, t = 11"],
     answer: 0,
     solution:
-      "$12 + 7 = 19 = 10011_2$, which needs 5 bits.\n- `s` is 4 bits: the expression is evaluated at 4 bits and the carry is lost → `0011` = **3**.\n- For `t` the operands are extended to the width of the 5-bit target **before** adding, so the carry is kept → **19**.\nThis is why the lecture's adder writes `assign {Cout, Sum} = A + B + Cin;` or uses a 33-bit wire for a 32-bit sum.",
+      "$12 + 7 = 19 = 10011_2$, which needs 5 bits.\n- `s` is 4 bits: the expression is evaluated at 4 bits and the carry is lost → `0011` = **3**.\n- `t` is 5 bits wide, so the carry bit fits → **19**.\nThis is why the lecture's 32-bit adder assigns `A + B + Cin` to a 33-bit wire w1 and takes the carry from w1[32], or writes `assign {Cout, Sum} = A + B + Cin;` (Lecture 8A p.47, p.58).",
   },
   {
     kind: "short",
     subtopic: "Conditional operator",
     difficulty: "medium",
-    source: "Style: Verilog Recap (conditional assignment)",
+    source: "Style: Verilog Recap p.10-11",
     prompt: "All signals are 1 bit. Write `f` as a Boolean expression in s, t, a, b and c (use ' for NOT). Any equivalent form is accepted.",
     code: "assign f = s ? (t ? a : b) : (a ^ c);",
     accept: ["s t a + s t' b + s' a c' + s' a' c", "s(t a + t' b) + s'(a ^ c)"],
@@ -94,7 +94,7 @@ export const verilogRecapQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "reg vs wire",
     difficulty: "medium",
-    source: "Style: PYP 2021-22 S1 Q1(4)",
+    source: "Style: PYP 2021-22 S1 Q1(4) / Verilog Recap p.3",
     prompt: "Which signals in this module **must** be declared as `reg`?",
     code: `module m (input a, b, clk,
           output p, q, r, s);
@@ -143,7 +143,7 @@ endmodule`,
     kind: "mcq",
     subtopic: "Positional instantiation",
     difficulty: "hard",
-    source: "Style: Lecture 8A (ordered instantiation)",
+    source: "Style: Lecture 8A p.32",
     prompt: "This full adder uses **positional** (ordered) connections. With A = 1, B = 0, CIN = 1, what are SUM and COUT?",
     code: `module add_half (input a, b, output sum, cout);
   assign sum  = a ^ b;
@@ -167,25 +167,25 @@ endmodule`,
     kind: "mcq",
     subtopic: "Sensitivity list",
     difficulty: "medium",
-    source: "Style: Lecture 8B (always @*)",
+    source: "Style: Lecture 8B p.5",
     prompt: "x and y are declared `reg`. Which statement about this block is true?",
     code: "always @(a or b)\nbegin\n  x = a & b;\n  y = x | c;\nend",
     options: [
-      "Simulation and synthesis agree, because x already depends on a and b",
-      "The synthesised hardware computes y = ab + c, but in simulation y is not updated when only c changes",
-      "Synthesis infers a latch on y because c is missing from the list",
-      "The code does not compile because c is read but not listed",
-      "In simulation y is updated only when c changes",
+      "Nothing is wrong, because x already depends on a and b",
+      "The block is not triggered when only c changes, so y does not follow ab + c as expected; use `always @*`",
+      "A flip-flop is inferred for y because c is missing from the list",
+      "y is updated only when c changes",
+      "The block runs only at clock edges",
     ],
     answer: 1,
     solution:
-      "The synthesis tool ignores the sensitivity list and builds the logic described by the statements: x = ab, y = ab + c — no latch, since x and y are assigned every time. The **simulator**, however, only executes the block when a or b changes, so a change on c alone leaves y at its old value. Simulation and hardware disagree. It compiles (usually with a warning). Fix: `always @*`.",
+      "The sensitivity list must contain the names of any signals that affect the output of the block (Lecture 8B p.4). This block reads a, b **and** c, but only a and b are listed, so it will not be triggered when c changes: a change on c alone leaves y at its old value, which is not the expected output y = ab + c. Lecture 8B p.5 shows exactly this case. Fix: `always @*` (the * means all input signals inside the block).\nThere is no clock edge in the list, so nothing becomes a flip-flop.",
   },
   {
     kind: "mcq",
     subtopic: "Latch inference",
     difficulty: "medium",
-    source: "Style: Lecture 8B (avoiding latches)",
+    source: "Style: Lecture 8B p.22-24",
     prompt: "Which always block infers a **latch**?",
     options: [
       "always @* begin\n  y = 1'b0;\n  if (en) y = d;\nend",
@@ -202,7 +202,7 @@ endmodule`,
     kind: "mcq",
     subtopic: "Latch inference",
     difficulty: "hard",
-    source: "Original",
+    source: "Style: Lecture 8B p.24",
     prompt: "`sel` is 2 bits; y and z are reg. What does this block synthesise to?",
     code: `always @* begin
   case (sel)
@@ -227,7 +227,7 @@ end`,
     kind: "mcq",
     subtopic: "Statement order in comb blocks",
     difficulty: "hard",
-    source: "Style: Lecture 8B (statement order)",
+    source: "Style: Lecture 8B p.20",
     prompt: "Which statement best describes the hardware produced by this block (y is a 2-bit reg)?",
     code: "always @* begin\n  y = 2'b00;\n  if (a) y = 2'b01;\n  if (b) y = 2'b10;\nend",
     options: [
@@ -265,48 +265,47 @@ end`,
     kind: "mcq",
     subtopic: "Blocking vs non-blocking",
     difficulty: "medium",
-    source: "Style: Lecture 10 (assignments in always blocks)",
-    prompt: "a and b are 4-bit regs holding a = 3 and b = 5 just before a rising clock edge. What are (a, b) just after the edge for Version 1 and for Version 2?",
-    code: `// Version 1                    // Version 2
-always @(posedge clk) begin     always @(posedge clk) begin
-  a = b;                          a <= b;
-  b = a;                          b <= a;
-end                             end`,
-    options: ["V1: (5, 5); V2: (5, 3)", "V1: (5, 3); V2: (5, 3)", "V1: (5, 3); V2: (5, 5)", "V1: (3, 3); V2: (5, 3)", "V1: (5, 5); V2: (5, 5)"],
+    source: "Style: PYP 2016-17 S1 Q4(a); Verilog Recap p.19; Lecture 10 p.13",
+    prompt: "Which row correctly compares a combinational always block with a synchronous always block?",
+    options: [
+      "Combinational: sensitivity list of signals or `*`, blocking `=`, each assignment is a wire connected to a circuit. Synchronous: `(posedge clk)`, non-blocking `<=`, each assignment is a register.",
+      "Combinational: `(posedge clk)`, blocking `=`, each assignment is a register. Synchronous: `*`, non-blocking `<=`, each assignment is a wire.",
+      "Combinational: sensitivity list of signals or `*`, non-blocking `<=`, order does not matter. Synchronous: `(posedge clk)`, blocking `=`, order matters.",
+      "Both kinds use non-blocking `<=`; only the sensitivity list differs.",
+      "Combinational: signals or `*`, blocking `=`, each assignment is a register. Synchronous: `(posedge clk)`, non-blocking `<=`, each assignment is a wire.",
+    ],
     answer: 0,
     solution:
-      "**Version 1 (blocking)** executes line by line with immediate updates: a = b → a = 5; then b = a reads the **new** a → b = 5. Result (5, 5): the old value 3 is lost.\n**Version 2 (non-blocking)** evaluates both right-hand sides first with the pre-edge values (b = 5, a = 3), then updates together: a = 5, b = 3. Result (5, 3): a genuine swap, i.e. two cross-coupled flip-flops. This is why clocked blocks use `<=`.",
+      "From the recap summary (p.19) and Lecture 10 p.13:\n- **Combinational** always block: sensitivity list of signals or `*`; **blocking** assignments `=`, where statement order matters; each assignment is a wire connected to a circuit.\n- **Synchronous** always block: sensitivity list `(posedge clk)`; **non-blocking** assignments `<=`, where statement order does not matter; each assignment is a register.\nThis is the answer expected when a paper asks for the difference between blocking and non-blocking assignment (PYP 2016-17 S1 Q4(a)).",
   },
   {
     kind: "mcq",
-    subtopic: "Blocking vs non-blocking",
+    subtopic: "What gets synthesised",
     difficulty: "hard",
-    source: "Style: Lecture 10 (shift registers)",
-    prompt: "How does this module behave?",
-    code: `module chain (input clk, d, output reg q3);
-  reg q1, q2;
-  always @(posedge clk) begin
-    q1 = d;
-    q2 = q1;
-    q3 = q2;
-  end
-endmodule`,
+    source: "Style: Lecture 10 p.47-48",
+    prompt: "What is synthesised from this block?",
+    code: `always @(posedge clk)
+begin
+  x <= a + b;
+  y <= x - c;
+  z <= y * y;
+end`,
     options: [
-      "As a 3-stage shift register: q3 is d delayed by three clock cycles",
-      "q3 is d delayed by one clock cycle: effectively a single D flip-flop",
-      "As a combinational buffer: q3 follows d immediately",
-      "As three transparent latches in series",
-      "It is illegal: blocking assignments cannot appear in a clocked always block",
+      "Three registers x, y, z: x's register input is a + b, y's is the output of register x minus c, and z's is the output of register y times itself",
+      "One register z, with a combinational circuit computing (a + b - c) squared at its input",
+      "Three registers, all loading from a + b at the same clock edge",
+      "No registers: the block is combinational because it contains only arithmetic",
+      "Three latches that are transparent while clk is high",
     ],
-    answer: 1,
+    answer: 0,
     solution:
-      "With blocking `=`, each statement sees the value just written by the previous one. At a rising edge: q1 = d, then q2 = q1 = d, then q3 = q2 = d. All three registers load d at the **same** edge, so q3 is just d delayed by **one** cycle (synthesis keeps one flip-flop's worth of logic). It is legal code, but not the shift register intended.\nWith non-blocking `q1 <= d; q2 <= q1; q3 <= q2;` (in any order) each register takes its neighbour's **old** value and q3 = d delayed by three cycles. (Reversing the blocking statements, q3 = q2; q2 = q1; q1 = d;, would also give a shift register — but the course rule is simply: `<=` in clocked blocks.)",
+      "In a synchronous always block, **each (non-blocking) assignment results in a register**, with its input connected to a circuit built from the right-hand side and its output connected to the signal on the left-hand side (Lecture 10 p.47).\n- `x <= a + b`: an adder feeding register x.\n- `y <= x - c`: a subtractor fed by the **output of register x** and c, feeding register y.\n- `z <= y * y`: a multiplier fed by the output of register y, feeding register z.\nThis is the circuit drawn on Lecture 10 p.48. B is wrong because x and y are also assignments in the block, so they are registers too.",
   },
   {
     kind: "mcq",
     subtopic: "Resets",
     difficulty: "medium",
-    source: "Style: Lecture 10 (clock and reset)",
+    source: "Style: Lecture 10 p.9-10 / PYP 2018-19 S1 Q4(b)(ii)",
     prompt: "`rst_n` is an **active-low** reset. Which block describes an 8-bit register with an **asynchronous** active-low reset?",
     options: [
       "always @(posedge clk or negedge rst_n)\n  if (!rst_n) q <= 8'd0;\n  else        q <= d;",
@@ -317,7 +316,7 @@ endmodule`,
     ],
     answer: 0,
     solution:
-      "An asynchronous reset must wake the block by itself, so it goes into the event list, on the edge where it **becomes active**: active-low → `negedge rst_n`; and the test inside is `if (!rst_n)`.\n- B is a valid register with a **synchronous** reset (acts only at clock edges).\n- C triggers on the reset being released, the wrong edge.\n- D tests the wrong polarity (it would clear while rst_n = 1).\n- E is combinational: a latch/mux, not a register.",
+      "An asynchronous reset must wake the block by itself, so it goes into the event list, on the edge where it **becomes active**: active-low → `negedge rst_n`; and the test inside is `if (!rst_n)`.\n- B is a valid register with a **synchronous** reset (acts only at clock edges).\n- C triggers on the reset being released, the wrong edge.\n- D tests the wrong polarity (it would clear while rst_n = 1).\n- E has no clock edge in its list, so q would not be a register at all.",
   },
   {
     kind: "short",
@@ -339,7 +338,7 @@ always @(posedge clk)
     kind: "short",
     subtopic: "Combinational + sequential timing",
     difficulty: "hard",
-    source: "Style: Verilog Recap slide 18",
+    source: "Style: Verilog Recap p.18",
     prompt: "z and r are 0 before the first rising edge. Inputs a and b change only while clk is low, as shown (rising edges 1–4 are marked). What is `r` (in decimal) immediately after the **3rd** rising edge?",
     code: `module pipe (input clk, input [7:0] a, b, output reg [7:0] r);
   reg [7:0] x, z;
@@ -417,49 +416,36 @@ endmodule`,
     ],
   },
   // ---------------------------------------------------------------------------------------------
-  // Testbenches, synthesisability, find-the-errors
+  // Synthesisability, literals in PYP style, find-the-errors
   {
     kind: "mcq",
     subtopic: "Synthesisable constructs",
     difficulty: "easy",
-    source: "Style: Verilog Recap (non-synthesisable constructs)",
-    prompt: "Which of the following would a synthesis tool **not** turn into hardware?",
+    source: "Style: Lecture 8A p.43",
+    prompt: "Lecture 8A lists the arithmetic operators Verilog supports. Which of these assign statements uses an operator that is **not generally synthesizable**?",
     options: [
       "`assign y = a * b;`",
-      "`always @(posedge clk) q <= d;`",
-      "`initial begin rst = 1; #20 rst = 0; end`",
+      "`assign y = a / b;`",
+      "`assign y = a - b;`",
       "`assign y = (a > b) ? a : b;`",
       "`assign {c, s} = a + b;`",
     ],
-    answer: 2,
+    answer: 1,
     solution:
-      "`#20` is a simulation delay and an `initial` stimulus block is testbench code: there is no gate that 'waits 20 time units'. The others are all synthesisable: a multiplier, a D flip-flop register, a comparator + 2:1 mux (max), and an adder whose carry goes to c.",
+      "Verilog supports `+ - * /` and the comparisons `< <= > >= == !=`, but the lecture notes that **division is not generally synthesizable** (Lecture 8A p.43). The others are all fine in hardware: a multiplier, a subtractor, a comparator feeding a multiplexer (the lecture's `max = (a>b) ? a : b`), and an adder whose carry goes to c.",
   },
   {
     kind: "short",
-    subtopic: "Testbenches",
+    subtopic: "Concatenation and replication",
     difficulty: "medium",
-    source: "Original",
-    prompt: "How many lines does the `$monitor` statement print before the simulation ends?",
-    code: `module tb;
-  reg a, b;
-  wire y;
-  assign y = a ^ b;
-  initial $monitor("%0t a=%b b=%b y=%b", $time, a, b, y);
-  initial begin
-    a = 0; b = 0;
-    #10 a = 1;
-    #5  b = 1;
-    #10 a = 0; b = 0;
-    #5  a = 0;
-    #5  b = 1;
-    #5  $finish;
-  end
-endmodule`,
-    accept: ["5"],
-    match: "number",
+    source: "PYP 2017-18 S1 Q3(a)",
+    prompt: "Let a = 5'b11011, b = 3'b101 and c = 3'b011. Determine the 7-bit value of x[6:0] after the statement below (in binary).",
+    code: "assign x = b[1] ? {a, c[1:0]} : {b, a[3:0]};",
+    accept: ["1011011", "7'b1011011"],
+    match: "text",
+    placeholder: "7 binary digits",
     solution:
-      "Delays accumulate, so the assignments happen at t = 0, 10, 15, 25, 30, 35 and `$finish` at 40. The monitor prints once at the start and then at the end of every time step in which one of a, b, y changes (`$time` advancing does not count; several changes in one time step give one line).\n- t = 0: a=0 b=0 y=0 → line 1\n- t = 10: a → 1, y → 1 → line 2\n- t = 15: b → 1, y → 0 → line 3\n- t = 25: a and b both → 0 in the same step → line 4 (y stays 0)\n- t = 30: a = 0 again: no change → no line\n- t = 35: b → 1, y → 1 → line 5\nTotal **5** lines.",
+      "- The condition is b[1]: b = 101, so b[1] = **0** and the conditional assignment selects the second expression (Recap p.10: `?:` is a multiplexer).\n- `{b, a[3:0]}` = `101` followed by a[3:0] = `1011` → `1011011`, 3 + 4 = 7 bits, exactly the width of x.\nSo x = **1011011**. (Had b[1] been 1, x would be `{a, c[1:0]}` = `11011` `11` = `1101111`.)",
   },
   {
     kind: "mcq",
@@ -484,7 +470,7 @@ endmodule`,
     ],
     answer: 3,
     solution:
-      "- y is assigned inside an always block → it must be a reg: genuine error.\n- The block reads sel but is not sensitive to it → simulation would miss changes of sel: genuine error (use `@*`).\n- `assign flag = …` needs a terminating `;`: genuine syntax error.\n- flag is driven by an `assign`, so it must stay a **wire**. Reading a reg on the right-hand side has no effect on the declaration of the left-hand side. This statement is **false**, so D is the answer.",
+      "- y is assigned inside an always block → it must be a reg: genuine error.\n- The block reads sel but sel is not in the list → the block is not triggered when sel changes: genuine error (use `@*`).\n- `assign flag = …` needs a terminating `;`: genuine syntax error.\n- flag is driven by an `assign`, so it must stay a **wire**. Reading a reg on the right-hand side has no effect on the declaration of the left-hand side. This statement is **false**, so D is the answer.",
   },
   {
     kind: "open",
@@ -521,7 +507,7 @@ endmodule;`,
       { point: "(b) out declared as a wire when driven by assign", marks: 1 },
     ],
     solution:
-      "Run the find-the-errors checklist line by line: reg declaration, sensitivity list, blocking vs non-blocking, complete assignment (latch), single driver, syntax. Six errors in total; the semantic ones (reg, @*, latch, double driver) are the ones examiners weight most.",
+      "Run the find-the-errors checklist line by line: reg declaration, sensitivity list, blocking vs non-blocking, complete assignment (latch), single driver, syntax. Six errors in total.",
   },
   {
     kind: "open",
@@ -542,17 +528,17 @@ endmodule;`,
   end
 endmodule`,
     modelAnswer:
-      "**(a)**\n- `count` is assigned in an always block → `output reg [3:0] count`.\n- `@(posedge clk or rst)` mixes an edge with a level and would make the reset asynchronous; a synchronous reset is tested only at the clock edge → `always @(posedge clk)`.\n- `count = 4'd0` is a blocking assignment in a clocked block → use `<=` like the other branches.\n- `assign tc = …` is inside the always block: continuous assignments (and instances) belong at module level → move it outside; tc stays a wire.\n**(b)**\n```\nmodule cnt10 #(parameter MOD = 10) (\n    input clk, rst, en,\n    output reg [3:0] count,\n    output tc);\n  always @(posedge clk) begin\n    if (rst)\n      count <= 4'd0;\n    else if (en) begin\n      if (count == MOD - 1) count <= 4'd0;\n      else                  count <= count + 1'b1;\n    end\n  end\n  assign tc = (count == MOD - 1);\nendmodule\n```",
+      "**(a)**\n- `count` is assigned in an always block → `output reg [3:0] count`.\n- `@(posedge clk or rst)`: listing the reset in the sensitivity list is how an **asynchronous** reset is written (and then as `posedge rst`, Lecture 10 p.10). A synchronous reset is only tested at the clock edge, so the list is just `posedge clk` (Lecture 10 p.8).\n- `count = 4'd0` is a blocking assignment in a clocked block → use `<=` like the other branches.\n- `assign tc = …` is inside the always block: continuous assignments (and instances) belong at module level → move it outside; tc stays a wire.\n**(b)**\n```\nmodule cnt10 #(parameter MOD = 10) (\n    input clk, rst, en,\n    output reg [3:0] count,\n    output tc);\n  always @(posedge clk) begin\n    if (rst)\n      count <= 4'd0;\n    else if (en) begin\n      if (count == MOD - 1) count <= 4'd0;\n      else                  count <= count + 1'b1;\n    end\n  end\n  assign tc = (count == MOD - 1);\nendmodule\n```",
     rubric: [
       { point: "count must be declared `output reg [3:0]`", marks: 2 },
-      { point: "Sensitivity list: only `posedge clk` for a synchronous reset (no mixing edge and level)", marks: 2 },
+      { point: "Sensitivity list: only `posedge clk` for a synchronous reset", marks: 2 },
       { point: "Blocking `=` in the reset branch changed to `<=`", marks: 2 },
       { point: "`assign tc` moved outside the always block (tc remains a wire)", marks: 2 },
       { point: "(b) Parameter MOD declared in the header and used for the wrap and tc", marks: 2 },
       { point: "(b) Complete, correct clocked block with reset, enable and wrap", marks: 2 },
     ],
     solution:
-      "Four separate faults: declaration (reg), sensitivity list (edge mixed with level), blocking assignment in a clocked block, and an `assign` placed inside an always block. Note that `count + 1` is not an error, but `1'b1` makes the width intention explicit.",
+      "Four separate faults: declaration (reg), sensitivity list (reset listed although it is synchronous), blocking assignment in a clocked block, and an `assign` placed inside an always block. Note that `count + 1` is not an error, but `1'b1` makes the width intention explicit.",
   },
   // ---------------------------------------------------------------------------------------------
   // Write-a-module questions
@@ -587,7 +573,7 @@ endmodule`,
     prompt:
       "Design a circuit `gt5` that compares two 5-bit two's complement numbers X[4:0] and Y[4:0] and outputs G = 1 when **X > Y** (strictly greater), otherwise G = 0. You must use exactly one instance of each of these modules:\n- a 4-to-1 multiplexer `module mux41 (input [3:0] D, input [1:0] S, output W);` with W = D[S]\n- a 4-bit unsigned comparator `module ult4 (input [3:0] A, B, output L);` with L = 1 when A < B (unsigned)\n(a) Explain how the two sign bits determine the result and state what must be connected to each multiplexer input and to the comparator. (8 marks)\n(b) Write the Verilog module `gt5` using named instantiation. Internal signals should match your design in (a). (10 marks)",
     modelAnswer:
-      "**(a)** Use the sign bits as the mux select, S = {X[4], Y[4]}.\n- S = 01: X ≥ 0 and Y < 0 → X > Y always → W = 1.\n- S = 10: X < 0 and Y ≥ 0 → never greater → W = 0.\n- S = 00 or 11 (same sign): X − Y has the same sign as X[3:0] − Y[3:0] (both numbers lie in 0…15, or both in −16…−1 where value = −16 + low 4 bits), so X > Y exactly when Y[3:0] < X[3:0] as unsigned numbers. Connect the comparator with A = Y[3:0], B = X[3:0]; its output L is the answer.\n- Data inputs: D[0] = L, D[1] = 1, D[2] = 0, D[3] = L, i.e. D = {L, 1'b0, 1'b1, L}.\n**(b)**\n```\nmodule gt5 (input [4:0] X, Y, output G);\n  wire L;                                   // comparator output\n\n  ult4  U1 (.A(Y[3:0]), .B(X[3:0]), .L(L));\n  mux41 U2 (.D({L, 1'b0, 1'b1, L}),\n            .S({X[4], Y[4]}),\n            .W(G));\nendmodule\n```\n(Checked exhaustively over all 1024 pairs of X and Y.)",
+      "**(a)** Use the sign bits as the mux select, S = {X[4], Y[4]}.\n- S = 01: X ≥ 0 and Y < 0 → X > Y always → W = 1.\n- S = 10: X < 0 and Y ≥ 0 → never greater → W = 0.\n- S = 00 or 11 (same sign): X − Y has the same sign as X[3:0] − Y[3:0] (both numbers lie in 0…15, or both in −16…−1 where value = −16 + low 4 bits), so X > Y exactly when Y[3:0] < X[3:0] as unsigned numbers. Connect the comparator with A = Y[3:0], B = X[3:0]; its output L is the answer.\n- Data inputs: D[0] = L, D[1] = 1, D[2] = 0, D[3] = L, i.e. D = {L, 1'b0, 1'b1, L}.\n**(b)**\n```\nmodule gt5 (input [4:0] X, Y, output G);\n  wire L;                                   // comparator output\n\n  ult4  U1 (.A(Y[3:0]), .B(X[3:0]), .L(L));\n  mux41 U2 (.D({L, 1'b0, 1'b1, L}),\n            .S({X[4], Y[4]}),\n            .W(G));\nendmodule\n```",
     modelFigures: [
       {
         kind: "table",

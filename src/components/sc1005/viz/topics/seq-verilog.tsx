@@ -148,10 +148,10 @@ function LiveWave({ rows, unit = 22, marks = [], cursor, onCursor, tickEvery = 1
 
 const toBits = (s: string): W[] => [...s].map((c) => (c === "1" ? 1 : 0));
 const flip = (arr: W[], t: number): W[] => arr.map((v, i) => (i === t ? (v ? 0 : 1) : v));
-const fmtW = (v: W | undefined) => (v === null || v === undefined ? "x" : String(v));
+const fmtW = (v: W | undefined) => (v === null || v === undefined ? "?" : String(v));
 
 // ---------------------------------------------------------------------------------------------
-// 1. Blocking vs non-blocking: step an always @(posedge clk) block and see the synthesised hardware.
+// 1. Non-blocking assignments: step an always @(posedge clk) block and see the synthesised hardware.
 
 interface Preset {
   label: string;
@@ -184,7 +184,7 @@ function exprStr(e: Expr, top = true): string {
 
 function BlockingStepper() {
   const [key, setKey] = useState<keyof typeof PRESETS>("shift");
-  const [blocking, setBlocking] = useState(false);
+  const [blocking] = useState(false);
   const p = PRESETS[key];
   const [regs, setRegs] = useState<Record<string, Bit>>(p.init);
   const [y, setY] = useState<Bit>(1);
@@ -253,8 +253,8 @@ function BlockingStepper() {
   });
   return (
     <VizFrame
-      title="Non-blocking (<=) vs blocking (=) in a clocked block"
-      hint="Pick a code example and the assignment operator, set the input, then press Clock edge. The schematic is what synthesis builds from the code."
+      title="Non-blocking (<=) in a synchronous block"
+      hint="Pick a code example, set the input, then press Clock edge. The schematic is what synthesis builds from the code: one register per assignment."
       onReset={() => reset()}
       figure={
         <>
@@ -267,18 +267,6 @@ function BlockingStepper() {
       controls={
         <>
           <Choice value={key} onChange={(k) => reset(k)} options={Object.entries(PRESETS).map(([k, v]) => ({ v: k as keyof typeof PRESETS, label: v.label }))} />
-          <Choice
-            value={blocking ? 1 : 0}
-            onChange={(v) => {
-              setBlocking(v === 1);
-              setRegs(p.init);
-              setHist([{ y, r: p.init }]);
-            }}
-            options={[
-              { v: 0, label: "non-blocking **<=**" },
-              { v: 1, label: "blocking **=**" },
-            ]}
-          />
           <div className="row" style={{ gap: 14, alignItems: "flex-end" }}>
             {p.inputs.includes("y") && (
               <div>
@@ -309,10 +297,10 @@ function BlockingStepper() {
         </>
       }
       tasks={[
-        "Predict: shift register with **<=**, y = 1 then 0, 0, 0. After how many edges does the 1 reach q? Step it.",
-        "Switch to blocking **=**. Step the same input. What does the schematic now show, and how many edges does y take to reach q?",
-        "Choose **Same, reversed order** with blocking **=**. Why does it behave like a shift register again? Would you rely on this?",
-        "Swap a and b: compare **<=** and **=**. Which one really swaps?",
+        "Predict: shift register, y = 1 then 0, 0, 0. After how many edges does the 1 reach q? Step it.",
+        "Choose **Same, reversed order**. Does the schematic change? Step the same input and compare (Lecture 10 p.25–26).",
+        "Swap a and b: after one edge, which values do a and b hold? Why do both right-hand sides use the old values?",
+        "Choose **A, B, C with logic** and trace three edges by hand before stepping (CZ1005 2018-19 S2 Q4(a) style).",
       ]}
     />
   );
@@ -403,7 +391,7 @@ function ResetTypes() {
           <Read
             tex={
               lastEdge === undefined
-                ? "sync: no rising edge yet, so q is unknown (x)"
+                ? "sync: no rising edge yet, so q is unknown"
                 : `sync: only looks at ${name} at edges; at the edge $t = ${lastEdge}$ it saw ${name} ${rst[lastEdge - 1] ? "asserted → $q = 0$" : `not asserted → $q = d = ${fmtW(d[lastEdge - 1])}$`}`
             }
           />
@@ -491,7 +479,7 @@ function CounterStepper() {
   }
   if (hasEn) lines.push({ text: "  end", id: "" }, { text: "  // en = 0: no assignment, q keeps its value", id: "hold" });
   lines.push({ text: "end" }, { text: "endmodule" });
-  const fmt = (v: number | null) => (v === null ? "x" : `${v} (${v.toString(2).padStart(width, "0")})`);
+  const fmt = (v: number | null) => (v === null ? "?" : `${v} (${v.toString(2).padStart(width, "0")})`);
   const bitsIns: { k: keyof typeof ins; show: boolean }[] = [
     { k: "rst", show: true },
     { k: "load", show: hasLoad },
@@ -527,24 +515,24 @@ function CounterStepper() {
       readout={
         <>
           <Read label="q now" tex={`**${fmt(q)}**`} tone={q === null ? "warn" : undefined} />
-          <Read label="next edge" tex={`branch **${br}** → $q^+ = ${nxt === null ? "x" : nxt}$`} tone="good" />
+          <Read label="next edge" tex={`branch **${br}** → $q^+ = ${nxt === null ? "?" : nxt}$`} tone="good" />
           {last && <Read label="last edge ran" tex={`**${last}**`} />}
-          {q === null && <Read tone="warn" tex="Before the first reset the register holds **x** (unknown). Unknown + 1 is still unknown." />}
-          {hist.length > 0 && <TableView head={["edge", "inputs", "q"]} rows={hist.map((h) => [h.edge, h.ins, h.q < 0 ? "x" : h.q])} highlightRow={hist.length - 1} />}
+          {q === null && <Read tone="warn" tex="Before the first reset the register value is **unknown**, so counting from it gives an unknown value too." />}
+          {hist.length > 0 && <TableView head={["edge", "inputs", "q"]} rows={hist.map((h) => [h.edge, h.ins, h.q < 0 ? "?" : h.q])} highlightRow={hist.length - 1} />}
         </>
       }
       tasks={[
         "Predict: clear rst, then count down from 0 without wrap. What value appears after the first edge? Why (think modulo $2^{\\text{WIDTH}}$)?",
         "Tick **wrap at MAX** with WIDTH = 5 and MAX = 20 (Tutorial 9 Q3a). Load 19 and step: what follows 20?",
         "Set both load = 1 and rst = 1. Which wins, and which line of the code decides that?",
-        "Tick **enable** and set en = 0. Which line is highlighted? Explain why no latch is created even though no assignment happens.",
+        "Tick **enable** and set en = 0. Which line is highlighted, and what does q do at the next edge?",
       ]}
     />
   );
 }
 
 // ---------------------------------------------------------------------------------------------
-// 4. Pipelining: x <= a + b; y <= x - c; z <= y * y;  with optional re-timing of c.
+// 4. What gets synthesised: x <= a + b; y <= x - c; z <= y * y; (the c1 option is not shown in the UI).
 
 const PA = [3, 5, 2, 6, 4, 7, 1, 5, 0, 0, 0];
 const PB = [1, 2, 4, 1, 3, 0, 2, 2, 0, 0, 0];
@@ -558,7 +546,7 @@ interface Tagged {
 }
 
 function PipelineViz() {
-  const [align, setAlign] = useState(false);
+  const [align] = useState(false);
   const [k, setK] = useState(0);
   // Simulate edges 1..k. Inputs "before edge j" are a[j-1], b[j-1], c[j-1] (set j).
   const sim = useMemo(() => {
@@ -603,7 +591,7 @@ function PipelineViz() {
         {label} register
       </text>
       <text x={xp + 35} y={84} textAnchor="middle" className="cir-label">
-        {val.v === null ? "x" : val.v}
+        {val.v === null ? "?" : val.v}
       </text>
       <text x={xp + 35} y={100} textAnchor="middle" className="cir-pin">
         {val.tag === null ? "" : val.ctag !== undefined && val.ctag !== null && val.ctag !== val.tag ? `set ${val.tag}, c${val.ctag}` : `set ${val.tag}`}
@@ -621,12 +609,12 @@ function PipelineViz() {
   const mis = (t: Tagged) => t.ctag !== undefined && t.ctag !== null && t.tag !== null && t.ctag !== t.tag;
   return (
     <VizFrame
-      title="Pipelining: a register after every stage"
+      title="What gets synthesised: a register after every step"
       hint="Press Next to apply one clock edge. Each register shows its value and which input set (1, 2, 3, …) it came from."
       onReset={() => setK(0)}
       figure={
         <>
-          <svg viewBox={`0 0 ${W} 150`} className="viz-svg" role="img" aria-label="Three-stage pipeline">
+          <svg viewBox={`0 0 ${W} 150`} className="viz-svg" role="img" aria-label="Registers after each step">
             <text x={8} y={22} className="cir-pin">
               inputs before edge {k + 1}: a={PA[k] ?? "-"}, b={PB[k] ?? "-"}, c={PC[k] ?? "-"} (set {k + 1})
             </text>
@@ -637,7 +625,7 @@ function PipelineViz() {
             {op(205, "−")}
             <line x1={205} y1={100} x2={205} y2={130} stroke="var(--text)" />
             <text x={212} y={136} className="cir-pin">
-              {align ? `c1 = ${s.c1.v ?? "x"} (set ${s.c1.tag ?? "-"})` : `c (set ${k + 1})`}
+              {align ? `c1 = ${s.c1.v ?? "?"} (set ${s.c1.tag ?? "-"})` : `c (set ${k + 1})`}
             </text>
             <line x1={220} y1={85} x2={250} y2={85} stroke="var(--text)" />
             {box(250, "y", s.y, mis(s.y))}
@@ -665,12 +653,11 @@ function PipelineViz() {
             </button>
             <span className="small muted">after edge {k}</span>
           </div>
-          <Toggle label="Add **c1 <= c** so c travels with its own data" value={align} onChange={(v) => { setAlign(v); }} />
         </>
       }
       readout={
         <>
-          <Read tex={`Latency: an input set reaches z after **${depth}** edges; a new set can enter **every** edge.`} />
+          <Read tex={`Each assignment is a register: an input set reaches z after **${depth}** edges.`} />
           {s.z.v !== null && s.z.tag !== null ? (
             <Read
               tone={zOk ? "good" : "bad"}
@@ -681,16 +668,16 @@ function PipelineViz() {
               }
             />
           ) : (
-            <Read tone="warn" tex="z is still x: the pipeline is filling." />
+            <Read tone="warn" tex="z is still unknown: no input set has reached it yet." />
           )}
-          <TableView head={["edge", "x", align ? "c1" : "c used", "y", "z"]} rows={sim.slice(0, k + 1).map((r, j) => [j, r.x.v ?? "x", align ? (r.c1.v ?? "x") : j === 0 ? "-" : PC[j - 1], r.y.v ?? "x", r.z.v ?? "x"])} highlightRow={k} />
+          <TableView head={["edge", "x", align ? "c1" : "c used", "y", "z"]} rows={sim.slice(0, k + 1).map((r, j) => [j, r.x.v ?? "?", align ? (r.c1.v ?? "?") : j === 0 ? "-" : PC[j - 1], r.y.v ?? "?", r.z.v ?? "?"])} highlightRow={k} />
         </>
       }
       tasks={[
         "Predict: after which edge does z first hold a real number? Step to check.",
         "With the plain code, compare z after edge 3 with $(a_1 + b_1 - c_1)^2$. Which $c$ was actually used?",
-        "Tick the **c1 <= c** line and step again. Why does c need its own register to stay in step with $a + b$?",
-        "In the combinational version, how long would one result take? What does the pipeline trade for a higher clock rate?",
+        "Which line of the code makes each register box? Count the registers between a and z.",
+        "Rewrite the block in the split style of Lecture 10 p.49 (`always @*` for x, y, z plus a separate block for x_f, y_f, z_f). Which signals are registers now?",
       ]}
     />
   );
@@ -787,13 +774,13 @@ function AlarmMonitor() {
       }
       readout={
         <>
-          <Read label={`cycle ${cyc}:`} tex={`count $= ${count[cyc] ?? "x"}$, evnt $= ${fmtW(ev[cyc])}$, alarm $= ${fmtW(alarm[cyc])}$`} />
+          <Read label={`cycle ${cyc}:`} tex={`count $= ${count[cyc] ?? "?"}$, evnt $= ${fmtW(ev[cyc])}$, alarm $= ${fmtW(alarm[cyc])}$`} />
           <Read
             tex={
               rs[cyc]
                 ? "rst is high: the next edge loads count = 0"
                 : count[cyc] === null
-                  ? "count is x until the first reset edge"
+                  ? "count is unknown until the first reset edge"
                   : ev[cyc] && !(freeze && alarm[cyc])
                     ? `next edge: count → ${(count[cyc]! + 1) % 64}`
                     : alarm[cyc] && freeze && ev[cyc]

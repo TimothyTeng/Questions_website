@@ -46,7 +46,7 @@ const BCD_SVG = `<svg viewBox="0 -8 520 310" xmlns="http://www.w3.org/2000/svg" 
 export const arithmeticLesson: Lesson = {
   topic: "arithmetic",
   bigPicture:
-    "Computers add, subtract and multiply in binary, and this chapter builds that hardware from the gates of Ch 3. A **half adder** adds two bits and a **full adder** adds three; chaining $N$ full adders gives an $N$-bit **ripple-carry adder**, whose speed is limited by the carry rippling from stage to stage. To handle negative numbers we use **2's complement**: it makes subtraction just addition of the negated operand, so one adder plus a row of XOR gates (the **add/subtract circuit**) does both. The price is a fixed range, so you must recognise **overflow** (same-sign operands, opposite-sign result) and use **sign extension** when widening a number. Multiplication is repeated **shift-and-add**, with care for the negative weight of the sign bit in signed multiplication, and **BCD addition** reuses binary adders with a **+6 correction** whenever a digit sum exceeds 9. Typical exam tasks: 8-bit hex 2's complement arithmetic with an overflow verdict, ripple-adder timing, signed 4-bit multiplication step by step, and the BCD adder built from two 4-bit adders.",
+    "In digital circuits such as computers and calculators, arithmetic is carried out on binary numbers, and this chapter builds that hardware from the gates of Ch 3. A **half adder** adds two bits and a **full adder** adds three; cascading $N$ full adders gives an $N$-bit **parallel (ripple) adder**, whose speed is limited by **carry propagation** from stage to stage. To handle negative numbers we use **2's complement**: it makes subtraction just addition of the negated operand, so one adder plus a row of XOR gates (the **add/subtract circuit**) does both. The price is a fixed range, so you must recognise **overflow** (same-sign operands, opposite-sign result) and use **sign extension** when widening a number. Multiplication is repeated **shift-and-add**, with care for the negative weight of the sign bit in signed multiplication, and **BCD addition** reuses binary adders with a **+6 correction** whenever a digit sum exceeds 9. Typical exam tasks: 8-bit hex 2's complement arithmetic with an overflow verdict, explaining carry propagation and carry look-ahead, signed 4-bit multiplication step by step, and the BCD adder built from two 4-bit adders.",
   sections: [
     {
       title: "Unsigned binary addition and subtraction",
@@ -100,7 +100,7 @@ export const arithmeticLesson: Lesson = {
       keyIdeas: [
         "**Half adder** (2 inputs): $\\text{Sum} = A \\oplus B$, $\\text{Carry} = AB$.",
         "**Full adder** (3 inputs $A, B, C_{in}$): $S = A \\oplus B \\oplus C_{in}$ (1 when an odd number of inputs are 1).",
-        "$C_{out} = AB + BC_{in} + AC_{in}$ (majority: 1 when at least two inputs are 1) $= AB + C_{in}(A + B) = AB + C_{in}(A \\oplus B)$.",
+        "$C_{out} = AB + BC_{in} + AC_{in}$ (1 when at least two inputs are 1) $= AB + C_{in}(A + B) = AB + C_{in}(A \\oplus B)$.",
         "The last form gives a full adder from **two half adders and an OR gate**: HA1 adds $A, B$ ($S_1 = A \\oplus B$, $C_1 = AB$); HA2 adds $S_1, C_{in}$ ($S = S_1 \\oplus C_{in}$, $C_2 = C_{in}S_1$); $C_{out} = C_1 + C_2$.",
         "Read the outputs as a 2-bit number: $A + B + C_{in} = (C_{out}S)_2$.",
       ],
@@ -159,37 +159,36 @@ export const arithmeticLesson: Lesson = {
       ],
     },
     {
-      title: "Parallel (ripple-carry) adders and carry propagation",
+      title: "Parallel (ripple) adders and carry propagation",
       intuition:
-        "Put $N$ full adders side by side and connect each carry out to the next carry in. All operand bits arrive at once, but bit $i$ cannot finish until the carry from bit $i-1$ has arrived, so the carry ripples across the adder and the worst-case delay grows with $N$.",
+        "Cascade $N$ full adders, connecting each carry out to the next carry in. All operand bits are fed in at once, but a stage's sum is not final until the carry from the stage below has arrived, so the addition speed is limited by the carry propagating through the full adders.",
       visuals: ["ripple-adder"],
       keyIdeas: [
-        "An $N$-bit **parallel adder** (ripple adder) is $N$ full adders: $C_{i+1}$ of stage $i$ feeds $C_{in}$ of stage $i+1$; $C_0$ is the carry in and $C_N$ the carry out.",
-        "All bits of the augend and addend are applied **simultaneously**, which is why it is called parallel.",
-        "**Carry propagation delay**: in the worst case (e.g. $0111\\cdots1 + 0000\\cdots1$) the carry must pass through every stage. If each full adder takes $t_c$ from carry-in to carry-out and $t_s$ from carry-in to sum, the MSB sum is valid after about $(N-1)t_c + t_s$ and $C_N$ after $N t_c$.",
-        "Before the carries settle the sum outputs can show wrong intermediate values; the result must not be used (e.g. clocked into a register) until the worst-case delay has passed.",
-        "**Carry look-ahead** logic computes the carries directly from the inputs instead of waiting for the ripple, so many IC adders (e.g. the 74283) are much faster than a pure ripple adder.",
+        "$N$ full adders can be cascaded to form an $N$-bit **parallel adder**, also known as a **ripple adder**: the carry out of stage $i$ feeds the carry in of stage $i+1$; $C_0$ is the carry in and $C_N$ the carry out. A 4-bit addition needs 4 FAs.",
+        "All the bits of the augend and addend are fed into the adder circuits **simultaneously**, so addition is very fast.",
+        "**Carry propagation**: the addition speed is limited by the propagation delays of the FAs, because a carry may have to pass through every stage (e.g. $0111 + 0001$).",
+        "Sufficient time must be given to the FAs to complete the addition before the result is used (e.g. before it is transferred into a register).",
+        "**Carry look-ahead**: carry propagation can be reduced (hence increasing the speed of addition) by a special-purpose logic circuit, the carry-look-ahead circuit. Many IC parallel adders have a built-in carry look-ahead circuit.",
       ],
-      figures: [{ kind: "svg", svg: RIPPLE_SVG, caption: "4-bit ripple-carry adder: the carry passes from FA0 to FA3 one stage at a time." }],
+      figures: [{ kind: "svg", svg: RIPPLE_SVG, caption: "4-bit ripple adder: the carry passes from FA0 to FA3 one stage at a time." }],
       example: {
         problem:
-          "An 8-bit ripple-carry adder uses full adders with a 12 ns carry-in → carry-out delay and a 15 ns carry-in → sum delay (the same delays apply from $A$, $B$). What is the worst-case time until all outputs, including $C_8$, are valid?",
+          "A 4-bit parallel adder with $C_0 = 0$ adds $0111 + 0001$. Give every carry and sum bit, and explain why this addition shows carry propagation.",
         steps: [
-          "Worst case: a carry generated in stage 0 must ripple through every stage.",
-          "$C_1$ is valid at 12 ns, $C_2$ at 24 ns, …, $C_7$ at $7 \\times 12 = 84$ ns.",
-          "$S_7$ needs $C_7$ plus a sum delay: $84 + 15 = 99$ ns. $C_8$ needs $C_7$ plus a carry delay: $84 + 12 = 96$ ns.",
-          "All outputs are valid after $\\max(99, 96) = 99$ ns.",
+          "FA0: $1 + 1 + 0 = 10_2$ → $S_0 = 0$, $C_1 = 1$.",
+          "FA1: $1 + 0 + 1 = 10_2$ → $S_1 = 0$, $C_2 = 1$. FA2: $1 + 0 + 1$ → $S_2 = 0$, $C_3 = 1$.",
+          "FA3: $0 + 0 + 1$ → $S_3 = 1$, $C_4 = 0$.",
+          "The carry produced by FA0 has to pass through FA1, FA2 and FA3 before $S_3$ is correct, so the result is only final after the carry has propagated through every stage.",
         ],
-        answer: "99 ns.",
+        answer: "$C_4C_3C_2C_1 = 0111$, $S = 1000$ ($7 + 1 = 8$); the carry propagates through all four FAs.",
       },
       pitfalls: [
-        "The delay is set by the longest carry chain, not by the number of 1s in the answer.",
-        "Do not multiply $N$ by the sum delay: only the last stage contributes a sum delay; the others contribute carry delays.",
+        "All operand bits are applied at the same time, but the sum is not final until the carries have propagated: allow enough time before using the result.",
       ],
       recall: [
-        { q: "How many full adders in a 16-bit ripple adder?", a: "16 (or 15 plus a half adder if there is no carry in)." },
-        { q: "Why is a ripple adder slow?", a: "Each stage must wait for the carry from the previous stage; the worst-case delay grows linearly with the number of bits." },
-        { q: "What speeds up a parallel adder?", a: "Carry look-ahead logic, which computes the carries in parallel." },
+        { q: "How many full adders in a 16-bit parallel adder?", a: "16: $N$ full adders are cascaded for $N$ bits." },
+        { q: "What limits the speed of a parallel adder?", a: "The propagation delays of the FAs: carry propagation from stage to stage." },
+        { q: "What is the purpose of a carry look-ahead circuit?", a: "To reduce carry propagation and hence increase the speed of addition." },
       ],
     },
     {
@@ -254,12 +253,10 @@ export const arithmeticLesson: Lesson = {
         "**Sign extension**: to widen a 2's complement number, copy the sign bit into the new upper bits: $101 = 1101 = 11101$ (−3); $011 = 0011 = 00011$ (+3). Padding a negative number with 0s changes its value.",
         "**Addition**: add all bits including the sign bits as unsigned binary and **ignore** any carry out of the MSB. Both operands (and the result) must have the same number of bits.",
         "**Subtraction**: $A - B = A + (-B)$, where $-B$ is the 2's complement of $B$ (whether $B$ is positive or negative).",
-        "**Overflow** (the true result is outside the range): only possible when adding two numbers of the **same sign**; it is detected when the result's sign differs from theirs. Adding opposite signs never overflows.",
-        "For subtraction $A - B$: overflow is only possible when $A$ and $B$ have **opposite** signs, and is detected when the result's sign differs from $A$'s.",
-        "Equivalent hardware rule: overflow $V = C_{N} \\oplus C_{N-1}$ (carry out of the MSB differs from the carry into it); also $V = a'b's + abs'$ using the sign bits $a, b$ of the operands and $s$ of the sum.",
-        "Carry out of the MSB is **not** the overflow flag for signed numbers (it is the unsigned overflow).",
+        "**Overflow**: an operation on two $N$-bit operands produces a result that cannot be represented in $N$ bits. In addition, no overflow occurs if the operands have **opposite** signs; overflow is detected when the operands have the **same** sign but the sum has the opposite sign (e.g. $01010 + 01000 = 10010$: $10 + 8$ reads as $-14$).",
+        "For subtraction, no overflow occurs if the operands have the **same** sign. Otherwise rewrite $A - B$ as $A + (-B)$ and apply the addition rule.",
+        "The carry out of the MSB is **ignored**; by itself it does not indicate overflow ($+10 + (-3)$ produces a carry out, but the result $+7$ is correct).",
       ],
-      formulas: ["V = C_N \\oplus C_{N-1} = a'b's + ab\\,s'"],
       example: {
         problem: "Perform the 8-bit 2's complement operations $8C + 9A$ and $3F - B6$ (hex) and state whether overflow occurs.",
         steps: [
@@ -278,7 +275,7 @@ export const arithmeticLesson: Lesson = {
       recall: [
         { q: "Sign-extend $1010$ to 8 bits.", a: "$1111\\,1010$ (−6)." },
         { q: "Can $+100 + (-100)$ overflow in 8 bits?", a: "No: operands of opposite sign never overflow." },
-        { q: "$C_8 = 1$, $C_7 = 1$ in an 8-bit addition. Overflow?", a: "No: $V = C_8 \\oplus C_7 = 0$." },
+        { q: "An 8-bit 2's complement addition produces a carry out of the MSB. Does that mean overflow?", a: "No: the carry out is ignored. Check the signs: overflow only if the operands have the same sign and the sum's sign differs." },
       ],
     },
     {
@@ -290,7 +287,6 @@ export const arithmeticLesson: Lesson = {
         "Each adder input $B_i = Y_i \\oplus M$, and $C_0 = M$.",
         "**Add** ($M = 0$): $B = Y$, $C_0 = 0$, result $X + Y$.",
         "**Subtract** ($M = 1$): $B = Y'$ (1's complement), $C_0 = 1$ adds the 1 to complete the 2's complement, result $X + Y' + 1 = X - Y$.",
-        "Overflow output: $V = C_N \\oplus C_{N-1}$ (one more XOR).",
         "**Parallel addition with registers**: operands are loaded from memory into register B; the full adders add A and B; a TRANSFER pulse clocks the adder output back into the accumulator register A. Sequence: CLEAR A, LOAD X into B, TRANSFER (A = 0 + X), LOAD Y into B, TRANSFER (A = X + Y).",
         "Enough time must be left between LOAD and TRANSFER for the carries to ripple through the adder.",
       ],
@@ -313,7 +309,7 @@ export const arithmeticLesson: Lesson = {
           "$X = 0011$, $Y = 0111$, subtract so $M = 1$ and $C_0 = 1$.",
           "XOR outputs $B = Y \\oplus 1111 = 1000$.",
           "Add: $0011 + 1000 + 1$. Bit 0: $1 + 0 + 1 = 10_2$ → $S_0 = 0$, $C_1 = 1$. Bit 1: $1 + 0 + 1$ → $S_1 = 0$, $C_2 = 1$. Bit 2: $0 + 0 + 1$ → $S_2 = 1$, $C_3 = 0$. Bit 3: $0 + 1 + 0$ → $S_3 = 1$, $C_4 = 0$.",
-          "Result $1100 = -4$ ✓. $V = C_4 \\oplus C_3 = 0 \\oplus 0 = 0$: no overflow.",
+          "Result $1100 = -4$ ✓. The numbers actually added, $+3$ and $-7$, have opposite signs, so no overflow.",
         ],
         answer: "$B = 1000$, carries $C_4C_3C_2C_1 = 0011$, result $1100 = -4$.",
       },
@@ -412,9 +408,9 @@ export const arithmeticLesson: Lesson = {
     "**8-bit hex 2's complement + / −** → convert each hex digit to 4 bits; for subtraction take the 2's complement of the subtrahend and add; drop the carry out; overflow iff the two operands **added** have the same sign and the result's sign differs. Give the answer in hex too.",
     "**\"Decimal value of a 2's complement number\"** → MSB 0: plain binary. MSB 1: negate (copy to the first 1, invert the rest) and put a minus sign; or sum the weights with $-2^{N-1}$ for the MSB.",
     "**Widening a signed number** → sign-extend (copy the MSB), never pad with 0s.",
-    "**Ripple-adder timing** → worst case: carry through $N-1$ stages, then one more stage's sum (or carry) delay.",
+    "**\"Explain carry propagation / carry look-ahead\"** → the FAs' propagation delays limit the speed because a carry may pass through every stage; a carry look-ahead circuit reduces carry propagation and so increases the speed of addition.",
     "**Full adder from half adders** → $S = (A \\oplus B) \\oplus C_{in}$, $C_{out} = AB + C_{in}(A \\oplus B)$: two HAs and an OR.",
-    "**Add/subtract circuit with levels** → $M = 1$ for subtract: XOR outputs are $Y'$, $C_0 = 1$; then run the carries from the LSB, and $V = C_N \\oplus C_{N-1}$.",
+    "**Add/subtract circuit with levels** → $M = 1$ for subtract: XOR outputs are $Y'$, $C_0 = 1$; then run the carries from the LSB, and judge overflow from the signs.",
     "**Signed multiplication** → sign-extend the multiplicand to the product width; shift-and-add for multiplier bits $0 \\ldots n-2$; if the multiplier MSB is 1, add the 2's complement of the multiplicand shifted $n-1$. Check in decimal.",
     "**BCD addition** → add digits in binary from the right; if a digit sum $> 9$ (or it carried out), add $0110$ and carry 1.",
     "**Design a BCD adder from two 4-bit adders** → $X = C_4 + S_3S_2 + S_3S_1$ (derive with a K-map over $S_3..S_0$ plus $C_4$); second adder adds $0XX0$; Cout $= X$.",

@@ -66,6 +66,25 @@ const PULSE3_TABLE: Figure = {
   ],
 };
 
+const PULSE3_MEALY: Figure = {
+  kind: "fsm",
+  caption: "Lecture 11 p.36: the same pulse machine with the outputs on the arrows (Inputs/Outputs: b/x). An arrow labelled /1 is taken whatever b is, and x = 1 while the machine is in the state it leaves.",
+  initial: "off",
+  states: [
+    { id: "off", x: 0, y: 0 },
+    { id: "on1", x: 1, y: 0 },
+    { id: "on2", x: 2, y: 0 },
+    { id: "on3", x: 3, y: 0 },
+  ],
+  edges: [
+    { from: "off", to: "off", label: "0/0", loop: "top" },
+    { from: "off", to: "on1", label: "1/0" },
+    { from: "on1", to: "on2", label: "/1" },
+    { from: "on2", to: "on3", label: "/1" },
+    { from: "on3", to: "off", label: "/1", bend: 0.35 },
+  ],
+};
+
 const T10: Figure = {
   kind: "fsm",
   caption: "Tutorial 10 machine (Moore). A: last input 0 while off. B: one 1 seen. C: on. D: one 0 seen while on. Output z = 1 in C and D.",
@@ -90,7 +109,7 @@ const T10: Figure = {
 
 const DET11_MOORE: Figure = {
   kind: "fsm",
-  caption: "Moore detector for 11 (overlapping): 3 states, z = 1 while in S2.",
+  caption: "Moore detector for 11: 3 states, z = 1 while in S2.",
   initial: "S0",
   states: [
     { id: "S0", label: "S0/0", x: 0, y: 0 },
@@ -139,24 +158,22 @@ const MOORE_MEALY_WAVE: Figure = {
 
 const VENDING_MERGED: Figure = {
   kind: "fsm",
-  caption: "Lecture vending machine after merging equivalent states (inputs c100 c50: 10 = 100c coin, 01 = 50c coin; outputs vend change). S0 idle, S1 50c credit, S2 100c credit, S3 150c (vend), S4 200c (vend + 50c change). S3 and S4 return to idle.",
+  caption: "Lecture 11 p.33: the vending machine after merging S4 and S2; S5, S3 and S7; S6 and S8 (inputs c100, c50: 10 = 100c coin, 01 = 50c coin; outputs vend, change). S0 idle, S1 50c credit, S4 100c credit, S5 150c (vend), S6 200c (vend and 50c change).",
   initial: "S0",
   states: [
-    { id: "S0", label: "S0/00", x: 0, y: 0 },
-    { id: "S1", label: "S1/00", x: 1, y: 1 },
-    { id: "S2", label: "S2/00", x: 2, y: 0 },
-    { id: "S3", label: "S3/10", x: 3, y: 1 },
-    { id: "S4", label: "S4/11", x: 3, y: 0 },
+    { id: "S0", label: "S0/00", x: 1, y: 0 },
+    { id: "S1", label: "S1/00", x: 0, y: 1 },
+    { id: "S4", label: "S4/00", x: 2, y: 1 },
+    { id: "S5", label: "S5/10", x: 1, y: 2 },
+    { id: "S6", label: "S6/11", x: 3, y: 2 },
   ],
   edges: [
     { from: "S0", to: "S1", label: "01" },
-    { from: "S0", to: "S2", label: "10" },
-    { from: "S1", to: "S2", label: "01" },
-    { from: "S1", to: "S3", label: "10" },
-    { from: "S2", to: "S3", label: "01" },
-    { from: "S2", to: "S4", label: "10" },
-    { from: "S3", to: "S0", bend: -0.25 },
-    { from: "S4", to: "S0", bend: 0.25 },
+    { from: "S0", to: "S4", label: "10" },
+    { from: "S1", to: "S4", label: "01" },
+    { from: "S1", to: "S5", label: "10" },
+    { from: "S4", to: "S5", label: "01" },
+    { from: "S4", to: "S6", label: "10" },
   ],
 };
 
@@ -231,18 +248,6 @@ const PYP_DIAGRAM: Figure = {
   ],
 };
 
-const ENCODING_TABLE: Figure = {
-  kind: "table",
-  caption: "Encodings for a 4-state cyclic machine A → B → C → D → A.",
-  head: ["State", "Binary", "Gray", "One-hot"],
-  rows: [
-    ["A", "00", "00", "0001"],
-    ["B", "01", "01", "0010"],
-    ["C", "10", "11", "0100"],
-    ["D", "11", "10", "1000"],
-  ],
-};
-
 const PULSE3_KMAPS: Figure[] = [
   {
     kind: "kmap",
@@ -263,23 +268,22 @@ const PULSE3_KMAPS: Figure[] = [
 export const fsmLesson: Lesson = {
   topic: "fsm",
   bigPicture:
-    "A **finite state machine** is the abstraction behind every sequential circuit you have built so far: at any clock cycle the circuit is in one of a finite set of **states**, and at each rising clock edge it moves to a **next state** chosen by the current state and the inputs. Counters are FSMs whose states are their count values; sequence detectors, door locks, vending machines and controllers are FSMs whose states record what has happened so far that still matters. The chapter's workflow runs in one direction: **word description → state diagram → state table → state encoding → next-state and output equations (K-maps) → D flip-flops plus gates**, and exam questions also run it backwards (**circuit → equations → state table → diagram**, then check whether a given diagram matches). Along the way you choose between **Moore** machines (outputs depend on the state only) and **Mealy** machines (outputs also depend on the present input), decide how many flip-flops an encoding needs, and make sure unused codes and reset cannot trap the machine.",
+    "A **finite state machine** describes a system with a finite number of **states** and the **transitions** between them. In a synchronous design the FSM sits in one state for each clock cycle, and at every rising clock edge it may move to another state, depending on the input values at that edge. Counters are FSMs whose states are their count values; the door lock, the vending machine and the Tutorial 10 machine are FSMs whose states record what has happened so far. The chapter's workflow runs in one direction: **word description → state diagram → (optional) state table → encode the states → encoded state table → next-state and output equations → flip-flops plus gates**, and exam questions also run it backwards (**circuit → equations → state table → diagram**, then check whether a given diagram matches). Along the way you meet **Moore** machines (outputs depend on the state only) and **Mealy** machines (outputs also depend on the present inputs), merge states that react identically, count how many flip-flops an encoding needs, and make sure the state register is reset to a valid state.",
   sections: [
     {
       title: "What an FSM is: states, transitions and the three-block structure",
       intuition:
-        "A sequential circuit only remembers what its flip-flops hold. An FSM names each possible memory content (a state) and says, for each input, which state comes next, so you can reason about behaviour before thinking about gates.",
+        "A sequential circuit only remembers what its flip-flops hold. An FSM names each possible situation (a state) and says, for each input, which state comes next, so you can reason about behaviour before thinking about gates.",
       visuals: ["fsm-stepper"],
       keyIdeas: [
-        "An FSM has a **finite set of states**, one of which is the **initial (reset) state**, and a set of **transitions** between them. In a synchronous design the machine sits in one state for a whole clock cycle.",
-        "At every **rising clock edge** the FSM may move to another state. Whether it moves, and where, depends on the **current state and the input values at that edge**. After the edge it stays in the new state for the next cycle.",
-        "A counter is the simplest FSM: each state is a count value and the transition is always to the next value. An **enabled counter** labels each arrow with en = 1 and stays put when en = 0.",
-        "Hardware structure: a **state register** (one D flip-flop per state bit) holds the current state; **next-state logic** (combinational) computes the next state from the current state and the inputs; **output logic** (combinational) computes the outputs.",
+        "An FSM describes a system using a **finite number of states** and the associated **transitions**. In synchronous design the FSM is in one state for the duration of each clock cycle.",
+        "At every **rising clock edge** the FSM may transition to another state. Whether it does depends on the **input values at that rising edge**; once it makes the transition it stays in that state for the next cycle.",
+        "A counter is the simplest FSM: each state is a count value and the transition is always to the next value. An **enabled counter** labels the arrows with the condition en = 1 and stays in the current state when en = 0.",
+        "Hardware structure (Lecture 12): a **state register** holds the current state; combinational logic determines the **next state** from the current state and the inputs; combinational logic drives the **outputs**. At each clock edge the state register is updated to whatever was determined to be the next state.",
         "In a **Moore** machine the output logic sees only the state; in a **Mealy** machine it also sees the inputs (the dashed path in the block diagram).",
         "States can be given any meaningful names (off, on1, Wait, Red1…). Names only become bits when you **encode** the states.",
       ],
       figures: [BLOCK_DIAGRAM],
-      formulas: ["S(t+1) = \\delta\\big(S(t),\\,X(t)\\big)", "\\text{Moore: } Z(t) = \\lambda\\big(S(t)\\big) \\qquad \\text{Mealy: } Z(t) = \\lambda\\big(S(t),\\,X(t)\\big)"],
       example: {
         problem: "The 3-cycle pulse machine starts in **off**. The input b sampled at five successive rising edges is 0, 1, 0, 1, 1. List the state and the output x after each edge.",
         figures: [PULSE3],
@@ -298,8 +302,8 @@ export const fsmLesson: Lesson = {
         "The state register is the only memory. Next-state and output logic are purely combinational.",
       ],
       recall: [
-        { q: "Name the three blocks of a synchronous FSM.", a: "State register (flip-flops), next-state logic, output logic." },
-        { q: "When can a synchronous FSM change state?", a: "Only at the active (rising) clock edge, using the inputs present at that edge." },
+        { q: "Name the three parts of the FSM hardware structure.", a: "State register, next-state logic, output logic." },
+        { q: "When can a synchronous FSM change state?", a: "Only at the rising clock edge, using the inputs present at that edge." },
         { q: "What does the output logic see in a Moore machine? In a Mealy machine?", a: "Moore: the current state only. Mealy: the current state and the current inputs." },
       ],
     },
@@ -308,12 +312,12 @@ export const fsmLesson: Lesson = {
       intuition:
         "A diagram is easy to draw from a word description; a table is easy to turn into logic. You need to read and write both, and to know the course's conventions for what an arrow means.",
       keyIdeas: [
-        "**State diagram**: circles are states, arrows are transitions, each arrow carries the input condition under which it is taken. Moore outputs go inside or beside the circle (e.g. `off/0`); Mealy outputs go on the arrow after a slash (`input/output`).",
-        "With several inputs, use a **legend**: e.g. Inputs: en, dn so an arrow labelled `10` means en = 1, dn = 0. Conditions can also be Boolean expressions (`ar'`, `a(rb'g')'`).",
-        "Course convention: input conditions **not shown** on any arrow leaving a state mean **stay in that state** (an implicit self-loop). Unlabelled arrows are unconditional.",
-        "The conditions on arrows leaving one state must be **mutually exclusive**: no input combination may satisfy two arrows to different states. The door-lock example needed `a·r·b'·g'` instead of just `a·r`, otherwise pressing every button at once would race through the code.",
-        "**State (transition) table**: one row per current state with a next-state column for each input value, plus the output (Moore) or one output per input value (Mealy). An equivalent layout lists one row per (state, input) pair; this is the layout you feed to K-maps.",
-        "A diagram and a table are complete when every state has a defined next state for **every** input combination.",
+        "**State transition diagram**: circle nodes are the states, arrows are the possible transitions, and conditions placed on the arrows say when each transition occurs. Moore outputs go above, below, beside or inside the state circles (e.g. `off/0`), with a legend naming the output; Mealy outputs go on the arrow after a slash (`input/output`).",
+        "With several inputs, use a **legend**: e.g. Inputs: en, dn, so an arrow labelled `10` means en = 1, dn = 0. Conditions can also be Boolean expressions (`ar'`, `a(rb'g')'`).",
+        "Course convention: input conditions **not shown** on any arrow leaving a state result in a **self-transition** (stay in that state). Unlabelled arrows are unconditional.",
+        "The conditions on arrows leaving one state must never be true together. In the door lock, pressing all buttons at once would satisfy `a·r` as well as the other conditions and race to the end state, so the lecture adds further conditions (`a·r·b'·g'`).",
+        "**State transition table**: one row per current state with a next-state column for each input value, plus the output. An equivalent layout lists one row per (current state, input) pair; this is the layout you turn into logic.",
+        "A diagram and a table are complete when every state has a defined next state for **every** input combination (after the door lock's main path is drawn, the lecture adds the other transitions for every state).",
       ],
       figures: [PULSE3, PULSE3_TABLE],
       example: {
@@ -321,70 +325,68 @@ export const fsmLesson: Lesson = {
         steps: [
           "en dn = 10: count up, 000 → 001. Draw an arrow 000 → 001 labelled `10`.",
           "en dn = 11: count down, 000 wraps to 111. Draw 000 → 111 labelled `11`.",
-          "en dn = 00 or 01: en = 0, hold. Either draw a self-loop labelled `0x` or rely on the convention that conditions not shown mean stay.",
+          "en dn = 00 or 01: en = 0, hold. These combinations are not shown on any arrow, so by the convention the counter stays in 000.",
           "Each of the 8 states gets exactly one `10` arrow and one `11` arrow, so the conditions never overlap.",
         ],
-        answer: "000 → 001 on 10, 000 → 111 on 11, stay on 00/01 (implicit self-loop).",
+        answer: "000 → 001 on 10, 000 → 111 on 11, stay on 00/01 (implicit self-transition).",
       },
       pitfalls: [
-        "Two arrows leaving the same state with overlapping conditions (e.g. `a` and `b` when both can be 1) make the machine ill-defined. Check every pair is mutually exclusive.",
+        "Two arrows leaving the same state with conditions that can both be true (e.g. `a·r` and `a·b` when two buttons are pressed together) make the next state undefined. Check every pair.",
         "Do not confuse a Mealy arrow `1/0` (input 1, output 0) with a Moore legend `10` (two inputs).",
         "In a two-input legend, the bit order follows the legend, not alphabetical order.",
       ],
       recall: [
-        { q: "In the course convention, what happens for an input combination that no arrow leaving the state mentions?", a: "The FSM stays in the current state (implicit self-loop)." },
-        { q: "Two arrows leave state S with conditions `ab` and `a`. What is wrong?", a: "They are not mutually exclusive: with a = b = 1 both are true, so the next state is undefined. Use `ab` and `ab'`." },
+        { q: "In the course convention, what happens for an input combination that no arrow leaving the state mentions?", a: "The FSM stays in the current state (self-transition)." },
+        { q: "Two arrows leave state S with conditions `ab` and `a`. What is wrong?", a: "Both are true when a = b = 1, so the next state is undefined. Use `ab` and `ab'`." },
         { q: "Where is a Moore output drawn? A Mealy output?", a: "Moore: in or beside the state circle. Mealy: on the arrow, after the slash." },
       ],
     },
     {
-      title: "Moore versus Mealy machines and their timing",
+      title: "Moore versus Mealy machines",
       intuition:
-        "A Mealy machine can answer in the same cycle it sees the input, so it reacts one cycle earlier and often needs fewer states. The price is that its output follows the input combinationally, so it can change (or glitch) in the middle of a clock cycle.",
+        "In every lecture example before page 35 the output depends only on the state. A Mealy machine lets the output also look at the present inputs, so it can describe the same behaviour more compactly, but its output can change in the middle of a clock cycle.",
       visuals: ["moore-vs-mealy"],
       keyIdeas: [
-        "**Moore**: Z = λ(S). The output changes only after a clock edge (plus the output-logic delay) and is constant for a whole cycle.",
-        "**Mealy**: Z = λ(S, X). The output can change whenever an input changes, even mid-cycle with no clock edge.",
-        "For the same behaviour a Mealy machine usually needs **fewer states**: an n-bit sequence detector needs n Mealy states but n + 1 Moore states (the extra Moore state exists only to hold the output 1).",
-        "Timing: the Mealy detector's output is 1 **during** the cycle in which the last bit of the pattern is present; the Moore output becomes 1 **one clock cycle later**, after the edge that enters the detect state.",
-        "To tell them apart from a circuit: if any input reaches the output gates without passing through a flip-flop, it is Mealy.",
-        "Converting Mealy → Moore: split each state by the different outputs on arrows entering it (each (state, output) pair becomes a Moore state).",
+        "**Moore machine**: the outputs depend only on the state: in state s the output is always the same value.",
+        "**Mealy machine**: the outputs depend on the state **and** the current values of the inputs, so the outputs can change mid-state if the inputs change.",
+        "Mealy outputs cannot be drawn inside the state circles, so they go on the arrows after a slash. The output on an arrow is the output **during the state the arrow leaves**, while the input values match those on that arrow.",
+        "Mealy machines are a little harder to design and analyse, but can be more **compact** (fewer states): the 11 detector below needs 3 Moore states but only 2 Mealy states.",
+        "From a diagram: outputs in or beside the states → Moore; outputs after a slash on the arrows → Mealy (PYP 2017-18 S1 Q4(c)(i)).",
+        "From a circuit: if an input reaches the output gates without passing through a flip-flop, the output depends on the present input, so it is Mealy.",
       ],
-      figures: [DET11_MOORE, DET11_MEALY, MOORE_MEALY_WAVE],
+      figures: [PULSE3_MEALY, DET11_MOORE, DET11_MEALY, MOORE_MEALY_WAVE],
       example: {
-        problem: "In the waveform above, in which clock cycle does each detector first report the pattern 11, and why do they differ?",
+        problem: "In the waveform above, in which clock cycle does each 11 detector first report the pattern, and why do they differ?",
         steps: [
           "x = 1 during cycles 1, 2 and 3. The first 1 is sampled at the edge that starts cycle 2, so both machines are in S1 (\"one 1 seen\") during cycle 2.",
-          "Mealy: in cycle 2 the machine is in S1 **and** the present input is 1, so z = λ(S1, 1) = 1 straight away, during cycle 2.",
+          "Mealy: in cycle 2 the machine is in S1 **and** the present input is 1, so it is on the arrow 1/1 and z = 1 straight away, during cycle 2.",
           "Moore: S1 has output 0. The second 1 is sampled at the edge starting cycle 3, which enters S2 (output 1), so z = 1 from cycle 3.",
-          "The Mealy output also drops one cycle earlier (cycle 4, when x = 0 is present), the Moore output at the start of cycle 5.",
           "If x changed mid-cycle instead, the Mealy output would change mid-cycle with it (no clock edge needed); the Moore output still only changes after edges. Try the \"x changes at the falling edge\" option in the figure above.",
         ],
-        answer: "Mealy: cycle 2 (as soon as the second 1 is present). Moore: cycle 3, one clock later.",
+        answer: "Mealy: cycle 2 (as soon as the second 1 is present). Moore: cycle 3, after the edge that enters S2.",
       },
       pitfalls: [
-        "\"Mealy outputs only change at clock edges\" is false: they follow the inputs combinationally.",
+        "\"Mealy outputs only change at clock edges\" is false: they follow the inputs, so they can change mid-state.",
         "A Moore output does not depend on the input now, but it does depend on past inputs through the state.",
-        "When counting states for a detector, remember the Moore version needs the extra output state.",
+        "An arrow label such as `/1` in a Mealy diagram has no input condition: it is taken unconditionally and outputs 1.",
       ],
       recall: [
-        { q: "How many states does a minimal Mealy detector for a 4-bit pattern need? A Moore one?", a: "4 (Mealy) and 5 (Moore), when no prefixes are equivalent." },
-        { q: "Which machine type can produce a pulse shorter than one clock cycle?", a: "Mealy, because its output follows input changes within a cycle." },
+        { q: "Where does a Mealy diagram show the outputs, and what does the output on an arrow mean?", a: "On the arrows after a slash; it is the output during the state the arrow leaves, while the inputs match that arrow." },
+        { q: "Which machine type's output can change in the middle of a clock cycle?", a: "Mealy, because its output depends on the current inputs as well as the state." },
         { q: "A circuit's output gate takes X and Q1 as inputs. Moore or Mealy?", a: "Mealy: the input reaches the output without going through a flip-flop." },
       ],
     },
     {
-      title: "Designing from a word description: sequence detectors and the Tutorial 10 machine",
+      title: "Designing from a word description: door lock, Tutorial 10 and counters",
       intuition:
-        "Each state should mean how much of the thing I am looking for has been seen so far. Write that meaning next to every state; the transitions then follow by asking what the new input does to that progress.",
-      visuals: ["detector-builder"],
+        "Each state should mean what has happened so far that still matters. Write that meaning next to every state; the transitions then follow by asking what each input does from there.",
       keyIdeas: [
-        "Recipe: (1) decide Moore or Mealy; (2) list what must be remembered and make one state per distinct situation, writing its meaning; (3) for every state and every input value draw the arrow; (4) add the outputs; (5) mark the reset state.",
-        "Sequence detector for pattern P: state Sk means \"the last k inputs are the first k bits of P\". On a mismatch, do not just fall back to S0: go to the **longest suffix of what you have seen that is still a prefix of P**.",
-        "**Overlapping** detection: after a match, the end of P may be the start of the next match (1011011 contains 1011 twice). The next state after a match is the longest proper suffix of P that is a prefix of P.",
-        "**Non-overlapping**: after a match the machine starts afresh, so the bits of the match cannot be reused.",
-        "Tutorial 10 machine (output turns on after two consecutive 1s, off after two consecutive 0s): four Moore states A (off, last input 0), B (off, one 1 seen), C (on), D (on, one 0 seen).",
-        "Counters with conditions (count up/down, saturate, skip values) are designed the same way: one state per count value, arrows from the rules.",
+        "Lecture door lock (unlock, u = 1, only after start, red, blue, green, red): first draw the main path Wait → Start → Red1 → Blue → Green → Red2 with the condition for each step, then add the other transitions for every state, then add the conditions that stop several buttons pressed together from being accepted.",
+        "Name each state after what it remembers: Wait (waiting for the start button), Start (waiting for the first coloured button), Red1 (start and red seen), …, Red2 (whole code entered, u = 1).",
+        "In the door lock: with no button pressed (a') the FSM stays; a wrong button (or several at once) sends it back to Wait; Red2 returns to Wait at the next edge.",
+        "Tutorial 10 machine (output turns on from the second consecutive 1 and off after the second consecutive 0): four Moore states A (off, last input 0), B (off, one 1 seen), C (on), D (on, one 0 seen).",
+        "Counters with conditions (PYP 2016-17 S1 Q4(b), PYP 2017-18 S2 Q4(b)) are designed the same way: one state per count value, arrows from the rules; staying at a limit is a self-loop.",
+        "Table-driven specifications (PYP 2016-17 S2 Q4(a): current location × MOVE → next location) give two arrows per table row.",
       ],
       figures: [T10],
       example: {
@@ -399,14 +401,14 @@ export const fsmLesson: Lesson = {
         answer: "States A B A B C D C C D A A B A B C; outputs 0 0 0 0 1 1 1 1 1 0 0 0 0 0 1.",
       },
       pitfalls: [
-        "Falling back to S0 on every mismatch is the classic detector bug: for pattern 110, the input 1110 must still be detected, so S2 on input 1 stays in S2.",
-        "Read the question for overlapping vs non-overlapping; it changes the arrows leaving the detect state.",
-        "Every state needs an arrow for **every** input value; check each state twice (x = 0 and x = 1).",
+        "Drawing only the main path: every state needs a next state for **every** input combination (shown or implied by the self-transition convention).",
+        "Check the conditions leaving each state cannot be true together (the door lock's several-buttons problem).",
+        "Mark the reset (initial) state with an arrow.",
       ],
       recall: [
-        { q: "Detector for 101, overlapping, Moore. Which state follows the detect state S3 on input 0?", a: "S2 (\"10\" seen): the suffix 10 of 1010 is a prefix of 101." },
+        { q: "In the door lock, what happens in Red1 if a = 1 with b = 1 and g = 1 pressed together?", a: "The condition a·b·r'·g' is false, so the FSM goes back to Wait (the a(br'g')' arrow)." },
         { q: "What does state B mean in the Tutorial 10 machine?", a: "Output is off and exactly one 1 has just been seen." },
-        { q: "What changes between overlapping and non-overlapping detectors?", a: "Only the arrows leaving the detect state (Moore) or the arrow that completes the match (Mealy)." },
+        { q: "How is \"the counter stays at its maximum\" drawn?", a: "As a self-loop on the maximum state for the count-up condition." },
       ],
     },
     {
@@ -414,67 +416,61 @@ export const fsmLesson: Lesson = {
       intuition:
         "Two states that produce the same outputs now and react identically to every possible future input are indistinguishable from outside, so one of them is redundant.",
       keyIdeas: [
-        "States are **equivalent** when they have the same outputs and, for every input, go to equivalent next states.",
+        "A strength of FSMs is that you can see where the behaviour can be simplified: states that have the same output and **react identically to future inputs** can be merged.",
         "Merge by redrawing the arrows that entered the removed state so that they enter the kept one, then delete the removed state.",
-        "In the lecture vending machine (150c drink, 100c and 50c coins), the states \"credit 100c\" reached by different coin orders react identically, as do all \"credit 150c\" states and both \"credit 200c\" states: 9 states reduce to 5.",
-        "Systematic method (partition refinement): group states by output; split a group whenever two members go, on some input, to different groups; repeat until nothing splits. Each final group is one state.",
-        "Fewer states can mean fewer flip-flops (⌈log₂ m⌉) and simpler next-state logic.",
+        "In the lecture vending machine (the drink costs 150c; only 100c and 50c coins are accepted), S2 and S4 both hold 100c credit and react identically, so they merge; so do S3, S5 and S7 (150c), and S6 and S8 (200c): 9 states reduce to 5.",
+        "Fewer states can mean fewer flip-flops ($\\lceil \\log_2 m \\rceil$) and simpler next-state logic.",
       ],
       figures: [VENDING_MERGED],
       example: {
         problem: "Moore table: S0/0 (0→S1, 1→S2), S1/0 (0→S3, 1→S0), S2/0 (0→S4, 1→S0), S3/1 (0→S3, 1→S0), S4/1 (0→S4, 1→S0). Which states merge?",
         steps: [
-          "Group by output: {S0, S1, S2} (output 0) and {S3, S4} (output 1).",
-          "S3 and S4: on 0 each goes to its own group {S3, S4}; on 1 both go to S0. They stay together.",
-          "In {S0, S1, S2}: on 0, S0 → S1 (output-0 group) but S1 → S3 and S2 → S4 (output-1 group). Split: {S0} and {S1, S2}.",
-          "Check {S1, S2} again: on 0 both go to {S3, S4}, on 1 both go to S0. Nothing else splits.",
+          "S3 and S4 both output 1, stay where they are on 0 and go to S0 on 1. Whatever inputs follow, they produce the same outputs, so S3 ≡ S4.",
+          "S1 and S2 both output 0, go to S0 on 1 and on 0 go to S3 and S4, which have just been found equivalent. So they also react identically: S1 ≡ S2.",
+          "S0 also outputs 0, but on input 0 it goes to S1 (output 0) while S1 goes to S3 (output 1), so S0 reacts differently and stays separate.",
         ],
         answer: "S3 ≡ S4 and S1 ≡ S2: 3 states remain.",
       },
       pitfalls: [
-        "Same output is necessary but not sufficient: the next states must also be equivalent.",
-        "Equivalence is checked after the first merge as well: merging one pair can make another pair equivalent.",
+        "Same output is necessary but not sufficient: the reactions to future inputs (the next states) must also match.",
+        "After one merge, check again: merging one pair can make another pair equivalent (as with S2 and S4 in the vending machine).",
       ],
       recall: [
-        { q: "Two Moore states have the same output and the same next state for every input. Can they merge?", a: "Yes, they are equivalent." },
+        { q: "Two Moore states have the same output and the same next state for every input. Can they merge?", a: "Yes: they react identically to every future input." },
         { q: "Why might merging states save a flip-flop?", a: "The number of flip-flops is ⌈log₂ m⌉; reducing m from 5 to 4 drops it from 3 to 2." },
-        { q: "First step of partition refinement?", a: "Group the states by their outputs." },
+        { q: "In the lecture vending machine, why can S2 and S4 merge?", a: "Both mean 100c credit (output 00) and react identically to every future coin." },
       ],
     },
     {
-      title: "State encoding: binary, Gray and one-hot",
+      title: "State encoding and the number of flip-flops",
       intuition:
-        "The diagram uses names; the hardware needs bit patterns. Any unique code per state works, but the choice changes how many flip-flops you need and how complicated the next-state logic is.",
+        "The diagram uses names; the hardware needs bit patterns. Any unique code per state works, but the choice changes the next-state logic, and a number of states that is not a power of two leaves unused codes.",
       visuals: ["state-encoding"],
       keyIdeas: [
-        "**Binary** (minimal) encoding: m states need ⌈log₂ m⌉ flip-flops. 4 states → 2, 5–8 states → 3, 11 states → 4.",
-        "**One-hot**: one flip-flop per state, exactly one of them is 1. m flip-flops, but the next-state equations can be written by inspection: $D_{S_i}$ = OR over every arrow into $S_i$ of (source state bit · arrow condition). Moore outputs are ORs of state bits.",
-        "**Gray** encoding: give consecutive states codes that differ in one bit. Useful for cyclic or counter-like machines: only one flip-flop changes per transition.",
-        "With binary encoding of m states there are 2^k − m **unused codes**. Treat them as don't-cares in the K-maps only if a reset guarantees the machine starts in a valid state; otherwise check where each unused code goes.",
-        "Different encodings give different circuits but identical behaviour.",
-        "A good assignment can make equations trivial: for the Tutorial 10 machine, A = 00, B = 01, C = 11, D = 10 gives D0 = x and z = Q1.",
+        "To encode the states, assign a unique binary value to each state. Any encoding works as long as each state is unique.",
+        "For m states we need $\\lceil \\log_2 m \\rceil$ bits (flip-flops): 4 states → 2 bits (s[1:0]); the 6-state door lock → 3 bits.",
+        "With k bits there are $2^k - m$ **unused codes** when m is not a power of two. The FSM must never be left to start in one of them (see reset below).",
+        "Different encodings give different circuits, but the resulting functionality is identical.",
+        "A good assignment can make the equations simpler: for the Tutorial 10 machine, A = 00, B = 01, C = 11, D = 10 gives D0 = x and z = Q1.",
       ],
-      figures: [ENCODING_TABLE],
-      formulas: ["k_{\\text{binary}} = \\lceil \\log_2 m \\rceil, \\qquad k_{\\text{one-hot}} = m, \\qquad \\text{unused codes} = 2^k - m"],
+      formulas: ["k = \\lceil \\log_2 m \\rceil, \\qquad \\text{unused codes} = 2^k - m"],
       example: {
-        problem: "Write the one-hot next-state equations for the Tutorial 10 machine (flip-flops A, B, C, D; input x).",
+        problem: "The lecture door lock has 6 states and is encoded Wait = 000, Start = 001, Red1 = 010, Blue = 011, Green = 100, Red2 = 101. How many flip-flops does it need, and which codes are unused?",
         steps: [
-          "Arrows into A: from A on x', from B on x', from D on x'. So $D_A = (A + B + D)x'$.",
-          "Into B: from A on x. So $D_B = Ax$.",
-          "Into C: from B on x, from C on x, from D on x. So $D_C = (B + C + D)x$.",
-          "Into D: from C on x'. So $D_D = Cx'$. Output z = C + D.",
+          "$2^2 = 4 < 6 \\le 2^3 = 8$, so $\\lceil \\log_2 6 \\rceil = 3$ flip-flops.",
+          "$2^3 - 6 = 2$ codes are unused: 110 and 111.",
+          "Because 6 is not a power of two, the state register must be reset to a valid state (Wait), and the next-state logic should send any invalid code back to Wait.",
         ],
-        answer: "$D_A = (A+B+D)x'$, $D_B = Ax$, $D_C = (B+C+D)x$, $D_D = Cx'$, $z = C + D$ (4 flip-flops).",
+        answer: "3 flip-flops; unused codes 110 and 111.",
       },
       pitfalls: [
         "⌈log₂ m⌉, not log₂ m rounded down: 5 states need 3 flip-flops, not 2.",
-        "One-hot equations are only valid while exactly one bit is 1. A one-hot machine has 2^m − m illegal codes.",
-        "Gray code helps only when the transitions follow the code order; it does not reduce the flip-flop count.",
+        "Two states with the same code are not an encoding: every state needs a unique code.",
       ],
       recall: [
-        { q: "How many flip-flops for 6 states in binary? In one-hot?", a: "3 (binary), 6 (one-hot)." },
-        { q: "How many unused codes for 6 states in binary?", a: "2³ − 6 = 2." },
-        { q: "Write the one-hot D equation for a state entered from S1 on x and from S3 unconditionally.", a: "$D = S_1x + S_3$." },
+        { q: "How many flip-flops for 6 states?", a: "3, since 2² = 4 < 6 ≤ 8 = 2³." },
+        { q: "How many unused codes for 6 states?", a: "2³ − 6 = 2." },
+        { q: "Do two different encodings of the same FSM behave differently?", a: "No: the circuits differ, but the functionality is identical." },
       ],
     },
     {
@@ -482,10 +478,10 @@ export const fsmLesson: Lesson = {
       intuition:
         "Once states are codes, the next-state bits and the outputs are just combinational functions of (state bits, inputs). Fill the table, minimise each column with a K-map, and hang the result in front of D flip-flops.",
       keyIdeas: [
-        "Stages (lecture): draw the diagram with named states → (optional) named state table → encode → encoded state table → equations for each next-state bit and each output → circuit.",
+        "Stages (Lecture 12 p.14): draw the diagram with named states → (optional) named state table → encode → encoded state table → equations for each next-state bit and each output → circuit.",
         "With D flip-flops, the next-state bit **is** the D input: $D_i = Q_i^+$. The table columns are directly the K-map contents.",
         "K-map variables: the state bits (MSB first) and the inputs. Moore output maps use the state bits only.",
-        "Unused state codes go in the K-map as don't-cares (X) when the reset makes them unreachable.",
+        "Unused state codes have no next state specified, so they can be treated as don't-cares (X) in the K-maps, provided the state register is reset to a valid state.",
         "Lecture example (off = 00, on1 = 01, on2 = 10, on3 = 11): x = s1 + s0, n1 = s1's0 + s1s0' = s1 ⊕ s0, and n0 = s1's0'b + s1s0', which a K-map shrinks further to s0'b + s1s0'.",
         "Implementation: one D flip-flop per state bit, D inputs from the next-state logic, Q outputs fed back to the logic and to the output logic, all flip-flops on the same clock, plus a reset.",
       ],
@@ -495,7 +491,7 @@ export const fsmLesson: Lesson = {
         steps: [
           "Encoded table (Q1Q0 x → Q1⁺Q0⁺): 00 0→00, 00 1→01, 01 0→00, 01 1→11, 11 0→10, 11 1→11, 10 0→00, 10 1→11.",
           "Q0⁺ column: 0 1 0 1 0 1 0 1 for x = 0,1 in every state, so $D_0 = x$ (Q0 simply remembers the last input).",
-          "Q1⁺ is 1 for (01,1), (11,0), (11,1), (10,1): minterms 3, 5, 6, 7 of (Q1, Q0, x). K-map gives $D_1 = Q_1Q_0 + Q_1x + Q_0x$ (a majority function).",
+          "Q1⁺ is 1 for (01,1), (11,0), (11,1), (10,1): minterms 3, 5, 6, 7 of (Q1, Q0, x). K-map gives $D_1 = Q_1Q_0 + Q_1x + Q_0x$.",
           "z = 1 in C (11) and D (10): $z = Q_1$.",
         ],
         answer: "$D_1 = Q_1Q_0 + Q_1x + Q_0x$, $D_0 = x$, $z = Q_1$.",
@@ -503,11 +499,11 @@ export const fsmLesson: Lesson = {
       pitfalls: [
         "Keep the variable order consistent between the table and the K-map (state bits first, then inputs).",
         "For a Moore output, do not include the input in the output equation.",
-        "Use the next-state value as D; for T or JK flip-flops you would need excitation tables instead.",
+        "The D input of each flip-flop is the **next** value of that state bit, not the current one.",
       ],
       recall: [
         { q: "With D flip-flops, what is D_i?", a: "The next value of state bit i: $D_i = Q_i^+$." },
-        { q: "What goes in a K-map cell for an unused state code?", a: "A don't-care (X), provided a reset prevents the machine from starting there." },
+        { q: "What can go in a K-map cell for an unused state code?", a: "A don't-care (X), provided a reset prevents the machine from starting there." },
         { q: "Which variables does a Moore output equation use?", a: "Only the state bits." },
       ],
     },
@@ -520,9 +516,9 @@ export const fsmLesson: Lesson = {
         "Step 1: write each flip-flop's D input and each output as a Boolean expression of the Q's and the inputs.",
         "Step 2: for each present state code and each input value, evaluate the D's: that is the next state. Evaluate the outputs too.",
         "Step 3: draw one circle per code and one arrow per table row; put outputs in circles (Moore) or on arrows (Mealy).",
-        "Checking a given diagram (PYP 2021-22 Q1(9) style): every arrow and every output in the diagram must match the table. One wrong arrow or output means the answer is \"No\".",
-        "**Unreachable / unused states**: codes the design never enters. If the machine powers up there, it may **lock up** (never return to valid states) or emit a wrong output. Always reset the state register to a valid state, and check where unused codes go.",
-        "Reset may be synchronous (takes effect at the clock edge) or asynchronous (immediate). Either way, the reset state is the initial-state arrow in the diagram.",
+        "Checking a given diagram (PYP 2021-22 S1 Q1(9)): every arrow and every output in the diagram must match the table. One wrong arrow or output means the answer is \"No\".",
+        "**Reset** (Lecture 12 p.17): always give the state register a reset to a valid state. Otherwise we cannot predict which state the FSM starts in, and if it starts in an invalid (unused) code we have no idea where it will go, since the transition logic may not be fully specified there. This matters most when the number of states is not a power of two.",
+        "Reset may be synchronous (takes effect at the clock edge) or asynchronous (immediate) (Lecture 10 p.7). Either way, the reset state is the initial-state arrow in the diagram.",
       ],
       figures: [PYP_CIRCUIT, PYP_TABLE, PYP_DIAGRAM],
       example: {
@@ -542,20 +538,19 @@ export const fsmLesson: Lesson = {
       ],
       recall: [
         { q: "First step in analysing an FSM circuit?", a: "Write the D input of every flip-flop (and every output) as an expression of the Q's and inputs." },
-        { q: "What is lock-up?", a: "Starting in an unused code from which the machine never returns to a valid state." },
+        { q: "Why must the state register have a reset?", a: "Otherwise the start state is unpredictable, and from an unused code the next state may be unspecified." },
         { q: "How many rows does the state table of a 2-flip-flop, 1-input machine have?", a: "2² × 2 = 8 (state, input) rows." },
       ],
     },
   ],
   playbook: [
-    "If you see **\"how many flip-flops\"**: binary needs ⌈log₂ m⌉, one-hot needs m; unused codes = 2^k − m.",
-    "If you see **a word description**: write the meaning of each state first, then for every state draw one arrow per input value; finally add outputs and the reset arrow.",
-    "If you see **a sequence detector**: Moore needs n + 1 states, Mealy n; on a mismatch go to the longest suffix that is still a prefix; read overlapping vs non-overlapping carefully.",
+    "If you see **\"how many flip-flops\"**: $\\lceil \\log_2 m \\rceil$ for m states; unused codes = $2^k - m$.",
+    "If you see **a word description**: write the meaning of each state first, draw the main path, then for every state add the arrows for the other inputs; finally add outputs and the reset arrow.",
     "If you see **\"trace this input sequence\"**: make a table edge by edge (state before, input, state after, output). For Moore the output follows the state after the edge; for Mealy it is read on the arrow taken.",
     "If you see **a circuit of D flip-flops and gates**: write D equations, evaluate all (state, input) rows, draw the diagram, then check the given diagram arrow by arrow and output by output.",
-    "If **an input wire reaches the output gate** directly: it is a Mealy machine; outputs go on arrows and can change mid-cycle.",
-    "If you see **\"derive the next-state equations\"**: build the encoded table, one K-map per state bit with the unused codes as X, and loop for a minimal SOP; D_i = Q_i⁺.",
-    "If you are asked **which states can be merged**: group by output, then split by where each input sends them, until stable.",
-    "If you see **unused codes or a missing reset**: check where every unused code goes; make sure the machine cannot lock up and has a defined reset state.",
+    "If you are asked **Moore or Mealy**: outputs in the states (or output gates fed only by flip-flops) → Moore; outputs on the arrows (or an input wired to an output gate) → Mealy.",
+    "If you see **\"derive the next-state equations\"**: build the encoded table, one K-map per state bit (unused codes may be X), and loop for a minimal SOP; D_i = Q_i⁺.",
+    "If you are asked **which states can be merged**: look for states with the same output that react identically to every future input; merge and recheck.",
+    "If you see **unused codes or a missing reset**: say the state register must be reset to a valid state, and check where every unused code goes.",
   ],
 };

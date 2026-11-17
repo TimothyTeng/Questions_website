@@ -19,8 +19,8 @@ export const sequentialQuestions: Draft[] = [
     ],
     answer: 1,
     solution:
-      "In this course **latch** means level-sensitive: while its enable is active the output follows the inputs (a D latch is transparent). A **flip-flop** is edge-triggered: it samples its inputs only at the active (normally rising) clock edge and holds the result until the next edge.\n- A reverses the two definitions.\n- Both latches and flip-flops normally provide $Q$ and $\\overline{Q}$.\n- It is the other way round: an edge-triggered flip-flop is built from two latches (master–slave).\n- Older references sometimes mix the names, which is why the lecture fixes the convention.",
-    source: "Original",
+      "In this course **latch** means level-sensitive: while its enable is high the output can change (a D latch is transparent). A **flip-flop** is edge-triggered: it changes its output only at the control signal's edge (rising, unless stated otherwise) and holds the result until the next edge.\n- A reverses the two definitions.\n- The lecture symbols show $Q$ and $\\overline{Q}$ on both latches and flip-flops.\n- It is the other way round: an edge-triggered flip-flop is built from two latches (master–slave).\n- Some older references do not follow this convention, which is why the lecture fixes it.",
+    source: "Lecture 09 p.31–32",
   },
   {
     kind: "mcq",
@@ -30,8 +30,8 @@ export const sequentialQuestions: Draft[] = [
     options: ["$Q = 1$, $\\overline{Q} = 0$", "$Q = 0$, $\\overline{Q} = 1$", "$Q = 0$, $\\overline{Q} = 0$", "$Q = 1$, $\\overline{Q} = 1$", "The outputs keep their previous values"],
     answer: 2,
     solution:
-      "A NOR gate outputs 0 whenever any input is 1. With $S = 1$ the $\\overline{Q}$ gate outputs 0, and with $R = 1$ the $Q$ gate outputs 0. So $Q = \\overline{Q} = 0$: the outputs are no longer complements, which is why $S = R = 1$ is called **invalid**. Worse, if both inputs then fall to 0 together, both gates switch to 1 at once and the latch may oscillate before settling in an unpredictable state.\n$Q = \\overline{Q} = 1$ (option D) is what the NAND (active-low) latch shows for its forbidden input $\\overline{S} = \\overline{R} = 0$.",
-    source: "Style: Lecture 9 SR latch",
+      "A NOR gate outputs 0 whenever any input is 1. With $S = 1$ the $\\overline{Q}$ gate outputs 0, and with $R = 1$ the $Q$ gate outputs 0. So $Q = \\overline{Q} = 0$: the outputs are no longer complements, which is why the $S = R = 1$ row is marked '?'. Worse, if both inputs are then de-asserted at the same time, the output may oscillate, and which state it finally settles in is impossible to know.",
+    source: "Lecture 09 p.8",
   },
   {
     kind: "mcq",
@@ -48,8 +48,8 @@ export const sequentialQuestions: Draft[] = [
     ],
     answer: 1,
     solution:
-      "For the NAND latch $Q = \\overline{\\overline{S}\\cdot\\overline{Q}}$ and $\\overline{Q} = \\overline{\\overline{R}\\cdot Q}$. A 0 on a NAND input forces its output to 1, so the inputs are **active-low**:\n- $\\overline{S} = 0, \\overline{R} = 1$ (i.e. $01$): the $Q$ gate outputs 1, **set**.\n- $\\overline{S} = 1, \\overline{R} = 0$: reset. $11$: store (no input asserted).\n- $\\overline{S} = \\overline{R} = 0$: both gates are forced to 1, so $Q = \\overline{Q} = 1$: **forbidden**.\nOptions with 'forbidden 11' treat the inputs as active-high (that is the NOR latch rule).",
-    source: "Style: Lecture 9 active-low latches",
+      "For the NAND latch $Q = \\overline{\\overline{S}\\cdot\\overline{Q}}$ and $\\overline{Q} = \\overline{\\overline{R}\\cdot Q}$. A 0 on a NAND input forces its output to 1, so the inputs are **active-low**:\n- $\\overline{S} = 0, \\overline{R} = 1$ (i.e. $01$): the $Q$ gate outputs 1, **set**.\n- $\\overline{S} = 1, \\overline{R} = 0$: reset. $11$: store (no input asserted).\n- $\\overline{S} = \\overline{R} = 0$: both inputs asserted at once, the active-low version of $S = R = 1$: **forbidden**.\nOptions with 'forbidden 11' treat the inputs as active-high (that is the NOR latch rule).",
+    source: "Style: Lecture 09 p.16",
   },
   {
     kind: "short",
@@ -62,7 +62,7 @@ export const sequentialQuestions: Draft[] = [
     placeholder: "6 bits",
     solution:
       "With $E = 0$ the latch ignores S and R and stores; with $E = 1$ it behaves as an SR latch.\n- $(1,1,0)$: enabled, set → 1.\n- $(0,0,1)$: disabled, R is ignored → 1.\n- $(1,0,0)$: enabled, store → 1.\n- $(1,0,1)$: enabled, reset → 0.\n- $(0,1,0)$: disabled, S ignored → 0.\n- $(1,1,0)$: enabled, set → 1.\nAnswer `111001`. The common mistake is to apply the reset in step 2 or the set in step 5 even though $E = 0$.",
-    source: "Style: Lecture 9 enabled SR latch table",
+    source: "Style: Lecture 09 p.12",
   },
   // ---------------------------------------------------------------- latch vs FF timing
   {
@@ -98,7 +98,7 @@ export const sequentialQuestions: Draft[] = [
         marks: [2, 6, 10, 14],
       },
     ],
-    source: "Style: Tutorial 8 Q2",
+    source: "Style: PYP 2017-18 S2 Q4(a)",
   },
   {
     kind: "short",
@@ -118,7 +118,7 @@ export const sequentialQuestions: Draft[] = [
     accept: ["4"],
     match: "number",
     solution:
-      "The falling edges of CLK are at the start of units 3, 7, 11, 15 and 19. At each one, Q takes D from just before the edge (units 2, 6, 10, 14, 18): D = 1, 0, 1, 1, 0.\nSo Q goes 0 → **1** → **0** → **1** → 1 → **0**: four changes.\n(If you used the rising edges at units 1, 5, 9, 13, 17, 21 you would sample D = 0, 1, 0, 0, 0, 0 and count only 2 changes: check the bubble on the clock input.)",
+      "The falling edges of CLK are at the start of units 3, 7, 11, 15 and 19. At each one, Q takes D from just before the edge (units 2, 6, 10, 14, 18): D = 1, 0, 1, 1, 0.\nSo Q goes 0 → **1** → **0** → **1** → 1 → **0**: four changes.\n(If you used the rising edges at units 1, 5, 9, 13, 17, 21 you would take D = 0, 1, 0, 0, 0, 0 and count only 2 changes: always check which edge is active.)",
     solutionFigures: [
       {
         kind: "wave",
@@ -130,7 +130,7 @@ export const sequentialQuestions: Draft[] = [
         marks: [3, 7, 11, 15, 19],
       },
     ],
-    source: "Original",
+    source: "Style: Lecture 09 p.30–31",
   },
   {
     kind: "open",
@@ -177,9 +177,9 @@ export const sequentialQuestions: Draft[] = [
       { point: "All outputs shaded as unknown before their first defined value", marks: 1 },
     ],
     solution: "Work column by column: mark the rising edges, then for each element ask whether it is listening and to what. The shaded regions come from S = R = 1 (while listening), from releasing S = R = 1 to 00 together, and from the unknown initial state.",
-    source: "Style: Tutorial 8 Q2",
+    source: "Style: Tut 8 Q2",
   },
-  // ---------------------------------------------------------------- JK / T / characteristic equations
+  // ---------------------------------------------------------------- JK / T flip-flops, timing, registers
   {
     kind: "mcq",
     subtopic: "JK flip-flop",
@@ -188,76 +188,86 @@ export const sequentialQuestions: Draft[] = [
     options: ["$J = 0, K = 0$", "$J = 0, K = 1$", "$J = 1, K = 0$", "$J = 1, K = 1$", "There are multiple correct answers"],
     answer: 4,
     solution:
-      "From the JK table: $J = 0, K = 1$ resets ($Q^+ = 0$), and $J = K = 1$ toggles, so from $Q = 1$ it also gives $Q^+ = 0$. Both B and D work, so the answer is E.\nCheck with $Q^+ = J\\overline{Q} + \\overline{K}Q$ and $Q = 1$: $Q^+ = \\overline{K}$, which is 0 whenever $K = 1$, whatever J is.\n$J = K = 0$ holds 1 and $J = 1, K = 0$ sets 1.",
+      "From the JK table: $J = 0, K = 1$ resets ($Q^+ = 0$), and $J = K = 1$ toggles, so from $Q = 1$ it also gives $Q^+ = 0$. Both B and D work, so the answer is E.\n$J = K = 0$ holds 1 and $J = 1, K = 0$ sets 1.",
     source: "Style: PYP 2021-22 S1 Q1(7)",
   },
   {
     kind: "short",
-    subtopic: "Characteristic equations",
-    difficulty: "medium",
-    prompt: "Write the characteristic equation of a J-K flip-flop: give a minimal SOP expression for the next state $Q^+$ in terms of J, K and the present state Q.",
-    accept: ["JQ' + K'Q", "K'Q + JQ'"],
-    match: "expr",
-    vars: ["J", "K", "Q"],
-    minimal: true,
-    placeholder: "e.g. JQ' + ...",
-    solution:
-      "Write $Q^+$ for all eight $(J, K, Q)$ rows: hold ($J K = 00$) gives Q, reset ($01$) gives 0, set ($10$) gives 1, toggle ($11$) gives $\\overline{Q}$. So $Q^+ = 1$ for rows $JKQ = 001, 100, 101, 110$.\nOn a K-map these group into $J\\overline{Q}$ (rows 100, 110) and $\\overline{K}Q$ (rows 001, 101):\n$$Q^+ = J\\overline{Q} + \\overline{K}Q$$\nThe term $J\\overline{K}$ is a consensus term and is not needed.",
-    solutionFigures: [{ kind: "kmap", vars: ["J", "K", "Q"], values: "01001110", groups: ["JQ'", "K'Q"], showIndex: true }],
-    source: "Style: Lecture 9 flip-flop tables",
-  },
-  {
-    kind: "mcq",
-    subtopic: "Flip-flop conversions",
-    difficulty: "medium",
-    prompt: "A J-K flip-flop has its J input driven by a signal A, and its K input driven by A through an inverter ($K = \\overline{A}$). How does the circuit behave?",
-    options: ["As a T flip-flop with $T = A$", "As a D flip-flop with $D = A$", "It toggles on every clock edge", "As an SR latch with $S = A$", "It never changes state"],
-    answer: 1,
-    solution:
-      "With $K = \\overline{A}$ the inputs are always $JK = 10$ (when $A = 1$: set) or $01$ (when $A = 0$: reset), so $Q^+ = A$: a D flip-flop with $D = A$.\nAlgebraically: $Q^+ = J\\overline{Q} + \\overline{K}Q = A\\overline{Q} + AQ = A$.\nA T flip-flop would need $J = K = T$; toggling every edge needs $J = K = 1$; it is still edge-triggered, not a latch.",
-    source: "Original",
-  },
-  {
-    kind: "mcq",
-    subtopic: "Asynchronous preset and clear",
+    subtopic: "T flip-flop",
     difficulty: "medium",
     prompt:
-      "A positive-edge D flip-flop has an active-low **asynchronous** clear $\\overline{CLR}$. Its output is $Q = 0$ at time 0. With the waveforms below (one column per time unit), during which units after unit 2 is $Q = 0$?",
+      "In the synchronous circuit below, the T flip-flop has $T = 1$ (its output Q toggles at each rising edge of clk), and $Y$ is the XNOR of Q and clk. At the start clk = 0 and Y = 1. Treat each half clock cycle as one time unit (clk = 0, 1, 0, 1, 0, 1, 0, 1) and ignore gate delays. Type Y for the 8 units as an 8-bit string.",
     figures: [
+      {
+        kind: "circuit",
+        circuit: {
+          inputs: ["1", "clk"],
+          gates: [
+            { id: "Q", type: "TFF", in: ["1", "clk"] },
+            { id: "Y", type: "XNOR", in: ["Q", "clk"] },
+          ],
+          outputs: ["Y"],
+        },
+      },
       {
         kind: "wave",
         signals: [
-          { name: "CLK", wave: "0011001100110011" },
-          { name: "D", wave: "0111110011111100" },
-          { name: "CLR'", wave: "1111111011111111" },
+          { name: "clk", wave: "01010101" },
+          { name: "Y", wave: "1xxxxxxx" },
         ],
-        ticks: T16,
       },
     ],
-    options: [
-      "Only during unit 7, while $\\overline{CLR}$ is low",
-      "During units 7, 8 and 9; Q returns to 1 at the rising edge at unit 10",
-      "Never: $\\overline{CLR}$ is not low at a rising edge, so it has no effect",
-      "From unit 7 to the end of the diagram",
-      "During units 6 to 9, because D is 0 in unit 6",
-    ],
-    answer: 1,
+    accept: ["11001100", "1 1 0 0 1 1 0 0", "1,1,0,0,1,1,0,0", "1, 1, 0, 0, 1, 1, 0, 0"],
+    match: "text",
+    placeholder: "8 bits",
     solution:
-      "An asynchronous clear acts **immediately**: when $\\overline{CLR}$ goes low in unit 7, Q drops to 0 at once (in the middle of the clock-high phase).\nReleasing $\\overline{CLR}$ does **not** restore the old value: Q stays 0 until the next rising edge, at unit 10, where the flip-flop captures D = 1 (from unit 9).\nSo Q = 0 in units 7, 8, 9.\n- A synchronous clear would be sampled only at edges; $\\overline{CLR}$ is high at every edge, so a synchronous clear would indeed do nothing (option C), which is the key difference.\n- D = 0 in units 6–7 does not matter: at the edge at unit 6 the flip-flop captured D from unit 5 (= 1).",
+      "At the start clk = 0 and Y = 1, and XNOR gives 1 only when its inputs are equal, so Q = 0.\nQ toggles at each rising edge of clk (units 1, 3, 5, 7): Q = 0, 1, 1, 0, 0, 1, 1, 0.\nY = XNOR(Q, clk) unit by unit: (0,0) → 1, (1,1) → 1, (1,0) → 0, (0,1) → 0, then the pattern repeats.\nY = **11001100**.",
     solutionFigures: [
       {
         kind: "wave",
         signals: [
-          { name: "CLK", wave: "0011001100110011" },
-          { name: "D", wave: "0111110011111100" },
-          { name: "CLR'", wave: "1111111011111111" },
-          { name: "Q", wave: "0011111000111111" },
+          { name: "clk", wave: "01010101" },
+          { name: "Q", wave: "01100110" },
+          { name: "Y", wave: "11001100" },
         ],
-        ticks: T16,
-        marks: [2, 6, 10, 14],
+        marks: [1, 3, 5, 7],
       },
     ],
-    source: "Original",
+    source: "PYP 2020-21 S2 Q4(a)(ii)",
+  },
+  {
+    kind: "mcq",
+    subtopic: "JK flip-flop",
+    difficulty: "medium",
+    prompt: "A J-K flip-flop starts at $Q = 0$. Before six successive rising clock edges, $(J, K) = (1,0), (1,1), (0,0), (1,1), (0,1), (1,1)$. What is Q after each edge?",
+    options: [
+      "1, 0, 0, 1, 0, 1",
+      "1, 1, 1, 1, 0, 0",
+      "1, 0, 1, 0, 0, 1",
+      "0, 1, 1, 0, 1, 0",
+      "Undefined from the second edge, because J = K = 1 is not allowed",
+    ],
+    answer: 0,
+    solution:
+      "Use the JK table at each edge: $(1,0)$ set → 1; $(1,1)$ toggle → 0; $(0,0)$ hold → 0; $(1,1)$ toggle → 1; $(0,1)$ reset → 0; $(1,1)$ toggle → 1.\n- B treats $J = K = 1$ as hold.\n- C treats $J = K = 0$ as toggle.\n- D swaps the roles of J and K.\n- E applies the SR-latch rule: for a JK flip-flop, $J = K = 1$ is allowed and toggles.",
+    source: "Style: Lecture 09 p.33",
+  },
+  {
+    kind: "mcq",
+    subtopic: "Active-low latches",
+    difficulty: "easy",
+    prompt: "An **active-low** transparent D latch has the enable input $\\overline{E}$. Which description of its behaviour is correct?",
+    options: [
+      "While $\\overline{E} = 1$, Q follows D; while $\\overline{E} = 0$, Q holds",
+      "While $\\overline{E} = 0$, Q follows D; while $\\overline{E} = 1$, Q holds",
+      "Q takes the value of D only at the falling edge of $\\overline{E}$",
+      "Q always shows $\\overline{D}$",
+      "It is made from the normal D latch by swapping its NAND gates for NOR gates",
+    ],
+    answer: 1,
+    solution:
+      "Active-low means the enable is asserted when it is 0. The lecture table for the active-low transparent latch: $\\overline{E} = 1$: store ($Q^+ = Q$); $\\overline{E} = 0$, D = 0: $Q^+ = 0$; $\\overline{E} = 0$, D = 1: $Q^+ = 1$ (transparent).\n- A is the active-high latch.\n- C describes an edge-triggered flip-flop, not a latch.\n- E is backwards: the active-low versions swap the NOR for NAND (and the OR for AND).",
+    source: "Lecture 09 p.16",
   },
   {
     kind: "mcq",
@@ -274,8 +284,8 @@ export const sequentialQuestions: Draft[] = [
     ],
     answer: 1,
     solution:
-      "While CLK = 1 the master follows D but the slave is closed, so Q cannot change. When CLK falls, the master closes (freezing the last D) and the slave opens, copying that frozen value to Q. While CLK = 0 the master is closed, so Q stays constant. Hence Q changes only at the **falling** edge: a negative-edge triggered flip-flop.\nThe lecture's positive-edge design uses the opposite enables: master transparent while CLK = 0, slave while CLK = 1.",
-    source: "Style: Lecture 9 master–slave",
+      "While CLK = 1 the master follows D but the slave is closed, so Q cannot change. When CLK falls, the master closes (freezing the last D) and the slave opens, copying that frozen value to Q. While CLK = 0 the master is closed, so Q stays constant. Hence Q changes only at the **falling** edge: a negative-edge triggered flip-flop.\nThis matches the lecture: for a negative-edge triggered setup, the master responds to high enable and the slave to low enable. The positive-edge design uses the opposite enables.",
+    source: "Style: Lecture 09 p.27",
   },
   {
     kind: "mcq",
@@ -293,7 +303,7 @@ export const sequentialQuestions: Draft[] = [
     answer: 1,
     solution:
       "While the clock is high every latch is transparent, so the new value ripples straight through: it reaches $Q_1$ after 2 ns, $Q_2$ after 4 ns, $Q_3$ after 6 ns, and would need 8 ns for $Q_4$, but the high phase ends at 7 ns. So it gets through three latches in one cycle. How far data travels depends on the clock's high time, which is exactly the problem edge-triggered flip-flops solve: with flip-flops, data moves exactly one stage per clock edge (option C would then be the correct behaviour).",
-    source: "Style: Lecture 9 timing of latches",
+    source: "Style: Lecture 09 p.24–26",
   },
   // ---------------------------------------------------------------- timing parameters
   {
@@ -303,56 +313,75 @@ export const sequentialQuestions: Draft[] = [
     prompt: "A clock has a period of 1.6 ns. What is its frequency?",
     options: ["1.6 GHz", "625 MHz", "62.5 MHz", "160 MHz", "6.25 GHz"],
     answer: 1,
-    solution: "$f = 1/T = 1/(1.6 \\times 10^{-9}\\text{ s}) = 6.25 \\times 10^{8}$ Hz $= 625$ MHz.\nUseful anchors: 1 ns ↔ 1 GHz, 10 ns ↔ 100 MHz; a period a bit longer than 1 ns is a frequency a bit below 1 GHz.",
-    source: "Style: Lecture 9 the clock",
+    solution: "$f = 1/T = 1/(1.6 \\times 10^{-9}\\text{ s}) = 6.25 \\times 10^{8}$ Hz $= 625$ MHz.\nLecture anchors: 1 ns ↔ 1 GHz, 10 ns ↔ 100 MHz; a period a bit longer than 1 ns is a frequency a bit below 1 GHz.",
+    source: "Style: Lecture 09 p.22",
   },
   {
     kind: "short",
-    subtopic: "Maximum clock frequency",
+    subtopic: "Propagation delay",
     difficulty: "medium",
     prompt:
-      "Register R1 feeds register R2 through combinational logic. R1's output can reach R2's D input along two paths: through a NAND (1.1 ns), then an XOR (1.5 ns), then an OR (1.0 ns); or through a NOT (0.5 ns) then an AND (1.2 ns). The flip-flops have clock-to-Q delay 0.8 ns and setup time 0.6 ns. What is the maximum clock frequency in MHz?",
-    accept: ["200"],
+      "In the circuit below, a NOT gate has a delay of 2 ns, an AND gate 4 ns and an OR gate 3 ns. If you report a single propagation delay for the circuit (inputs a, b, c to output f), what is it in ns?",
+    figures: [
+      {
+        kind: "circuit",
+        circuit: {
+          inputs: ["a", "b", "c"],
+          gates: [
+            { id: "N1", type: "NOT", in: ["a"] },
+            { id: "G1", type: "AND", in: ["N1", "b"] },
+            { id: "N2", type: "NOT", in: ["c"] },
+            { id: "f", type: "OR", in: ["G1", "N2"] },
+          ],
+          outputs: ["f"],
+        },
+      },
+    ],
+    accept: ["9"],
     match: "number",
-    placeholder: "MHz",
+    placeholder: "ns",
     solution:
-      "The critical (longest) path is $1.1 + 1.5 + 1.0 = 3.6$ ns (the other path is only 1.7 ns).\n$T_{min} = t_{cq} + t_{comb,max} + t_{su} = 0.8 + 3.6 + 0.6 = 5.0$ ns.\n$f_{max} = 1/5.0\\text{ ns} = 200$ MHz.\nCommon errors: using only the logic delay (3.6 ns → 278 MHz) or the shorter path.",
-    source: "Style: Lecture 9 timing in circuits",
+      "Sum the gate delays along each input-to-output path:\n- $a \\to f$: NOT + AND + OR $= 2 + 4 + 3 = 9$ ns.\n- $b \\to f$: AND + OR $= 4 + 3 = 7$ ns.\n- $c \\to f$: NOT + OR $= 2 + 3 = 5$ ns.\nIf we report a single number, we always use the worst (longest) path: **9 ns**.",
+    source: "Style: Lecture 09 p.19–20",
   },
   {
     kind: "mcq",
-    subtopic: "Setup and hold",
+    subtopic: "Propagation delay",
     difficulty: "hard",
     prompt:
-      "Two flip-flops share a 200 MHz clock. Their clock-to-Q delay is 0.2 ns, setup time 0.5 ns and hold time 0.4 ns. The logic between them has a longest path of 3.0 ns and a shortest path of 0.1 ns. Which statement is correct?",
-    options: [
-      "Setup is violated; lowering the clock frequency fixes it",
-      "Hold is violated; lowering the clock frequency fixes it",
-      "Hold is violated; changing the clock frequency cannot fix it, so delay must be added to the short path",
-      "Both setup and hold are met",
-      "Both setup and hold are violated",
+      "In the circuit below, each NOT gate has a delay of 2 ns and the AND gate a delay of 3 ns. With enable = 1 the output Op oscillates. What is the oscillation frequency of Op?",
+    figures: [
+      {
+        kind: "circuit",
+        circuit: {
+          inputs: ["enable"],
+          gates: [
+            { id: "G", type: "AND", in: ["enable", "Op"] },
+            { id: "N1", type: "NOT", in: ["G"] },
+            { id: "N2", type: "NOT", in: ["N1"] },
+            { id: "Op", type: "NOT", in: ["N2"] },
+          ],
+          outputs: ["Op"],
+        },
+      },
     ],
-    answer: 2,
+    options: ["About 55.6 MHz", "About 111 MHz", "About 83.3 MHz", "18 MHz", "Op does not oscillate; it settles at 1"],
+    answer: 0,
     solution:
-      "Setup: $T = 5$ ns $\\ge t_{cq} + t_{comb,max} + t_{su} = 0.2 + 3.0 + 0.5 = 3.7$ ns, so setup is met.\nHold: the earliest new data can reach the second flip-flop is $t_{cq} + t_{comb,min} = 0.2 + 0.1 = 0.3$ ns after the edge, but it must not change until $t_h = 0.4$ ns after the edge: **hold violation**.\nThe hold check contains no clock period, so slowing the clock does nothing; the fix is to make the short path slower (add buffers).",
-    source: "Original",
+      "With enable = 1 the AND gate passes Op round the loop, and the loop contains three inverters, so each trip round the loop inverts Op.\n- One trip takes $3 \\times 2 + 3 = 9$ ns, so Op changes every 9 ns.\n- One full period (0 → 1 → 0) takes two changes: $T = 18$ ns.\n- $f = 1/T = 1/(18 \\times 10^{-9}\\text{ s}) \\approx 55.6$ MHz.\n111 MHz uses only one trip (9 ns) as the period; 83.3 MHz forgets the AND gate delay; with enable = 0 the output would settle at 1.",
+    source: "Style: PYP 2016-17 S1 Q3(a)",
   },
   {
     kind: "mcq",
-    subtopic: "Setup and hold",
+    subtopic: "Registers",
     difficulty: "medium",
-    prompt: "A D flip-flop has a setup time of 0.5 ns and a hold time of 0.2 ns. Its D input changes from 0 to 1 at 0.3 ns **before** a rising clock edge. What should you expect?",
-    options: [
-      "Q becomes 1 reliably, because D changed before the edge",
-      "Q stays 0 reliably, because D changed too late",
-      "The setup time is violated, so Q may go metastable and its value after the edge is not guaranteed",
-      "The hold time is violated, so Q may go metastable",
-      "Q becomes 1 only after an extra 0.5 ns delay",
-    ],
-    answer: 2,
+    prompt:
+      "Four 3-bit registers are connected in a chain on the same clock (y → q1 → q2 → q3 → q4), as in the lecture. Their initial contents are unknown. The input y has the values 5, 2, 7, 1, 6, 3 just before rising edges 1 to 6. What does q4 hold just after edge 5?",
+    options: ["2", "6", "7", "5", "Still unknown"],
+    answer: 0,
     solution:
-      "D must be stable for at least $t_{su} = 0.5$ ns before the edge. Changing 0.3 ns before the edge violates **setup**. The flip-flop may capture 0, capture 1, or hover between the two (metastability) for a while, so the result is not guaranteed; in a timing diagram you would shade it as undefined.\nHold concerns changes **after** the edge (within 0.2 ns), so D is not a hold problem here.",
-    source: "Original",
+      "At each edge every register takes the value its left neighbour had just before the edge, so after edge $k$: q1 = $y_k$, q2 = $y_{k-1}$, q3 = $y_{k-2}$, q4 = $y_{k-3}$ (unknown until edge 4).\nAfter edge 5: q4 = $y_2$ = **2** (q1 = 6, q2 = 1, q3 = 7).\n6 is q1, 7 is q3; 5 would be one stage too many; q4 stops being unknown at edge 4.",
+    source: "Style: Lecture 09 p.39",
   },
   // ---------------------------------------------------------------- flip-flop chains (PYP Q1(8) style)
   {
@@ -405,13 +434,13 @@ export const sequentialQuestions: Draft[] = [
     match: "text",
     placeholder: "Q2Q1Q0",
     solution:
-      "Next state: $Q_2^+ = Q_1 \\oplus Q_0$, $Q_1^+ = Q_2$, $Q_0^+ = Q_1$.\n- 001 → ($0 \\oplus 1 = 1$, 0, 0) = 100\n- 100 → ($0 \\oplus 0 = 0$, 1, 0) = 010\n- 010 → ($1 \\oplus 0 = 1$, 0, 1) = 101\n- 101 → ($0 \\oplus 1 = 1$, 1, 0) = 110\nAfter 4 edges: **110**. (This is a linear-feedback shift register: it visits all 7 non-zero states before repeating.)",
+      "Next state: $Q_2^+ = Q_1 \\oplus Q_0$, $Q_1^+ = Q_2$, $Q_0^+ = Q_1$.\n- 001 → ($0 \\oplus 1 = 1$, 0, 0) = 100\n- 100 → ($0 \\oplus 0 = 0$, 1, 0) = 010\n- 010 → ($1 \\oplus 0 = 1$, 0, 1) = 101\n- 101 → ($0 \\oplus 1 = 1$, 1, 0) = 110\nAfter 4 edges: **110**.",
     source: "Style: PYP 2021-22 S1 Q1(8)",
   },
-  // ---------------------------------------------------------------- shift registers, ring/Johnson, FIFO
+  // ---------------------------------------------------------------- flip-flop chains, registers, FIFO
   {
     kind: "short",
-    subtopic: "Johnson counter",
+    subtopic: "Next state of a flip-flop circuit",
     difficulty: "medium",
     prompt: "The 4-bit circuit below starts at $Q_3Q_2Q_1Q_0 = 0000$. What is $Q_3Q_2Q_1Q_0$ after **6** clock edges?",
     figures: [
@@ -433,19 +462,25 @@ export const sequentialQuestions: Draft[] = [
     match: "text",
     placeholder: "Q3Q2Q1Q0",
     solution:
-      "This is a Johnson (twisted-ring) counter: the bits shift right ($Q_3 \\to Q_2 \\to Q_1 \\to Q_0$) and $\\overline{Q_0}$ is fed back into $Q_3$.\n0000 → 1000 → 1100 → 1110 → 1111 → 0111 → **0011** (6 edges) → 0001 → 0000.\nIt has $2n = 8$ states.",
-    source: "Style: Lecture 9 registers",
+      "Read the wiring: $D_3 = \\overline{Q_0}$, $D_2 = Q_3$, $D_1 = Q_2$, $D_0 = Q_1$. So at each edge the bits move one place right ($Q_3 \\to Q_2 \\to Q_1 \\to Q_0$) and $\\overline{Q_0}$ (from the present state) enters $Q_3$.\n0000 → 1000 → 1100 → 1110 → 1111 → 0111 → **0011** (6 edges).",
+    source: "Style: PYP 2021-22 S1 Q1(8)",
   },
   {
     kind: "mcq",
-    subtopic: "Ring and Johnson counters",
-    difficulty: "medium",
-    prompt: "A mod-12 counter is to be built (a) as a binary counter, (b) as a ring counter, (c) as a Johnson counter. How many flip-flops does each need?",
-    options: ["(a) 4, (b) 12, (c) 6", "(a) 4, (b) 6, (c) 12", "(a) 12, (b) 4, (c) 6", "(a) 4, (b) 12, (c) 12", "(a) 3, (b) 12, (c) 6"],
+    subtopic: "Flip-flop symbols",
+    difficulty: "easy",
+    prompt: "Using the course convention, how can you tell from its schematic symbol that a component is **edge-triggered** (a flip-flop rather than a latch)?",
+    options: [
+      "It has a small triangle on its control (clock) input",
+      "It has both a Q and a $\\overline{Q}$ output",
+      "Its inputs are labelled S and R",
+      "It has a bubble on its Q output",
+      "Its enable input is labelled E",
+    ],
     answer: 0,
     solution:
-      "- Binary: need $2^n \\ge 12$, so $n = 4$ (16 states, 12 used).\n- Ring: one flip-flop per state (a single 1 circulates): 12.\n- Johnson: $2n$ states, so $n = 6$.\n3 flip-flops give only 8 states.",
-    source: "Original",
+      "The lecture's rule: the symbol for an edge-triggered component always has a small triangle on the control input. The latch symbols (SR latch, D latch) have no triangle.\n- Latches and flip-flops are both drawn with Q and $\\overline{Q}$.\n- S and R appear on SR latches (and the lesser seen SR flip-flop), so the labels do not decide it.",
+    source: "Lecture 09 p.32",
   },
   {
     kind: "mcq",
@@ -455,7 +490,7 @@ export const sequentialQuestions: Draft[] = [
     options: ["20 ns", "80 ns", "160 ns", "400 ns", "8 ns"],
     answer: 2,
     solution: "One bit enters per edge, so 8 edges are needed. At 50 MHz the period is $1/50\\text{ MHz} = 20$ ns, so $8 \\times 20 = 160$ ns.",
-    source: "Style: Lecture 10 serial data transfer",
+    source: "Style: Lecture 10 p.36–40",
   },
   {
     kind: "short",
@@ -468,7 +503,7 @@ export const sequentialQuestions: Draft[] = [
     placeholder: "8 hex digits",
     solution:
       "After edge $k$: R1 = $X_k$, R2 = $\\overline{X_{k-1}}$, R3 = $\\overline{X_{k-2}}$, R4 = $\\overline{X_{k-3}}$, where the 'inputs' before $X_1$ are the initial zeros.\n- Edges 1, 2: R4 still holds initial zeros that never passed the inverter: 0, 0.\n- Edge 3: R4 receives the R2 value produced at edge 1, $\\overline{0} = $ F.\n- Edges 4–8: $\\overline{9} = 6$, $\\overline{4} = $ B, $\\overline{\\text{E}} = 1$, $\\overline{2} = $ D, $\\overline{7} = 8$.\nOUT: **0 0 F 6 B 1 D 8**. The data appear 3 edges late (one per register after R1), each inverted once.",
-    source: "Style: Tutorial 8 Q3",
+    source: "Style: Tut 8 Q3",
   },
   // ---------------------------------------------------------------- counters
   {
@@ -480,73 +515,74 @@ export const sequentialQuestions: Draft[] = [
     options: ["001, 010, 011, 100", "111, 110, 101, 100", "001, 011, 111, 110", "100, 010, 001, 100", "001, 000, 001, 000"],
     answer: 1,
     solution:
-      "A flip-flop toggles when its clock input **rises**.\n- Edge 1: $Q_0$ 0→1 (rising) toggles $Q_1$ 0→1 (rising) toggles $Q_2$ 0→1: state 111.\n- Edge 2: $Q_0$ 1→0 (falling): nothing else: 110.\n- Edge 3: $Q_0$ 0→1 toggles $Q_1$ 1→0 (falling, stops): 101.\n- Edge 4: $Q_0$ 1→0: 100.\nSo it counts **down** (7, 6, 5, 4, …). To count up with rising-edge flip-flops, clock each stage from the previous $\\overline{Q}$ (or use falling-edge flip-flops clocked by Q).",
-    source: "Style: CE1005 2017-18 Q4(b)",
+      "A flip-flop toggles when its clock input **rises**.\n- Edge 1: $Q_0$ 0→1 (rising) toggles $Q_1$ 0→1 (rising) toggles $Q_2$ 0→1: state 111.\n- Edge 2: $Q_0$ 1→0 (falling): nothing else: 110.\n- Edge 3: $Q_0$ 0→1 toggles $Q_1$ 1→0 (falling, stops): 101.\n- Edge 4: $Q_0$ 1→0: 100.\nSo it counts **down** (7, 6, 5, 4, …): with these connections each stage toggles when the previous Q **rises**.",
+    source: "Style: PYP 2017-18 S1 Q4(b)",
   },
   {
     kind: "mcq",
     subtopic: "Ripple counters",
     difficulty: "medium",
     prompt:
-      "A 4-bit ripple up-counter ($Q_0$ toggles first, each later bit is clocked by the bit before it) changes from $1011$ to $1100$ ($Q_3Q_2Q_1Q_0$). Which transient values appear on the outputs, in order, between those two states?",
-    options: ["1010 then 1000", "1001 then 1000", "1111", "0011 then 0000", "None: all bits change at the same time"],
+      "A 4-bit version of the ripple counter in PYP 2017-18 S1 Q4(b): four **negative-edge** triggered J-K flip-flops all have $J = K = 1$; FF0 is clocked by clk, FF1 by $Q_0$, FF2 by $Q_1$ and FF3 by $Q_2$. Starting from $Q_3Q_2Q_1Q_0 = 0000$, what is the state after 11 falling edges of clk?",
+    options: ["1011", "1101", "0101", "0100", "1100"],
     answer: 0,
     solution:
-      "Bits change one after another, each a flip-flop delay after its predecessor:\n- $Q_0$: 1 → 0 gives 1010 (a falling $Q_0$ clocks the next stage).\n- $Q_1$: 1 → 0 gives 1000.\n- $Q_2$: 0 → 1 gives 1100 (a rising $Q_2$ does not trigger $Q_3$), and the ripple stops.\nSo the outputs pass through 10 and 8 before settling at 12. Logic decoding the count can glitch on these values; a synchronous counter has no such transients.",
-    source: "Original",
+      "With $J = K = 1$ each flip-flop toggles at a falling edge of its own clock input. $Q_0$ toggles at every falling clk edge; $Q_1$ toggles when $Q_0$ falls; $Q_2$ when $Q_1$ falls; $Q_3$ when $Q_2$ falls.\nTracing from 0000: 0001, 0010, 0011, 0100, …: the state goes up by one at each falling clk edge, so after 11 edges it is $11_{10}$ = **1011**.\n- 1101 is 1011 written with the bits reversed.\n- 0101 ($= 16 - 11$) is what a down-count would give.\n- 0100 is the bitwise inverse of 1011; 1100 is one edge too many.",
+    source: "Style: PYP 2017-18 S1 Q4(b)",
   },
   {
     kind: "mcq",
-    subtopic: "Ripple vs synchronous counters",
+    subtopic: "Master–slave flip-flop",
     difficulty: "medium",
-    prompt:
-      "A 4-bit ripple counter uses flip-flops with a clock-to-Q delay of 12.5 ns. The count must have settled before it is read just before the next clock edge. Ignoring setup time, what is the maximum clock frequency?",
-    options: ["80 MHz", "40 MHz", "20 MHz", "10 MHz", "160 MHz"],
-    answer: 2,
+    prompt: "In the lecture's **positive-edge** master–slave D flip-flop (built from two D latches), what happens while CLK = 0?",
+    options: [
+      "The master samples D while the slave is disabled, so Q holds its value",
+      "The slave copies the master's value to Q",
+      "Both latches are transparent, so Q follows D",
+      "Both latches are disabled, so D is ignored",
+      "The master is disabled and the slave samples D",
+    ],
+    answer: 0,
     solution:
-      "In the worst case (e.g. 0111 → 1000 or 1111 → 0000) the change ripples through all four flip-flops: $4 \\times 12.5 = 50$ ns. The period must be at least 50 ns, so $f_{max} = 1/50\\text{ ns} = 20$ MHz.\n80 MHz is the limit for one flip-flop delay, which is what a synchronous counter would achieve (plus its gate delay).",
-    source: "Original",
+      "The master stage is enabled when the control is low and samples the current input, while the slave is disabled, 'locking it in the middle'. Only when the control goes high is the master disabled and the slave uses the value from the middle to determine its output. Hence Q changes only at the rising edge.\nB and E describe the CLK = 1 phase (or a negative-edge design); if both were transparent (C) the circuit would be a latch.",
+    source: "Lecture 09 p.27–28",
   },
   {
     kind: "short",
-    subtopic: "Counter modulus",
-    difficulty: "hard",
+    subtopic: "D latch",
+    difficulty: "easy",
     prompt:
-      "A 4-bit binary ripple up-counter has an active-low asynchronous clear driven by a 2-input NAND gate whose inputs are $Q_3$ and $Q_2$. Starting from 0, what is the modulus of the counter (the number of stable states in its cycle)?",
-    accept: ["12"],
+      "A positive-level D latch starts with $Q = 0$. The inputs $(E, D)$ are applied one after another: $(1,1)$, $(0,0)$, $(0,1)$, $(1,0)$, $(1,1)$, $(0,0)$. Type Q after each step as a 6-bit string (first step first).",
+    accept: ["111011", "1 1 1 0 1 1", "1,1,1,0,1,1", "1, 1, 1, 0, 1, 1"],
+    match: "text",
+    placeholder: "6 bits",
+    solution:
+      "D latch table: $E = 0$ → store; $E = 1$ → $Q^+ = D$ (transparent).\n- $(1,1)$: transparent → 1.\n- $(0,0)$, $(0,1)$: disabled, hold → 1, 1.\n- $(1,0)$: transparent → 0.\n- $(1,1)$: transparent → 1.\n- $(0,0)$: hold → 1.\nAnswer `111011`.",
+    source: "Style: Lecture 09 p.14",
+  },
+  {
+    kind: "short",
+    subtopic: "Clock period and frequency",
+    difficulty: "easy",
+    prompt: "A clock has a frequency of 125 MHz. What is its period in ns?",
+    accept: ["8"],
     match: "number",
-    solution:
-      "The NAND output (the clear) goes low as soon as $Q_3 = Q_2 = 1$. Counting from 0, the first value with both bits set is $1100_2 = 12$. At that moment the counter is cleared, so 12 exists only for a gate delay (a glitch), and the stable states are 0, 1, …, 11: **mod-12**.\n(0–11 never have $Q_3 = Q_2 = 1$: 8 = 1000, 9 = 1001, 10 = 1010, 11 = 1011.)",
-    source: "Original",
+    placeholder: "ns",
+    solution: "The frequency is the inverse of the period, so $T = 1/f = 1/(125 \\times 10^{6}\\text{ Hz}) = 8 \\times 10^{-9}$ s $= 8$ ns.\nCheck against the lecture anchors: 10 ns ↔ 100 MHz, so a slightly higher frequency means a slightly shorter period.",
+    source: "Style: Lecture 09 p.22",
   },
   {
     kind: "short",
-    subtopic: "Synchronous counters",
-    difficulty: "hard",
+    subtopic: "SR latch",
+    difficulty: "easy",
     prompt:
-      "A 3-bit **synchronous down**-counter (7, 6, 5, …, 0, 7, …) is built from T flip-flops with a common clock. Give a minimal expression for $T_2$, the toggle input of the most significant bit, in terms of $Q_2$, $Q_1$, $Q_0$.",
-    accept: ["Q1'Q0'", "Q0'Q1'"],
-    match: "expr",
-    vars: ["Q2", "Q1", "Q0"],
-    minimal: true,
-    placeholder: "e.g. Q1Q0",
+      "A NOR SR latch starts with $Q = 1$. The inputs $(S, R)$ are applied one after another: $(0,1)$, $(0,0)$, $(1,0)$, $(0,0)$, $(1,0)$, $(0,1)$. Type Q after each step as a 6-bit string (first step first).",
+    accept: ["001110", "0 0 1 1 1 0", "0,0,1,1,1,0", "0, 0, 1, 1, 1, 0"],
+    match: "text",
+    placeholder: "6 bits",
     solution:
-      "When counting down, a bit toggles exactly when all lower bits are 0 (they are about to borrow): 100 → 011 and 000 → 111 are the only steps where $Q_2$ changes.\nSo $T_2 = 1$ in states 0 and 4, i.e. whenever $Q_1 = Q_0 = 0$: $T_2 = \\overline{Q_1}\\,\\overline{Q_0}$.\n(For the up-counter it would be $Q_1Q_0$. Also $T_1 = \\overline{Q_0}$ and $T_0 = 1$.)",
-    source: "Style: Lecture 9 counters",
-  },
-  {
-    kind: "short",
-    subtopic: "Registers with load",
-    difficulty: "medium",
-    prompt:
-      "One bit of a register is a D flip-flop with output Q. It must load the input I at a clock edge when the load signal L = 1, and keep its value when L = 0, without gating the clock. Give an expression for its D input in terms of L, I and Q.",
-    accept: ["LI + L'Q", "L'Q + LI"],
-    match: "expr",
-    vars: ["L", "I", "Q"],
-    placeholder: "D = ...",
-    solution:
-      "Put a 2-to-1 multiplexer in front of D, selected by L: input 1 is I, input 0 is the flip-flop's own output Q.\n$$D = L\\cdot I + \\overline{L}\\cdot Q$$\nWhen L = 0 the flip-flop reloads Q at every edge, so it holds. Gating the clock (AND-ing CLK with L) is avoided in synchronous design because it creates glitches and skew.",
-    source: "Style: Lecture 9 registers",
+      "SR latch table: $00$ store, $01$ reset, $10$ set.\n- $(0,1)$ reset → 0; $(0,0)$ store → 0.\n- $(1,0)$ set → 1; $(0,0)$ store → 1; $(1,0)$ set again → 1.\n- $(0,1)$ reset → 0.\nAnswer `001110`.",
+    source: "Style: Lecture 09 p.12",
   },
   {
     kind: "open",
@@ -555,7 +591,7 @@ export const sequentialQuestions: Draft[] = [
     prompt:
       "Three negative-edge triggered J-K flip-flops all have $J = K = 1$. FF0 is clocked by CLK, FF1 by $Q_0$ and FF2 by $Q_1$.\n(a) Sketch the timing diagram of $Q_0$, $Q_1$ and $Q_2$ for eight clock cycles, starting from $Q_2Q_1Q_0 = 000$ with CLK initially high. (5 marks)\n(b) State the count sequence and whether it is an up- or down-counter. (2 marks)",
     modelAnswer:
-      "(a) With $J = K = 1$ each flip-flop toggles at every falling edge of its own clock.\n- $Q_0$ toggles at every falling edge of CLK, so it has half the clock frequency.\n- $Q_1$ toggles whenever $Q_0$ falls (1 → 0), i.e. every second CLK falling edge.\n- $Q_2$ toggles whenever $Q_1$ falls, every fourth CLK falling edge.\n(b) $Q_2Q_1Q_0$ = 000, 001, 010, 011, 100, 101, 110, 111, 000: a 3-bit (mod-8) binary **up**-counter. In a real ripple counter each later bit changes a flip-flop delay after the one that clocks it.",
+      "(a) With $J = K = 1$ each flip-flop toggles at every falling edge of its own clock.\n- $Q_0$ toggles at every falling edge of CLK.\n- $Q_1$ toggles whenever $Q_0$ falls (1 → 0), i.e. every second CLK falling edge.\n- $Q_2$ toggles whenever $Q_1$ falls, every fourth CLK falling edge.\n(b) $Q_2Q_1Q_0$ = 000, 001, 010, 011, 100, 101, 110, 111, 000: a 3-bit binary **up**-counter.",
     modelFigures: [
       {
         kind: "wave",
@@ -574,10 +610,10 @@ export const sequentialQuestions: Draft[] = [
       { point: "Q0 toggles at every falling edge of CLK", marks: 2 },
       { point: "Q1 toggles when Q0 falls", marks: 1.5 },
       { point: "Q2 toggles when Q1 falls", marks: 1.5 },
-      { point: "Count sequence 0, 1, 2, …, 7, 0 identified as a mod-8 up-counter", marks: 2 },
+      { point: "Count sequence 0, 1, 2, …, 7, 0 identified as an up-counter", marks: 2 },
     ],
-    solution: "Each stage is a divide-by-2: falling-edge flip-flops clocked by the previous Q count up. Draw each Q changing only on a falling edge of its own clock.",
-    source: "Style: CE1005 2017-18 Q4(b)",
+    solution: "Each flip-flop toggles at a falling edge of its own clock input (CLK for FF0, the previous Q for the others). Draw each Q changing only on a falling edge of its own clock, then read $Q_2Q_1Q_0$ after each CLK edge.",
+    source: "Style: PYP 2017-18 S1 Q4(b)",
   },
   {
     kind: "open",
@@ -585,7 +621,7 @@ export const sequentialQuestions: Draft[] = [
     difficulty: "easy",
     prompt: "What is an SR latch? Draw one built from NOR gates, give its truth table, and briefly describe how it stores a bit and why one input combination must be avoided. (6 marks)",
     modelAnswer:
-      "An SR latch is the simplest 1-bit memory element: two cross-coupled gates whose outputs feed back into each other's inputs, with a Set input and a Reset input.\nNOR version: $Q = \\overline{R + \\overline{Q}}$, $\\overline{Q} = \\overline{S + Q}$ (diagram below).\n- $S = 1, R = 0$: the $\\overline{Q}$ gate outputs 0, so the Q gate sees $0, 0$ and outputs 1: **set**.\n- $S = 0, R = 1$: Q = 0, $\\overline{Q} = 1$: **reset**.\n- $S = R = 0$: each gate's output holds the other in place through the feedback, so the previous Q is **stored**.\n- $S = R = 1$: both outputs are forced to 0, so Q and $\\overline{Q}$ are not complements; and if S and R then return to 0 together, both gates switch simultaneously and the latch may oscillate or settle unpredictably. So $S = R = 1$ is **invalid** and must be avoided.",
+      "An SR latch is the most basic circuit for storing a bit: two cross-coupled gates whose outputs feed back into each other's inputs, with a Set input and a Reset input.\nNOR version: $Q = \\overline{R + \\overline{Q}}$, $\\overline{Q} = \\overline{S + Q}$ (diagram below).\n- $S = 1, R = 0$: the $\\overline{Q}$ gate outputs 0, so the Q gate sees $0, 0$ and outputs 1: **set**.\n- $S = 0, R = 1$: Q = 0, $\\overline{Q} = 1$: **reset**.\n- $S = R = 0$: each gate's output holds the other in place through the feedback, so the previous Q is **stored**.\n- $S = R = 1$: both outputs are forced to 0, so Q and $\\overline{Q}$ are not complements; and if S and R are then de-asserted at the same time, the output may oscillate, and which state it settles in is impossible to know. So $S = R = 1$ must be avoided.",
     modelFigures: [
       {
         kind: "circuit",
@@ -610,13 +646,13 @@ export const sequentialQuestions: Draft[] = [
       },
     ],
     rubric: [
-      { point: "Definition: a bistable 1-bit storage element with set and reset inputs, built with feedback", marks: 1 },
+      { point: "Definition: a 1-bit storage element with set and reset inputs, built with feedback", marks: 1 },
       { point: "Correct cross-coupled NOR diagram", marks: 1.5 },
       { point: "Correct truth table (store, reset, set, invalid)", marks: 1.5 },
       { point: "Explains storage through feedback when S = R = 0", marks: 1 },
       { point: "Explains why S = R = 1 is invalid (Q = Q' = 0, race on release)", marks: 1 },
     ],
-    solution: "Key points: cross-coupled feedback stores the bit; S sets, R resets; S = R = 1 breaks the complementary outputs and causes a race when released.",
-    source: "Style: CE1005 2017-18 Q4(a)",
+    solution: "Key points: cross-coupled feedback stores the bit; S sets, R resets; S = R = 1 breaks the complementary outputs and makes the state unpredictable when both are released together.",
+    source: "Style: PYP 2017-18 S1 Q4(a)",
   },
 ];

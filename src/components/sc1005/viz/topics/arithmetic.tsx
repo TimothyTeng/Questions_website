@@ -106,7 +106,7 @@ function FullAdder() {
           onChange={setForm}
           options={[
             { v: "ha", label: "Two half adders + OR" },
-            { v: "sop", label: "XOR + majority (SOP)" },
+            { v: "sop", label: "XOR + SOP carry" },
           ]}
         />
       }
@@ -266,7 +266,7 @@ function RippleAdder() {
         "Predict: starting from 0000 + 0000, how many delays does 0111 + 0001 take to settle? Step through and watch the carry walk left one stage per delay.",
         "Look at t = 1 and t = 2 for that example: the sum reads 0110 and then 0100 before reaching 1000. Why must a register wait before loading the sum?",
         "Find an addition that settles after a single delay (no carry chain). What property of the bits makes it fast?",
-        "Explain how a carry look-ahead adder would avoid the wait: what would it compute directly from the A and B bits?",
+        "The lecture says carry propagation can be reduced by a carry-look-ahead circuit. Which limitation that you saw here would that address?",
       ]}
     />
   );
@@ -466,14 +466,14 @@ function TwosWheel() {
             tex={V ? `**1**: the arrow crossed the red 7 | −8 boundary (true result ${trueSum} is outside −8…7)` : "**0**: result in range −8…7"}
             tone={V ? "bad" : "good"}
           />
-          <Read label="Carry C4" tex={`${carry}${carry ? ": crossed 1111 → 0000 (unsigned wrap), which is **not** a signed overflow by itself" : ""}`} />
+          <Read label="Carry C4" tex={`${carry}${carry ? ": the carry out is ignored in 2's complement addition; it does **not** by itself mean overflow" : ""}`} />
           <Read tex={`Operand signs: ${xs < 0 ? "−" : "+"} and ${k < 0 ? "−" : "+"}${(xs < 0) !== (k < 0) ? " (opposite signs: overflow impossible)" : ""}`} />
         </>
       }
       tasks={[
         "Predict: does $5 + 4$ overflow in 4 bits? Check where the arrow ends and what the result reads as.",
         "Pick a negative x and a positive k. Can you make the arrow cross the red boundary? Explain why operands of opposite sign never overflow.",
-        "Find a sum with carry out C4 = 1 but no overflow (e.g. −3 + 5). Why is the carry out not the overflow flag?",
+        "Find a sum with carry out C4 = 1 but no overflow (e.g. −3 + 5). Why is the carry out ignored rather than used to judge overflow?",
         "Select x = 1000 (−8) and press Negate. What happens, and why is −8 the exception?",
       ]}
     />
@@ -556,7 +556,7 @@ function AddSubCircuit() {
           {/* overflow XOR */}
           <rect x={6} y={222} width={56} height={40} rx={6} fill={V ? "var(--bad-soft)" : "var(--surface)"} stroke={V ? "var(--bad)" : "var(--text)"} strokeWidth={1.6} />
           <text x={34} y={240} textAnchor="middle" className="cir-pin">
-            C4⊕C3
+            overflow
           </text>
           <text x={34} y={255} textAnchor="middle" className="cir-bit" fill={V ? "var(--bad)" : "var(--text)"}>
             V={V}
@@ -587,13 +587,17 @@ function AddSubCircuit() {
           <Read label="XOR outputs" tex={`B = Y ⊕ M = ${toBin(Y, 4)} ⊕ ${M ? "1111" : "0000"} = **${B.slice().reverse().join("")}**${M ? " (Y inverted)" : " (Y unchanged)"}, $C_0 = ${M}$`} />
           <Read label="Adder" tex={`${toBin(X, 4)} + ${B.slice().reverse().join("")} + ${M} = **${S.slice().reverse().join("")}**, carries $C_4..C_1$ = ${[C[4], C[3], C[2], C[1]].join("")}`} />
           <Read label="Signed result" tex={`${S.slice().reverse().join("")} = ${signed(sv, 4)}`} tone={V ? "bad" : "good"} />
-          <Read label="Overflow" tex={`$V = C_4 \\oplus C_3 = ${C[4]} \\oplus ${C[3]} = ${V}$${V ? `: true result ${trueRes} is outside −8…7` : ""}`} tone={V ? "bad" : "good"} />
+          <Read
+            label="Overflow"
+            tex={`sign bits of the numbers added: $X_3 = ${bit(X, 3)}$, $B_3 = ${B[3]}$; sum $S_3 = ${S[3]}$ ⇒ ${V ? `same-sign operands, opposite-sign sum: **overflow** (true result ${trueRes} is outside −8…7)` : "**no overflow**"}`}
+            tone={V ? "bad" : "good"}
+          />
         </>
       }
       tasks={[
         "Predict every wire for $3 - 7$ (the preset): B inputs, carries and result. Then check against the diagram.",
         "Keep X and Y, switch to Add. Which wires change, and why does $C_0$ change too?",
-        "Find a subtraction that overflows. Do the operands have the same or opposite signs? Confirm $V = C_4 \\oplus C_3$.",
+        "Find a subtraction that overflows. Do the operands have the same or opposite signs? Confirm with the sign rule on $X_3$, $B_3$ and $S_3$.",
         "Explain why inverting Y alone (1's complement) would make every difference 1 too small, and which wire fixes it.",
       ]}
     />

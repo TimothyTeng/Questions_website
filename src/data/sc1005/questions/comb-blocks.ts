@@ -1,4 +1,4 @@
-import type { Draft, Figure } from "@/lib/sc1005/types";
+import type { CircuitSpec, Draft, Figure } from "@/lib/sc1005/types";
 
 // ---------------------------------------------------------------------------------------------
 // Block-diagram SVG helpers (multiplexers, decoders, comparators drawn as blocks). Exported so the
@@ -189,11 +189,36 @@ export function signedCompSvg(dl: [string, string, string, string] | null, bits 
 
 // ---------------------------------------------------------------------------------------------
 
+/** PYP 2018-19 S2 Q3(b): 2-4 decoder (drawn as its AND gates) on X[1:0], AND with X[5:2], OR. */
+const decMuxCircuit: CircuitSpec = {
+  inputs: ["X1", "X0", "X2", "X3", "X4", "X5"],
+  gates: [
+    { id: "d0", type: "AND", in: ["!X1", "!X0"] },
+    { id: "d1", type: "AND", in: ["!X1", "X0"] },
+    { id: "d2", type: "AND", in: ["X1", "!X0"] },
+    { id: "d3", type: "AND", in: ["X1", "X0"] },
+    { id: "p0", type: "AND", in: ["d0", "X2"] },
+    { id: "p1", type: "AND", in: ["d1", "X3"] },
+    { id: "p2", type: "AND", in: ["d2", "X4"] },
+    { id: "p3", type: "AND", in: ["d3", "X5"] },
+    { id: "Y", type: "OR", in: ["p0", "p1", "p2", "p3"] },
+  ],
+  outputs: ["Y"],
+};
+
 const segTable: Figure = {
   kind: "table",
   head: ["Digit", "a", "b", "c", "d", "e", "f", "g"],
   rows: Array.from({ length: 10 }, (_, d) => [d, ..."abcdefg".split("").map((s) => (SEG7[d].includes(s) ? 1 : 0))]),
   caption: "Segments lit for each BCD digit (1 = lit), a = top segment, clockwise, g = middle",
+};
+
+const SEG_HEX: Record<number, string> = { ...SEG7, 10: "abcefg", 11: "cdefg", 12: "adef", 13: "bcdeg", 14: "adefg", 15: "aefg" };
+const segHexTable: Figure = {
+  kind: "table",
+  head: ["Digit", "WXYZ", "a", "b", "c", "d", "e", "f", "g"],
+  rows: Array.from({ length: 16 }, (_, d) => [d.toString(16).toUpperCase(), d.toString(2).padStart(4, "0"), ..."abcdefg".split("").map((s) => (SEG_HEX[d].includes(s) ? 1 : 0))]),
+  caption: "Hexadecimal seven-segment truth table (1 = segment on), as in Lecture 07 p.14 and Lab 3 Table 1",
 };
 
 export const combBlocksQuestions: Draft[] = [
@@ -202,18 +227,18 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Multiplexers",
     difficulty: "easy",
-    source: "Style: PYP 2017-18 S2 Q3(a)",
+    source: "Style: Lecture 07 p.24, PYP 2017-18 S2 Q3(a)",
     prompt: "A multiplexer must route any one of **48** data inputs to its single output. What is the minimum number of select lines it needs?",
     options: ["5", "6", "24", "48", "There are multiple correct answers"],
     answer: 1,
     solution:
-      "An $n$-input multiplexer needs $\\lceil \\log_2 n \\rceil$ select bits, because the select lines must be able to name every input with a distinct binary code.\n$2^5 = 32 < 48$, so 5 bits cannot name all inputs; $2^6 = 64 \\ge 48$, so **6** select lines are needed (16 of the 64 codes are unused).\n24 and 48 confuse select lines with data lines (one-hot selection would need 48 lines).",
+      "An $n$-input multiplexer needs $\\lceil \\log_2 n \\rceil$ select bits, because the select lines must be able to name every input with a distinct binary code.\n$2^5 = 32 < 48$, so 5 bits cannot name all inputs; $2^6 = 64 \\ge 48$, so **6** select lines are needed (16 of the 64 codes are unused).\n24 and 48 confuse select lines with data lines.",
   },
   {
     kind: "mcq",
     subtopic: "Implementing functions with a MUX",
     difficulty: "medium",
-    source: "Style: Tutorial 6 Q1",
+    source: "Style: Tut 6 Q1",
     prompt: "The 4-to-1 multiplexer below has select inputs $S_1 = A$ (MSB) and $S_0 = B$. Which expression is the output $F$?",
     figures: [fig(muxSvg(["C'", "1", "0", "C"], ["A", "B"]), "4-to-1 MUX: data line $I_k$ is passed to F when $S_1S_0 = k$")],
     options: ["F = A'C' + BC", "F = B'C' + AC", "F = B'C + AC'", "F = A'B'C' + ABC", "None of the above"],
@@ -226,31 +251,38 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Decoders",
     difficulty: "easy",
-    source: "Style: PYP 2016-17 S2 Q3(b)",
+    source: "Style: PYP 2017-18 S1 Q3(b)",
     prompt: "A 3-to-8 decoder has inputs $I_2I_1I_0 = ABC$ ($A$ is the MSB) and active-high outputs $d_0 \\dots d_7$. Outputs $d_1$, $d_2$, $d_4$ and $d_7$ are connected to a 4-input OR gate whose output is $F$. What is $F$?",
     figures: [fig(decoder38(["A", "B", "C"], ["", "to OR", "to OR", "", "to OR", "", "", "to OR"], "1"), "Only the marked outputs feed the OR gate")],
     options: ["$F = A \\oplus B \\oplus C$", "$F = AB + BC + AC$", "$F = (A \\oplus B \\oplus C)'$", "$F = A'B'C + ABC'$", "$F = A + B + C$"],
     answer: 0,
     solution:
-      "Output $d_k$ of a decoder is exactly minterm $m_k$ of its inputs, so ORing outputs builds a sum of minterms: $F = \\sum m(1,2,4,7)$.\nThese are the input combinations with an **odd** number of 1s (001, 010, 100, 111), which is the definition of the 3-input XOR (odd parity), i.e. the sum output of a full adder.\n$AB + BC + AC = \\sum m(3,5,6,7)$ is the carry (majority) function, and option C is the even-parity function $\\sum m(0,3,5,6)$.",
-  },
-  {
-    kind: "mcq",
-    subtopic: "Decoders",
-    difficulty: "hard",
-    source: "Original",
-    prompt:
-      "A 3-to-8 decoder has **active-low** outputs $\\overline{Y_0} \\dots \\overline{Y_7}$: the selected output is 0 and all the others are 1. Its inputs are $ABC$ ($A$ = MSB) and it is permanently enabled. Outputs $\\overline{Y_0}$, $\\overline{Y_2}$, $\\overline{Y_5}$ and $\\overline{Y_7}$ drive a 4-input **AND** gate with output $G$. Which of the following describes $G$?",
-    options: ["$G = \\sum m(0,2,5,7)$", "$G = \\sum m(1,3,4,6)$", "$G = \\prod M(0,2,5,7)$", "$G = \\prod M(1,3,4,6)$", "There are multiple correct answers"],
-    answer: 4,
-    solution:
-      "The AND output is 1 only when **all four** of its inputs are 1, i.e. when none of outputs 0, 2, 5, 7 is the selected (low) one. So $G = 0$ exactly for inputs 0, 2, 5, 7 and $G = 1$ for 1, 3, 4, 6.\nThat is $G = \\sum m(1,3,4,6)$, and listing the zeros instead gives the same function as $\\prod M(0,2,5,7)$. Both **B** and **C** are correct, so the answer is **E**.\n(Rule of thumb: active-low outputs into a NAND give $\\sum m$ of the connected outputs; into an AND they give $\\prod M$ of the connected outputs.) A and D describe the complement $G'$.",
+      "Output $d_k$ of a decoder is exactly minterm $m_k$ of its inputs, so ORing outputs builds a sum of minterms: $F = \\sum m(1,2,4,7)$.\nThese are the input combinations with an **odd** number of 1s (001, 010, 100, 111): the 3-input XOR, i.e. the Sum output of a full adder (PYP 2017-18 S1 Q3(b) builds a full adder exactly this way).\n$AB + BC + AC = \\sum m(3,5,6,7)$ is the full-adder Carry, and option C is the complement $\\sum m(0,3,5,6)$.",
   },
   {
     kind: "mcq",
     subtopic: "Decoders",
     difficulty: "medium",
-    source: "Style: Lecture 7 (larger decoders)",
+    source: "Style: PYP 2018-19 S2 Q3(b)",
+    prompt:
+      "In the circuit below, $X[1{:}0]$ drives a 2-4 decoder ($i_1 = X[1]$, $i_0 = X[0]$). Output $d_k$ is ANDed with $X[k+2]$ and the four AND outputs are ORed to give $Y$. The decoder is drawn as its AND gates. For $X[5{:}0] = 010110$, what is $Y$, and what commonly used circuit is this?",
+    figures: [{ kind: "circuit", circuit: decMuxCircuit, caption: "2-4 decoder on X[1:0], AND gates with X[5:2], OR gate" }],
+    options: [
+      "$Y = 1$ ($= X[4]$); the circuit is a 4-to-1 multiplexer",
+      "$Y = 0$ ($= X[3]$); the circuit is a 4-to-1 multiplexer",
+      "$Y = 1$; the circuit is a 2-to-4 decoder",
+      "$Y = 0$ ($= X[5]$); the circuit is a 4-to-1 multiplexer",
+      "$Y = 1$; the circuit is a priority encoder",
+    ],
+    answer: 0,
+    solution:
+      "$X[1{:}0] = 10$, so the decoder sets only $d_2 = 1$. Only the AND gate fed by $d_2$ can pass its data bit, so $Y = X[4] = 1$ (bits of 010110 from $X[5]$ down: 0, 1, 0, 1, 1, 0).\nFor every value of $X[1{:}0]$ exactly one of $X[2] \\dots X[5]$ reaches $Y$: $X[1{:}0]$ acts as the select input and $X[5{:}2]$ as the data inputs of a **4-to-1 multiplexer** (PYP 2018-19 S2 Q3(b)(iii)).\n**B** swaps $i_1$ and $i_0$ (it decodes 01 and passes $X[3]$).",
+  },
+  {
+    kind: "mcq",
+    subtopic: "Decoders",
+    difficulty: "medium",
+    source: "Style: PYP 2020-21 S2 Q3(a)",
     prompt:
       "A 4-to-16 decoder is built from two 3-to-8 decoders with active-high enables, as shown. Both decoders receive $A_2A_1A_0$; U0 is enabled by $A_3'$ and U1 by $A_3$. For the input $A_3A_2A_1A_0 = 1101$, which output line is high?",
     figures: [fig(twoDecoders(), "Two 3-to-8 decoders sharing $A_2A_1A_0$, enabled by $A_3'$ and $A_3$")],
@@ -263,33 +295,26 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Priority encoders",
     difficulty: "medium",
-    source: "Original",
+    source: "Style: PYP 2017-18 S2 Q2(a)",
     prompt:
-      "An 8-to-3 **priority** encoder gives the index of the highest-numbered active input ($I_7$ has the highest priority) on $Y_2Y_1Y_0$, and a valid output $V = 1$ when any input is active. The inputs are shown below. What are the outputs?",
-    figures: [{ kind: "table", head: ["$I_7$", "$I_6$", "$I_5$", "$I_4$", "$I_3$", "$I_2$", "$I_1$", "$I_0$"], rows: [[0, 0, 1, 0, 1, 1, 0, 0]] }],
-    options: ["$Y_2Y_1Y_0 = 101$, $V = 1$", "$Y_2Y_1Y_0 = 010$, $V = 1$", "$Y_2Y_1Y_0 = 111$, $V = 1$", "$Y_2Y_1Y_0 = 011$, $V = 1$", "$Y_2Y_1Y_0 = 000$, $V = 0$"],
+      "The circuit of PYP 2017-18 S2 Table Q2 has active-low inputs $E^*, A_7^* \\dots A_1^*$ and active-high outputs $Y_2Y_1Y_0$. When $E^*$ is asserted, $Y_2Y_1Y_0$ is the index of the highest-numbered asserted input $A_k^*$ (000 if none is asserted); when $E^*$ is negated the outputs are 000. For the inputs below, what is $Y_2Y_1Y_0$?",
+    figures: [{ kind: "table", head: ["$E^*$", "$A_7^*$", "$A_6^*$", "$A_5^*$", "$A_4^*$", "$A_3^*$", "$A_2^*$", "$A_1^*$"], rows: [[0, 1, 1, 0, 1, 0, 0, 1]] }],
+    options: ["101", "010", "111", "000", "110"],
     answer: 0,
     solution:
-      "Active inputs: $I_5$, $I_3$, $I_2$. The highest-numbered one wins, so the output is $5 = 101_2$, and $V = 1$ because at least one input is active.\n**B** (010) picks the lowest active input instead. **C** (111) is what a plain OR-gate encoder produces: it ORs the codes $101 + 011 + 010 = 111$, which names an input that is not even active. That is exactly why a priority encoder is needed when several inputs can be active at once.",
+      "The inputs are active-low, so an input is asserted when it is **0**: $A_5^*$, $A_3^*$ and $A_2^*$ are asserted, and $E^* = 0$ means the circuit is enabled.\nThe highest-numbered asserted input wins: $A_5$, so $Y_2Y_1Y_0 = 101$.\n**B** (010) picks the lowest asserted input. **C** (111) treats a 1 as asserted ($A_7^* = 1$). **D** treats $E^* = 0$ as disabling the circuit.",
   },
   {
     kind: "mcq",
-    subtopic: "Encoders",
-    difficulty: "medium",
-    source: "Original",
+    subtopic: "Multiplexers",
+    difficulty: "easy",
+    source: "Style: Lecture 07 p.25 (bus multiplexer)",
     prompt:
-      "A simple 4-to-2 encoder is built from two OR gates: $Y_1 = I_2 + I_3$ and $Y_0 = I_1 + I_3$ (shown below). It is designed for one-hot inputs. What happens if $I_1$ and $I_2$ are both 1 (and $I_0 = I_3 = 0$)?",
-    figures: [{ kind: "circuit", circuit: { inputs: ["I3", "I2", "I1", "I0"], gates: [{ id: "Y1", type: "OR", in: ["I2", "I3"] }, { id: "Y0", type: "OR", in: ["I1", "I3"] }], outputs: ["Y1", "Y0"] } }],
-    options: [
-      "$Y_1Y_0 = 11$: the same code as $I_3$ alone, so the output is wrong",
-      "$Y_1Y_0 = 10$: $I_2$ wins because it has the larger index",
-      "$Y_1Y_0 = 01$: $I_1$ wins because it is checked first",
-      "$Y_1Y_0 = 00$: the encoder detects the conflict and outputs 0",
-      "The outputs oscillate between 01 and 10",
-    ],
+      "A 4-bit 2x1 mux selects between $A = 1010$ (on $I_0$) and $B = 0110$ (on $I_1$) and drives the 4-bit bus $C$. It is built from 1-bit 2x1 muxes as in Lecture 07. How many 1-bit 2x1 muxes does it contain, and what is $C$ when $s_0 = 1$?",
+    options: ["4 muxes, $C = 0110$", "4 muxes, $C = 1010$", "1 mux, $C = 0110$", "2 muxes, $C = 0110$", "8 muxes, $C = 1110$"],
     answer: 0,
     solution:
-      "Evaluate the gates: $Y_1 = I_2 + I_3 = 1 + 0 = 1$ and $Y_0 = I_1 + I_3 = 1 + 0 = 1$, so $Y_1Y_0 = 11$.\nThe OR encoder simply ORs the codes of all active inputs ($10 + 01 = 11$), producing the code of $I_3$, which is not active. There is no priority logic and no feedback, so B, C, D and E are impossible. A **priority encoder** adds gating so that a higher input masks the lower ones (e.g. $Y_0 = I_3 + I_1I_2'$).",
+      "A 4-bit 2x1 mux is **four** 1-bit 2x1 muxes, one per bit ($a_3/b_3$ to $c_3$, …, $a_0/b_0$ to $c_0$), all sharing the same select line $s_0$.\nWith $s_0 = 1$ every mux passes its $I_1$ input, so $C = B = 0110$.\n**B** is the $s_0 = 0$ case. **E** ORs $A$ and $B$, which a multiplexer never does.",
   },
   {
     kind: "mcq",
@@ -315,48 +340,50 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Seven-segment decoders",
     difficulty: "medium",
-    source: "Style: Lecture 7 (7-segment decoder)",
+    source: "Style: Lab 3 (active-low seg_L), Lecture 07 p.14",
     prompt:
-      "A BCD-to-7-segment decoder drives a **common-anode** display, so each segment output is **active-low** (a segment lights when its output is 0). Using the segment table below, for which BCD inputs (0–9) is the decoder's output for segment **c** at logic 1?",
+      "A BCD-to-7-segment decoder has **active-low** segment outputs, like `seg_L` in Lab 3 (a segment lights when its output is 0). Using the segment table below, for which BCD inputs (0–9) is the decoder's output for segment **c** at logic 1?",
     figures: [segTable],
     options: ["Only for input 2", "For inputs 2 and 5", "For inputs 5 and 6", "For inputs 1, 4 and 7", "For every input except 2"],
     answer: 0,
     solution:
-      "Read the c column: segment c is lit for every digit except **2**.\nWith an active-low (common-anode) display, a lit segment needs output 0 and an unlit segment needs output 1. So the c output is 1 only when the segment is dark, i.e. only for input 2.\n**E** is the active-high answer (common-cathode). Segment **b** is the one that is dark for 5 and 6, which is where B and C come from.",
+      "Read the c column: segment c is lit for every digit except **2**.\nWith active-low outputs, a lit segment needs output 0 and an unlit segment needs output 1. So the c output is 1 only when the segment is dark, i.e. only for input 2.\n**E** is the active-high answer (the table column itself). Segment **b** is the one that is dark for 5 and 6, which is where B and C come from.",
   },
   {
     kind: "mcq",
     subtopic: "Multiplexers",
     difficulty: "medium",
-    source: "Original",
-    prompt: "A 32-to-1 multiplexer must be built using **only 4-to-1 multiplexers** (unused data or select inputs may be tied to constants). What is the minimum number of 4-to-1 multiplexers?",
-    options: ["8", "10", "11", "16", "31"],
-    answer: 2,
+    source: "Style: L1-L12 practice L8 Q3–Q4",
+    prompt:
+      "A 2-input multiplexer has data inputs $A_1, A_0$, select $S$ and output $Z$ ($Z = A_0$ when $S = 0$, $Z = A_1$ when $S = 1$). An active-high enable $EN$ is added: when $EN = 0$, $Z = 0$ whatever $S$ is; when $EN = 1$ it works as before. Which expression is $Z$?",
+    options: ["$Z = EN\\,(S'A_0 + SA_1)$", "$Z = EN + S'A_0 + SA_1$", "$Z = EN'\\,(S'A_0 + SA_1)$", "$Z = S'A_0 + SA_1$", "$Z = EN\\,(SA_0 + S'A_1)$"],
+    answer: 0,
     solution:
-      "Build a tree. Level 1: $32/4 = 8$ muxes, all driven by $S_1S_0$. Level 2: the 8 outputs go into $8/4 = 2$ muxes driven by $S_3S_2$. Level 3: the 2 remaining outputs still have to be selected by $S_4$, which needs one more mux (use two of its four data inputs and tie its upper select bit to 0).\nTotal $8 + 2 + 1 = 11$. **10** forgets the last stage; **31** is the count for 2-to-1 muxes.",
+      "Without the enable, the 2-to-1 MUX is $S'A_0 + SA_1$ (one AND gate per data input, ORed: Lecture 07 p.24).\nThe enable must force $Z = 0$ when $EN = 0$ and change nothing when $EN = 1$: AND the whole expression with $EN$, giving $Z = EN(S'A_0 + SA_1)$. In gates, $EN$ becomes an extra input on each AND gate.\n**B** gives $Z = 1$ whenever $EN = 1$. **C** has an active-low enable. **E** swaps the data inputs.",
   },
   {
     kind: "mcq",
-    subtopic: "Demultiplexers",
-    difficulty: "easy",
-    source: "Original",
-    prompt: "A 1-to-4 **demultiplexer** sends its data input $D$ to the output selected by $S_1S_0$; the other outputs are 0. Which block behaves identically?",
+    subtopic: "Decoders",
+    difficulty: "hard",
+    source: "Style: PYP 2020-21 S2 Q3(a)",
+    prompt:
+      "A 5-to-32 decoder ($X[4{:}0]$ in, $Y[31{:}0]$ out) is built from one 2-4 decoder and four 3-8 decoders with enable. The 2-4 decoder receives $X[4{:}3]$; its output $d_k$ enables 3-8 decoder $U_k$, which receives $X[2{:}0]$ and drives $Y[8k+7{:}8k]$. For $X = 10110$, which output is high?",
     options: [
-      "A 2-to-4 decoder whose inputs are $S_1S_0$ and whose enable is $D$",
-      "A 4-to-1 multiplexer whose select lines are $S_1S_0$",
-      "A 4-to-2 encoder whose inputs are $D, S_1, S_0$ and 0",
-      "A 2-to-4 decoder whose inputs are $D$ and $S_0$ and whose enable is $S_1$",
-      "A 2-bit magnitude comparator",
+      "$U_2$ is enabled; its $d_6$ drives $Y[22]$",
+      "$U_1$ is enabled; its $d_6$ drives $Y[14]$",
+      "$U_2$ and $U_0$ are both enabled; $Y[22]$ and $Y[6]$ are high",
+      "$U_6$ is enabled; its $d_2$ drives $Y[50]$",
+      "$U_3$ is enabled; its $d_6$ drives $Y[30]$",
     ],
     answer: 0,
     solution:
-      "Output $k$ of a demux is $D \\cdot m_k(S_1, S_0)$. Output $k$ of a decoder with enable is $EN \\cdot m_k(I_1, I_0)$. They are identical when $EN = D$ and $I_1I_0 = S_1S_0$: with $D = 0$ all outputs are 0, with $D = 1$ exactly the selected output is 1.\nThis is why decoder chips with an enable are sold as \"decoder/demultiplexers\". A multiplexer does the opposite job (many inputs to one output).",
+      "The 2-4 decoder sees $X[4{:}3] = 10$, so only its $d_2$ is high and only $U_2$ is enabled; the other three 3-8 decoders output all 0s.\n$U_2$ decodes $X[2{:}0] = 110 = 6$, so its $d_6$ is high, which is $Y[8 \\cdot 2 + 6] = Y[22]$. Check: $10110_2 = 22$.\n**C** forgets that the enables are one-hot, so only one 3-8 decoder can ever be active. **D** swaps the two fields of $X$.",
   },
   {
     kind: "mcq",
     subtopic: "Multiplexers",
     difficulty: "medium",
-    source: "Style: Lecture 7 (timing diagrams)",
+    source: "Style: Lecture 07 p.28 (timing diagrams)",
     prompt: "A 2-to-1 multiplexer outputs $Y = A$ when $S = 0$ and $Y = B$ when $S = 1$. Using the waveforms below (one bit per time slot, no gate delay), which sequence is $Y$?",
     figures: [
       {
@@ -390,7 +417,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Implementing functions with a MUX",
     difficulty: "hard",
-    source: "Style: PYP 2017-18 S1 Q3(c)",
+    source: "Style: PYP 2016-17 S1 Q3(b), PYP 2018-19 S1 Q3(a)",
     prompt:
       "$F(A,B,C,D) = \\sum m(1,2,5,7,8,9,14)$ is implemented with an 8-to-1 multiplexer whose select lines are $S_2S_1S_0 = ABC$. Each data line is connected to 0, 1, $D$ or $D'$. Which assignment of $I_0, I_1, \\dots, I_7$ (in that order) is correct?",
     options: ["$D,\\ D',\\ D,\\ D,\\ 1,\\ 0,\\ 0,\\ D'$", "$D',\\ D,\\ D',\\ D',\\ 1,\\ 0,\\ 0,\\ D$", "$D',\\ 0,\\ 0,\\ 1,\\ D,\\ D,\\ D',\\ D$", "$D,\\ D',\\ D,\\ D,\\ D,\\ 0,\\ 0,\\ D'$", "None of the above"],
@@ -418,7 +445,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Implementing functions with a MUX",
     difficulty: "medium",
-    source: "Style: PYP 2018-19 S1 Q3(b)",
+    source: "Style: PYP 2017-18 S2 Q3(b)",
     prompt:
       "$F(A,B,C) = \\sum m(3,4)$ must be built from **one 2-to-1 multiplexer, one 2-input AND gate and one 2-input NOR gate**, with no inverters (complemented inputs are not available). Which variable(s) can drive the multiplexer's select line?",
     options: ["$A$ only", "$B$ only", "$C$ only", "Any of $A$, $B$ or $C$", "It cannot be done"],
@@ -430,9 +457,9 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Adders as blocks",
     difficulty: "medium",
-    source: "Style: Lecture 4/7 (adder–subtractor block)",
+    source: "Style: Lecture 4 p.42–44 (add/subtract circuit)",
     prompt:
-      "A 4-bit adder–subtractor block feeds each bit of $B$ through an XOR gate with control $SUB$, and connects $SUB$ to the adder's carry-in. With $A = 0101$, $B = 0111$ and $SUB = 1$, what are the 4-bit result $S$ and the carry-out?",
+      "A 4-bit add/subtract circuit feeds each bit of $B$ through an XOR gate with control $SUB$, and connects $SUB$ to the adder's carry-in. With $A = 0101$, $B = 0111$ and $SUB = 1$, what are the 4-bit result $S$ and the carry-out?",
     options: ["$S = 1110$, $C_{out} = 0$", "$S = 1110$, $C_{out} = 1$", "$S = 0010$, $C_{out} = 1$", "$S = 1101$, $C_{out} = 0$", "$S = 1100$, $C_{out} = 1$"],
     answer: 0,
     solution:
@@ -442,7 +469,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Decoders",
     difficulty: "easy",
-    source: "Style: Lecture 7 (decoder internals)",
+    source: "Style: Lecture 07 p.19 (decoder internals)",
     prompt: "A 3-to-8 decoder with an active-high enable is built from basic gates, using the true and complemented form of each input. Which gate set is sufficient?",
     options: [
       "Eight 4-input AND gates and three NOT gates",
@@ -459,7 +486,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Combinational design process",
     difficulty: "easy",
-    source: "Style: Lecture 7 (three 1s detector)",
+    source: "Style: Lecture 07 p.8 (three 1s detector)",
     prompt: "A circuit must output 1 when its 8-bit input $abcdefgh$ contains **four adjacent 1s** somewhere. Following the lecture's equation-based approach, the two-level circuit needs:",
     options: ["5 four-input AND gates feeding a 5-input OR gate", "4 four-input AND gates feeding a 4-input OR gate", "8 four-input AND gates feeding an 8-input OR gate", "6 three-input AND gates feeding a 6-input OR gate", "A single 8-input AND gate"],
     answer: 0,
@@ -470,7 +497,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Decoders",
     difficulty: "easy",
-    source: "Style: Lecture 7 (New Year's countdown)",
+    source: "Style: Lecture 07 p.20 (New Year's countdown)",
     prompt: "A processor counts down from 59 to 0 in binary, and a decoder lights exactly one of the bulbs labelled 0 … 59. If the smallest suitable binary decoder is used, how many of its outputs are left unconnected?",
     options: ["4", "5", "6", "0", "60"],
     answer: 0,
@@ -481,7 +508,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "Block-diagram design",
     difficulty: "medium",
-    source: "Style: Tutorial 6 Q3",
+    source: "Style: Tut 6 Q3",
     prompt:
       "In the ferry boarding system, a 2-bit ramp number $R$ drives a 2-to-4 decoder whose one-hot outputs light the four green ramp lights. The signal $FULL$ is 1 when all ramps are full. The designer connects $FULL$ **directly** to the decoder's active-high enable. What happens?",
     options: [
@@ -493,14 +520,14 @@ export const combBlocksQuestions: Draft[] = [
     ],
     answer: 0,
     solution:
-      "With an active-high enable, $EN = 0$ forces every output to 0 and $EN = 1$ gives the normal one-hot output. Connecting $FULL$ directly therefore lights a ramp only when everything is full, and lights nothing when cars should board.\nThe fix is $EN = FULL'$ (an inverter, or a decoder with an active-low enable). The outputs stay one-hot or all-zero; never two or four at once.",
+      "With an active-high enable, $EN = 0$ forces every output to 0 and $EN = 1$ gives the normal one-hot output. Connecting $FULL$ directly therefore lights a ramp only when everything is full, and lights nothing when cars should board.\nThe fix is $EN = FULL'$ (an inverter). The outputs stay one-hot or all-zero; never two or four at once.",
   },
   // ---------------------------------------------------------------- short
   {
     kind: "short",
     subtopic: "Implementing functions with a MUX",
     difficulty: "medium",
-    source: "Style: Tutorial 6 Q1",
+    source: "Style: Tut 6 Q1",
     prompt:
       "Determine the **minimised sum-of-products** expression for the output $F$ of the 4-to-1 multiplexer below, in terms of $s_1, s_0, a, b$ ($s_1$ is the MSB of the select). Constants 1 and 0 are tied to $I_2$ and $I_3$.",
     figures: [fig(muxSvg(["b", "a'", "1", "0"], ["s1", "s0"]), "4-to-1 MUX with an inverted input and constant data lines")],
@@ -517,41 +544,40 @@ export const combBlocksQuestions: Draft[] = [
     kind: "short",
     subtopic: "Comparators",
     difficulty: "hard",
-    source: "Style: PYP 2016-17 S1 Q3(a)",
+    source: "Style: PYP 2018-19 S2 Q3(a)",
     prompt:
-      "A 2-bit magnitude comparator has inputs $A = A_1A_0$ and $B = B_1B_0$ (unsigned). Give the **minimal SOP** for the output $G$, which is 1 when $A > B$. Use the variable names `A1, A0, B1, B0`.",
+      "A 2-bit comparator has inputs $A = A_1A_0$ and $B = B_1B_0$ (unsigned). Give the **minimal SOP** for the output $G$, which is 1 when $A > B$. Use the variable names `A1, A0, B1, B0`.",
     match: "expr",
     vars: ["A1", "A0", "B1", "B0"],
     minimal: true,
     accept: ["A1B1' + A1A0B0' + A0B1'B0'"],
     placeholder: "e.g. A1B1' + …",
     solution:
-      "Think in terms of the comparison rule: $A > B$ if the MSBs decide it ($A_1 = 1, B_1 = 0$), or the MSBs are equal and the LSBs decide it ($A_0 = 1, B_0 = 0$).\n$G = A_1B_1' + (A_1 \\odot B_1)A_0B_0'$. Expanding $A_1 \\odot B_1 = A_1B_1 + A_1'B_1'$ and minimising on a K-map (rows $A_1A_0$, columns $B_1B_0$) gives three prime implicants:\n$G = A_1B_1' + A_1A_0B_0' + A_0B_1'B_0'$.\n$G = \\sum m(4, 8, 9, 12, 13, 14)$; check: $A = 10, B = 01$ ($m_9$) is covered by $A_1B_1'$.",
+      "Step 1, capture the function: the 16-row truth table over $A_1A_0B_1B_0$ has $G = 1$ where $A > B$: $A = 1$ vs $B = 0$ ($m_4$), $A = 2$ vs $B = 0, 1$ ($m_8, m_9$), $A = 3$ vs $B = 0, 1, 2$ ($m_{12}, m_{13}, m_{14}$). So $G = \\sum m(4, 8, 9, 12, 13, 14)$.\nStep 2A, K-map (rows $A_1A_0$, columns $B_1B_0$): $m_8, m_9, m_{12}, m_{13}$ form $A_1B_1'$; $m_{12}, m_{14}$ form $A_1A_0B_0'$; $m_4, m_{12}$ form $A_0B_1'B_0'$.\n$G = A_1B_1' + A_1A_0B_0' + A_0B_1'B_0'$. (PYP 2018-19 S2 Q3(a) also asks for $Y = (A \\le B)$, which is just $G'$.)",
     solutionFigures: [{ kind: "kmap", vars: ["A1", "A0", "B1", "B0"], values: "0000100011001110", groups: ["A1B1'", "A1A0B0'", "A0B1'B0'"], caption: "A > B for 2-bit numbers" }],
   },
   {
     kind: "short",
     subtopic: "Seven-segment decoders",
     difficulty: "medium",
-    source: "Style: Lecture 7 (7-segment decoder)",
+    source: "Style: Lab 3 §4.3, Lecture 07 p.14–15",
     prompt:
-      "A BCD-to-7-segment decoder (active-high outputs) has input $WXYZ$ ($W$ = MSB). Inputs 1010–1111 never occur and may be treated as don't cares. Using the segment table, give the **minimal SOP** for segment **e** (bottom-left).",
-    figures: [segTable],
+      "The hexadecimal seven-segment decoder of Lecture 07 and Lab 3 has input $WXYZ$ ($W$ = MSB) and active-high outputs. Using the truth table, give the **minimal SOP** for segment **c** (bottom right).",
+    figures: [segHexTable],
     match: "expr",
-    dontCares: [10, 11, 12, 13, 14, 15],
     vars: ["W", "X", "Y", "Z"],
     minimal: true,
-    accept: ["X'Z' + YZ'"],
-    placeholder: "e.g. X'Z' + …",
+    accept: ["Y'Z + W'Z + W'Y' + W'X + WX'"],
+    placeholder: "e.g. Y'Z + …",
     solution:
-      "Segment e is lit for digits 0, 2, 6, 8: $e = \\sum m(0, 2, 6, 8) + d(10, 11, 12, 13, 14, 15)$.\nOn the K-map: the four corners $m_0, m_2, m_8, m_{10}$ form $X'Z'$ (using $d_{10}$), and $m_2, m_6, m_{10}, m_{14}$ form the quad $YZ'$ (using $d_{10}, d_{14}$).\n$e = X'Z' + YZ' = Z'(X' + Y)$. Without the don't cares you would need four terms, which is why BCD decoders always exploit the unused codes.",
-    solutionFigures: [{ kind: "kmap", vars: ["W", "X", "Y", "Z"], values: "1010001010xxxxxx", groups: ["X'Z'", "YZ'"], caption: "Segment e with don't cares for 10–15" }],
+      "Segment c is dark only for 2, C, E, F: $c = \\sum m(0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13)$.\nK-map groups (each a quad): $W'Y'$ ($m_0, m_1, m_4, m_5$), $W'Z$ ($m_1, m_3, m_5, m_7$), $W'X$ ($m_4, m_5, m_6, m_7$), $WX'$ ($m_8 \\dots m_{11}$), and $Y'Z$ ($m_1, m_5, m_9, m_{13}$), which is the only quad containing $m_{13}$.\n$c = Y'Z + W'Z + W'Y' + W'X + WX'$ (5 terms, as in Lab 3 §4.3 you derive c, d and f yourself).",
+    solutionFigures: [{ kind: "kmap", vars: ["W", "X", "Y", "Z"], values: "1101111111110100", groups: ["Y'Z", "W'Z", "W'Y'", "W'X", "WX'"], caption: "Segment c of the hexadecimal decoder" }],
   },
   {
     kind: "short",
     subtopic: "Decoders",
     difficulty: "easy",
-    source: "Original",
+    source: "Style: PYP 2020-21 S2 Q3(a)",
     prompt: "How many **2-to-4 decoders with enable** are needed to build a 4-to-16 decoder (no other gates)?",
     match: "number",
     accept: ["5"],
@@ -562,7 +588,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "short",
     subtopic: "Implementing functions with a MUX",
     difficulty: "medium",
-    source: "Style: PYP 2017-18 S2 Q3(b)",
+    source: "Style: PYP 2016-17 S1 Q3(b), PYP 2018-19 S1 Q3(a)",
     prompt:
       "$F(A,B,C,D) = \\sum m(1,4,5,8,9,11,14,15)$ is implemented with a 4-to-1 multiplexer whose select lines are $S_1S_0 = AB$, plus gates on the data lines. Give the simplest expression (in $C$ and $D$) that must be connected to data line $I_2$.",
     match: "expr",
@@ -576,7 +602,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "short",
     subtopic: "Implementing functions with a MUX",
     difficulty: "medium",
-    source: "Style: PYP 2017-18 S1 Q3(c)",
+    source: "Style: PYP 2016-17 S2 Q3(c)",
     prompt:
       "$F(A,B,C) = A'B + BC' + AB'C$ is implemented with a single 8-to-1 multiplexer with select lines $S_2S_1S_0 = ABC$ and each data line tied to 0 or 1. Enter the data-line values as an 8-bit string in the order $I_7 I_6 \\dots I_0$.",
     match: "text",
@@ -589,20 +615,40 @@ export const combBlocksQuestions: Draft[] = [
     kind: "short",
     subtopic: "Priority encoders",
     difficulty: "medium",
-    source: "Original",
+    source: "Style: PYP 2017-18 S2 Q2(a)(i)",
     prompt:
-      "An 8-to-3 priority encoder gives **$I_0$ the highest priority** and $I_7$ the lowest. Its output $Y_2Y_1Y_0$ is the index of the winning input. The inputs are $I_7 I_6 I_5 I_4 I_3 I_2 I_1 I_0 = 1011\\,0000$. Enter $Y_2Y_1Y_0$.",
-    match: "text",
-    accept: ["100"],
-    placeholder: "3 bits",
+      "For the circuit of PYP 2017-18 S2 Table Q2 (active-low inputs $E^*, A_7^* \\dots A_1^*$; $Y_2Y_1Y_0$ = index of the highest-numbered asserted input when $E^*$ is asserted, 000 otherwise), write a minimal SOP for $Y_1$. Use `E` for \"$E^*$ asserted\" and `a7` … `a1` for \"$A_k^*$ asserted\" (so `E` = $(E^*)'$, `a7` = $(A_7^*)'$).",
+    figures: [
+      {
+        kind: "table",
+        head: ["$E^*$", "$A_7^*$", "$A_6^*$", "$A_5^*$", "$A_4^*$", "$A_3^*$", "$A_2^*$", "$A_1^*$", "$Y_2$", "$Y_1$", "$Y_0$"],
+        rows: [
+          [1, "x", "x", "x", "x", "x", "x", "x", 0, 0, 0],
+          [0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+          [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1],
+          [0, 1, 1, 1, 1, 1, 0, "x", 0, 1, 0],
+          [0, 1, 1, 1, 1, 0, "x", "x", 0, 1, 1],
+          [0, 1, 1, 1, 0, "x", "x", "x", 1, 0, 0],
+          [0, 1, 1, 0, "x", "x", "x", "x", 1, 0, 1],
+          [0, 1, 0, "x", "x", "x", "x", "x", 1, 1, 0],
+          [0, 0, "x", "x", "x", "x", "x", "x", 1, 1, 1],
+        ],
+        caption: "Table Q2 (x = don't care)",
+      },
+    ],
+    match: "expr",
+    vars: ["E", "a7", "a6", "a5", "a4", "a3", "a2", "a1"],
+    minimal: true,
+    accept: ["Ea7 + Ea6 + Ea5'a4'a3 + Ea5'a4'a2"],
+    placeholder: "e.g. Ea7 + …",
     solution:
-      "Active inputs: $I_7, I_5, I_4$. Here the **lowest** index has the highest priority, so $I_4$ wins and the output is $4 = 100_2$.\nAn encoder with the usual convention (highest index wins) would output $111$; always read which end has priority.",
+      "$Y_1 = 1$ in the rows where the winning input is $A_7$, $A_6$, $A_3$ or $A_2$, and only when $E$ is asserted:\n$Y_1 = E\\,[a_7 + a_7'a_6 + a_7'a_6'a_5'a_4'a_3 + a_7'a_6'a_5'a_4'a_3'a_2]$.\nWith $x + x'y = x + y$ the complemented higher inputs drop out: $a_7 + a_7'a_6 = a_7 + a_6$, and once $a_7 + a_6$ is present the $a_7'a_6'$ factors are not needed; likewise $a_3 + a_3'a_2 = a_3 + a_2$.\n$Y_1 = Ea_7 + Ea_6 + Ea_5'a_4'a_3 + Ea_5'a_4'a_2$. In the circuit, each asserted-low input $A_k^*$ reaches an AND gate through a bubble.",
   },
   {
     kind: "short",
     subtopic: "Multiplexers",
     difficulty: "medium",
-    source: "Original",
+    source: "Style: Tut 6 Q1, Lecture 13 p.11 (MUX feeding a MUX)",
     prompt:
       "In the circuit below each MUX outputs its 0-input when $S = 0$ and its 1-input when $S = 1$ (the first MUX receives $C$ on input 0 and $C'$ on input 1, with select $B$). Give the **minimal SOP** for $F(A, B, C)$.",
     figures: [{ kind: "circuit", circuit: { inputs: ["A", "B", "C"], gates: [{ id: "M1", type: "MUX2", in: ["C", "!C", "B"] }, { id: "F", type: "MUX2", in: ["M1", "B", "A"] }], outputs: ["F"], showNets: true } }],
@@ -619,7 +665,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "short",
     subtopic: "Decoders",
     difficulty: "medium",
-    source: "Style: PYP 2016-17 S2 Q3(b)",
+    source: "Style: PYP 2018-19 S2 Q3(a), PYP 2017-18 S1 Q3(b)",
     prompt: "A 4-to-16 decoder has inputs $ABCD$ ($A$ = MSB) and active-high outputs $d_0 \\dots d_{15}$. Outputs $d_3$, $d_7$, $d_{11}$ and $d_{15}$ are ORed to give $F$. Give the **minimal SOP** for $F$.",
     match: "expr",
     vars: ["A", "B", "C", "D"],
@@ -655,7 +701,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "open",
     subtopic: "Block-diagram design",
     difficulty: "medium",
-    source: "Style: Tutorial 6 Q3",
+    source: "Style: Tut 6 Q3",
     prompt:
       "A theme-park ride directs riders to one of **six** boarding gates using a 3-bit gate number $G$ (0–5) and a 1-bit signal $STOP$ that is 1 when boarding is suspended. Each gate has a green lamp $L[5{:}0]$, of which at most one is on. If $G$ is 6 or 7 (an invalid code) and boarding is not suspended, an error lamp $ERR$ must light instead. When $STOP = 1$, every lamp is off.\n(a) Sketch a block diagram using a single 3-to-8 decoder with an active-high enable plus any extra gates you need. (6 marks)\n(b) Write a Verilog module `ride` that instantiates the predefined decoder `module dec3to8 (input [2:0] i, input en, output [7:0] d);` using named instantiation. (8 marks)",
     modelAnswer:
@@ -676,7 +722,7 @@ export const combBlocksQuestions: Draft[] = [
     kind: "open",
     subtopic: "Implementing functions with a MUX",
     difficulty: "medium",
-    source: "Style: PYP 2017-18 S1 Q3(c), PYP 2018-19 S2 Q3(b)",
+    source: "Style: PYP 2016-17 S2 Q3(c), PYP 2016-17 S1 Q3(b)",
     prompt:
       "$F(A,B,C,D) = \\sum m(0, 1, 3, 4, 8, 9, 15)$.\n(a) Implement $F$ with one 8-to-1 multiplexer (select lines $ABC$, $A$ = MSB) and one inverter. Give the value on every data line. (6 marks)\n(b) Implement $F$ with one 4-to-1 multiplexer (select lines $AB$) and a minimum number of basic gates on the data lines. (6 marks)",
     modelAnswer:

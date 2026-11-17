@@ -3,7 +3,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { clockEdge, evalCircuit, minimalCover, productString, type Bit, type Implicant } from "@/lib/sc1005/logic";
 import type { CircuitSpec, FsmEdge, FsmState, WaveSignal } from "@/lib/sc1005/types";
-import { BitRow, Choice, CircuitSvg, FsmSvg, KMapSvg, Read, TableView, Toggle, VizFrame, WaveSvg } from "../kit";
+import { Choice, CircuitSvg, FsmSvg, KMapSvg, Read, TableView, Toggle, VizFrame, WaveSvg } from "../kit";
 
 // Interactive figures for the fsm lesson, chosen by id (see LessonSection.visuals).
 export default function FsmVisual({ id }: { id: string }) {
@@ -12,8 +12,6 @@ export default function FsmVisual({ id }: { id: string }) {
       return <FsmStepper />;
     case "moore-vs-mealy":
       return <MooreVsMealy />;
-    case "detector-builder":
-      return <DetectorBuilder />;
     case "state-encoding":
       return <StateEncoding />;
     case "circuit-analyser":
@@ -402,114 +400,15 @@ function MooreVsMealy() {
                 : `none yet: feed the pattern ${pat}`
             }
           />
-          <Read label="States" tex={`Moore needs $n+1 = ${mo.states.length}$, Mealy $n = ${me.states.length}$ for a ${pat.length}-bit pattern`} />
-          {late && <Read tone="warn" tex="With mid-cycle input changes the Mealy output changes mid-cycle too, and in the first half of a cycle it is computed from the **old** input (a possible false output). The Moore output still changes only after edges." />}
+          <Read label="States" tex={`Moore: ${mo.states.length} states, Mealy: ${me.states.length} states (Mealy machines can be more compact)`} />
+          {late && <Read tone="warn" tex="With mid-cycle input changes the Mealy output changes mid-cycle too: a Mealy output depends on the current inputs, so it can change mid-state. The Moore output still changes only after edges." />}
         </>
       }
       tasks={[
         "Predict: for **detect 11**, feed 0, 1, 1. In which cycle does each z first become 1? Check the waveform.",
-        "Feed 1, 1, 1, 1. How long does each output stay high? Why does the Moore machine need a state (S2) that the Mealy machine does not?",
-        "Switch on **x changes at the falling edge** and repeat. Find a half-cycle where the Mealy z is 1 although the pattern was not completed. Explain using $z = \\lambda(S, x)$.",
-        "Choose **detect 101** and feed 1, 0, 1, 0, 1. Both machines detect the overlapping second 101: which arrow makes that possible?",
-      ]}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// 3. Sequence detector builder
-
-const TEST_STREAM: Bit[] = [1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1];
-
-function DetectorBuilder() {
-  const [pbits, setPbits] = useState<Bit[]>([1, 0, 1, 1]);
-  const [type, setType] = useState<"moore" | "mealy">("moore");
-  const [overlap, setOverlap] = useState(true);
-  const [xs, setXs] = useState<Bit[]>([]);
-  const P = pbits.join("");
-  const m = useMemo(() => detector(P, type, overlap), [P, type, overlap]);
-  const d = useMemo(() => diagramOf(m), [m]);
-  const setLen = (n: number) => {
-    setPbits((b) => (n <= b.length ? b.slice(0, n) : [...b, ...(Array(n - b.length).fill(0) as Bit[])]));
-    setXs([]);
-  };
-  const cyc = cyclesOf(m, xs, 0);
-  const now = cyc[cyc.length - 1];
-  // Detection flags per fed input: Mealy fires on the arrow taken, Moore when the state after the edge outputs 1.
-  const hits = xs.map((x, k) => (type === "mealy" ? outOf(m, cyc[k].s, x) : outOf(m, cyc[k + 1].s, 0)) === 1);
-  const n = P.length;
-  const after = type === "mealy" ? m.next[`S${n - 1}`][Number(P[n - 1]) as Bit] : null;
-  const ov = lps(P.slice(1), P, n - 1);
-  const k = Math.ceil(Math.log2(m.states.length));
-  const tbl = stateTable(m);
-  return (
-    <VizFrame
-      title="Build a sequence detector"
-      hint="Click the pattern bits to edit them, choose Moore or Mealy and overlapping or not; the diagram is rebuilt automatically. Then feed bits and watch detections."
-      onReset={() => setXs([])}
-      figure={
-        <div style={{ display: "grid", gap: 8 }}>
-          <FsmSvg states={d.states} edges={d.edges} initial="S0" active={now.s} />
-          <div className="row" style={{ gap: 3, flexWrap: "wrap" }}>
-            {xs.map((x, i) => (
-              <span
-                key={i}
-                className="small"
-                title={hits[i] ? "pattern completed here" : undefined}
-                style={{
-                  fontFamily: "var(--font-geist-mono), monospace",
-                  padding: "1px 6px",
-                  borderRadius: 5,
-                  border: "1px solid var(--border)",
-                  background: hits[i] ? "var(--good)" : "var(--surface)",
-                  color: hits[i] ? "var(--surface)" : "var(--text)",
-                  fontWeight: 700,
-                }}
-              >
-                {x}
-              </span>
-            ))}
-            {!xs.length && <span className="small muted">Fed bits appear here; green = the bit that completes a detection.</span>}
-          </div>
-        </div>
-      }
-      controls={
-        <>
-          <div className="row" style={{ gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <span className="small">Pattern</span>
-            <BitRow bits={pbits} onChange={(b) => { setPbits(b); setXs([]); }} />
-            <Choice value={pbits.length} onChange={setLen} options={[2, 3, 4, 5].map((v) => ({ v, label: `${v} bits` }))} />
-          </div>
-          <Choice value={type} onChange={(t) => { setType(t); setXs([]); }} options={[{ v: "moore", label: "Moore" }, { v: "mealy", label: "Mealy" }]} />
-          <Toggle label="Overlapping detections allowed" value={overlap} onChange={(v) => { setOverlap(v); setXs([]); }} />
-          <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
-            <button className="btn small" onClick={() => setXs((h) => [...h, 0])}>Feed 0</button>
-            <button className="btn small" onClick={() => setXs((h) => [...h, 1])}>Feed 1</button>
-            <button className="btn small" disabled={!xs.length} onClick={() => setXs((h) => h.slice(0, -1))}>Undo</button>
-            <button className="btn small" onClick={() => setXs(TEST_STREAM)}>Feed test stream</button>
-          </div>
-        </>
-      }
-      readout={
-        <>
-          <Read label="States" tex={`**${m.states.length}** (${type === "moore" ? "n + 1" : "n"} for an ${n}-bit pattern) → **${k}** flip-flops in binary`} />
-          <Read label="Detections" tex={`**${hits.filter(Boolean).length}** in ${xs.length} bits`} tone={hits.some(Boolean) ? "good" : undefined} />
-          <Read
-            label="After a match"
-            tex={
-              overlap
-                ? `go to S${ov}: the longest proper suffix of ${P} that is also a prefix is ${ov ? `"${P.slice(0, ov)}"` : "empty"}${type === "moore" ? " (then add the new bit)" : ""}`
-                : `start afresh${type === "moore" ? ": from the detect state, behave like S0" : `: S${n - 1} → ${after} on the completing bit`}`
-            }
-          />
-          <TableView head={["State", "meaning", ...tbl.head.slice(1)]} rows={tbl.rows.map((r, i) => [r[0], m.states[i].meaning ?? "", ...r.slice(1)])} highlightRow={m.states.findIndex((s) => s.id === now.s)} />
-        </>
-      }
-      tasks={[
-        "Predict: for **1011** overlapping, which state follows the detect state on input 1? On input 0? Check the arrows leaving S4.",
-        "Feed the test stream with overlapping on, then off. Count the detections each time and find the bits that are shared between two overlapping matches.",
-        "Set the pattern to **110**. From S2 (seen 11), where does a further 1 go? Why would going back to S0 be wrong for the input 1110?",
-        "Switch between Moore and Mealy for the same pattern. Which arrows change, and why does the Mealy version never need the detect state?",
+        "Feed 1, 1, 1, 1. How long does each output stay high? Why can the Mealy machine show the output on an arrow instead of needing a separate output state (S2)?",
+        "Switch on **x changes at the falling edge** and repeat. Find a half-cycle where the Mealy z changes without a clock edge. Explain using the fact that a Mealy output depends on the state and the current input.",
+        "Choose **detect 101** and feed 1, 0, 1, 0, 1. Both machines detect 101 a second time, reusing the middle 1: which arrow makes that possible?",
       ]}
     />
   );
@@ -523,7 +422,7 @@ DET11.name = "11 detector (3 states)";
 const DET101 = detector("101", "moore", true);
 DET101.name = "101 detector (4 states)";
 const DET1011 = detector("1011", "moore", false);
-DET1011.name = "1011 non-overlap (5 states)";
+DET1011.name = "1011 detector (5 states)";
 const ENC_PRESETS: Machine[] = [{ ...T10, name: "Tutorial 10 (4 states)" }, { ...PULSE3, name: "3-cycle pulse (4 states)" }, DET11, DET101, DET1011];
 
 const bitCount = (x: number) => x.toString(2).replace(/0/g, "").length;
@@ -645,7 +544,7 @@ function StateEncoding() {
             </>
           ) : (
             <div className="small muted" style={{ padding: 8 }}>
-              {dup ? "Two states share a code: every state needs a unique code." : "One-hot: no K-map needed. Each D equation is read straight off the arrows entering that state."}
+              {dup ? "Two states share a code: every state needs a unique code." : ""}
             </div>
           )}
           <TableView head={["State", "code", m.inName, "next = code", m.outName]} rows={tableRows} />
@@ -659,8 +558,6 @@ function StateEncoding() {
             onChange={setEnc}
             options={[
               { v: "binary", label: "Binary" },
-              { v: "gray", label: "Gray" },
-              { v: "onehot", label: "One-hot" },
               { v: "custom", label: "Custom" },
             ]}
           />
@@ -696,9 +593,9 @@ function StateEncoding() {
       }
       tasks={[
         "Predict: the Tutorial 10 machine in binary order gives a two-term, six-literal $D_0$. Try Custom with A = 00, B = 01, C = 11, D = 10. What do $D_0$ and z become, and what does Q0 now remember?",
-        "Choose the **1011 non-overlap** machine (5 states). How many flip-flops do binary and one-hot need, and how many codes are unused in each?",
+        "Choose the **1011 detector** machine (5 states). How many flip-flops does it need, and how many codes are unused?",
         "For the **11 detector** (3 states), find the unused code in the K-map and check whether the minimal $D_1$ uses it as a 1 or a 0.",
-        "Compare the literal count of binary, Gray and one-hot for the 3-cycle pulse machine. Which wins on flip-flops and which on logic?",
+        "For the 3-cycle pulse machine, choose Custom and give codes different from the lecture's (off 00, on1 01, on2 10, on3 11). The equations change; does the behaviour? (Lecture 12 p.14)",
       ]}
     />
   );

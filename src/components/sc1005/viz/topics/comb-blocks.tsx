@@ -14,8 +14,6 @@ export default function CombBlocksVisual({ id }: { id: string }) {
       return <MuxFunction />;
     case "decoder-lab":
       return <DecoderLab />;
-    case "priority-encoder":
-      return <PriorityEncoder />;
     case "signed-compare":
       return <SignedCompare />;
     case "seg7-decoder":
@@ -197,7 +195,7 @@ function MuxPath() {
 
 const FN_PRESETS: Record<3 | 4, { label: string; f: string }[]> = {
   3: [
-    { label: "Majority", f: "00010111" },
+    { label: "Carry Σm(3,5,6,7)", f: "00010111" },
     { label: "Odd parity", f: "01101001" },
     { label: "Σm(3,4,6,7)", f: "00011011" },
   ],
@@ -376,10 +374,10 @@ function MuxFunction() {
         </>
       }
       tasks={[
-        "Predict: for the Majority preset with a 4-to-1 MUX, what goes on $I_1$ (rows 010, 011)? Check the label.",
+        "Predict: for the full-adder Carry preset with a 4-to-1 MUX, what goes on $I_1$ (rows 010, 011)? Check the label.",
         "Change one F cell inside a block and watch only that block's data line change. Why can a data line never need more than $v$ or $v'$ when one variable is left over?",
         "Switch to the 2-to-1 MUX. The data lines become 2-variable functions: compare them with the halves of the K-map of F.",
-        "Pick **Even parity** for 4 variables. Its K-map has no groups at all, yet the 8-to-1 MUX needs only D and D'. Explain.",
+        "Pick **Even parity** for 4 variables. Its K-map has no adjacent 1s to loop, yet the 8-to-1 MUX needs only D and D'. Explain.",
       ]}
     />
   );
@@ -496,7 +494,7 @@ function DecoderLab() {
               Odd parity
             </button>
             <button className="chip" onClick={() => setConn(n === 3 ? [3, 5, 6, 7] : [3])}>
-              {n === 3 ? "Majority (carry)" : "AND"}
+              {n === 3 ? "Carry" : "AND"}
             </button>
             <button className="chip" onClick={() => setConn([])}>
               Clear
@@ -509,128 +507,15 @@ function DecoderLab() {
           <Read label="Input" tex={`$${inBits.join("")}_2 = ${idx}$ ${en ? `→ output ${idx} is selected: $d_{${idx}} = m_{${idx}} = ${minterm}$` : "→ **EN = 0**: no output is selected"}`} tone={en ? "good" : "warn"} />
           <Read label="Outputs" tex={`$d_{${N - 1}} \\dots d_0$ = ${[...d].reverse().join("")}${low ? ` (pins show the complement ${[...outV].reverse().join("")})` : ""} — ${en ? "one-hot" : "all zero"}`} />
           <Read label="F =" tex={used.length ? `$\\sum m(${used.join(",")})$ = **${minimalSop(vars, used)}**` : "connect some outputs"} />
-          {low && used.length > 0 && <Read tex="Active-low outputs into a **NAND** still give $\\sum m$: the NAND output is 1 when any connected (low) output is selected." />}
+          {low && used.length > 0 && <Read tex="Bubble-to-bubble: a **NAND** is an OR with bubbled inputs, so it is 1 when any connected (low) output is selected." />}
           <Read label="F now" tex={`**${F}**`} tone={F ? "good" : undefined} />
         </>
       }
       tasks={[
         "Predict which lamp lights for $ABC = 110$, then click the inputs to check. Now set EN = 0: what happens to every output?",
-        "The preset connects $d_1, d_2, d_4, d_7$. Step through all eight inputs: F is the odd-parity (full-adder sum) function. Read the readout's minimal SOP.",
+        "The preset connects $d_1, d_2, d_4, d_7$: the full-adder Sum (PYP 2017-18 S1 Q3(b)). Step through all eight inputs and read the readout's minimal SOP.",
         "Connect $d_3, d_5, d_6, d_7$ instead: which full-adder output is this?",
-        "Turn on active-low outputs. The pins now idle at 1. Why must the OR gate become a NAND for F to stay the same?",
-      ]}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// 4. Plain encoder vs priority encoder
-
-function PriorityEncoder() {
-  const [ins, setIns] = useState<Bit[]>([0, 0, 1, 0, 1, 1, 0, 0]); // I7 … I0
-  const [hiFirst, setHiFirst] = useState(true);
-  const active = ins.flatMap((b, j) => (b ? [7 - j] : []));
-  const winner = active.length ? (hiFirst ? Math.max(...active) : Math.min(...active)) : -1;
-  const plain = active.reduce((a, i) => a | i, 0);
-  const V: Bit = active.length ? 1 : 0;
-  const pr = winner < 0 ? 0 : winner;
-  const top = 20;
-  const pitch = 30;
-  const H = top + 8 * pitch + 20;
-  const iy = (i: number) => top + pitch / 2 + (7 - i) * pitch;
-  const bx = 130;
-  const outs = (val: number, y0: number, label: string, ok: boolean) => (
-    <g>
-      <T x={300} y={y0 - 14} bold size={11} color="var(--muted)">
-        {label}
-      </T>
-      {bitsOf(val, 3).map((b, j) => (
-        <g key={j}>
-          <BitBox x={312 + j * 26} y={y0} v={b} />
-          <T x={312 + j * 26} y={y0 + 24} anchor="middle" size={10} color="var(--muted)">{`Y${2 - j}`}</T>
-        </g>
-      ))}
-      <T x={312 + 3 * 26} y={y0 + 4} bold color={ok ? "var(--good)" : "var(--bad)"}>
-        {ok ? `= ${val} ✓` : `= ${val} ✗`}
-      </T>
-    </g>
-  );
-  const svg = (
-    <svg viewBox={`0 0 460 ${H}`} className="viz-svg" role="img" aria-label="Priority encoder">
-      {Array.from({ length: 8 }, (_, i) => {
-        const v = ins[7 - i];
-        const masked = v === 1 && i !== winner;
-        return (
-          <g key={i}>
-            <T x={24} y={iy(i) + 4} anchor="end" bold>{`I${i}`}</T>
-            <BitBox x={44} y={iy(i)} v={v} onClick={() => setIns(toggleBit(ins, 7 - i))} />
-            <Wire pts={[[54, iy(i)], [bx, iy(i)]]} v={i === winner ? "path" : v} dash={masked ? "5 4" : undefined} />
-            {masked && (
-              <T x={64} y={iy(i) - 5} size={9} color="var(--warn)">
-                masked
-              </T>
-            )}
-          </g>
-        );
-      })}
-      <rect x={bx} y={top} width={130} height={8 * pitch} rx={5} fill="var(--surface)" stroke="var(--text)" strokeWidth={1.8} />
-      <T x={bx + 65} y={top + 4 * pitch - 6} anchor="middle" bold size={11}>
-        8-to-3
-      </T>
-      <T x={bx + 65} y={top + 4 * pitch + 10} anchor="middle" bold size={11}>
-        encoder
-      </T>
-      {outs(pr, top + 40, "priority encoder", V === 1)}
-      {outs(plain, top + 120, "plain OR encoder", active.length <= 1)}
-      <T x={300} y={top + 196} bold size={11} color="var(--muted)">
-        valid
-      </T>
-      <BitBox x={312} y={top + 214} v={V} />
-      <T x={330} y={top + 218} size={11}>
-        V = OR of inputs
-      </T>
-    </svg>
-  );
-  const codes = active
-    .slice()
-    .sort((a, b) => b - a)
-    .map((i) => i.toString(2).padStart(3, "0"));
-  return (
-    <VizFrame
-      title="Encoder vs priority encoder"
-      hint="Click the inputs. The winning input's path is highlighted; lower-priority active inputs are masked (dashed)."
-      onReset={() => {
-        setIns([0, 0, 1, 0, 1, 1, 0, 0]);
-        setHiFirst(true);
-      }}
-      figure={svg}
-      controls={
-        <Choice
-          value={hiFirst ? "hi" : "lo"}
-          onChange={(v) => setHiFirst(v === "hi")}
-          options={[
-            { v: "hi", label: "$I_7$ has priority" },
-            { v: "lo", label: "$I_0$ has priority" },
-          ]}
-        />
-      }
-      readout={
-        <>
-          <Read label="Active" tex={active.length ? active.map((i) => `$I_{${i}}$`).join(", ") : "none"} />
-          <Read label="Priority" tex={winner < 0 ? "no input: $Y = 000$ but $V = 0$ marks it invalid" : `winner $I_{${winner}}$ → $Y = ${pr.toString(2).padStart(3, "0")}$, $V = 1$`} tone="good" />
-          <Read
-            label="Plain OR"
-            tex={active.length > 1 ? `ORs the codes ${codes.join(" + ")} = **${plain.toString(2).padStart(3, "0")}** (names $I_{${plain}}$: wrong)` : `$Y = ${plain.toString(2).padStart(3, "0")}$ (fine for one-hot input)`}
-            tone={active.length > 1 ? "bad" : undefined}
-          />
-          <Read label="Plain" tex="$Y_2 = I_4 + I_5 + I_6 + I_7$, $Y_1 = I_2 + I_3 + I_6 + I_7$, $Y_0 = I_1 + I_3 + I_5 + I_7$" />
-        </>
-      }
-      tasks={[
-        "Predict both outputs for the starting inputs ($I_5, I_3, I_2$ active), then check. Which input does the plain encoder's code point to?",
-        "Make the input one-hot (a single 1). Do the two encoders agree now?",
-        "Clear every input. Both encoders output 000: what tells you that this does not mean $I_0$?",
-        "Switch priority to $I_0$ and repeat the first task. Exam questions state which end wins; read it.",
+        "Set EN = 0 with some outputs connected. Why is F always 0?",
       ]}
     />
   );
@@ -839,9 +724,9 @@ function Seg7Decoder() {
       }
       tasks={[
         "Predict which segments light for input 0111, then set it. Is your display convention the same as the course's (7 = a, b, c)?",
-        "Select segment e. The K-map uses the X cells (10–15) to make the corner group X'Z'. What would e be without the don't cares?",
-        "Turn on the hex decoder. Why does every segment's SOP get longer?",
-        "For a common-anode display the decoder must output 0 to light a segment. Which cells of the e K-map would you group instead?",
+        "Turn on the hex decoder (the Lecture 07 / Lab 3 table). Select segment a and compare the SOP with the lecture's six loops.",
+        "Turn the hex decoder off: inputs 10–15 become don't cares (BCD input only). Why does every segment's SOP get shorter?",
+        "Lab 3's outputs seg_L are active-low: the output must be 0 to light a segment. Which cells of the e K-map would you group instead?",
       ]}
     />
   );

@@ -1,5 +1,5 @@
 import type { Draft } from "@/lib/sc1005/types";
-import { cmosGateSvg, cmosSvg, type CmosNet } from "../lessons/ic-tech";
+import { cmosGateSvg, type CmosNet } from "../lessons/ic-tech";
 
 /** An analog voltage trace (one sample per time unit) with dashed threshold lines, as a static SVG. */
 function analogSvg(samples: number[], lines: { v: number; label: string }[], vmax = 3.5): string {
@@ -20,7 +20,7 @@ function analogSvg(samples: number[], lines: { v: number; label: string }[], vma
 
 const AOI: CmosNet = { p: ["A", { s: ["B", "C"] }] };
 const S1NET: CmosNet = { p: [{ s: ["A", "B", "C"] }, { s: ["D", { p: ["A", "C"] }] }] };
-const FAULT_PDN: CmosNet = { s: ["A", { p: ["B", "C"] }] };
+const PYP_NET: CmosNet = { s: ["D", { p: ["A", { s: ["B", "C"] }] }] };
 const O3NET: CmosNet = { p: ["D", { s: [{ p: ["A", "B"] }, "C"] }] };
 const SCHMITT_S6 = [0.3, 0.7, 1.1, 1.5, 1.8, 1.4, 1.9, 1.5, 1.75, 2.2, 2.6, 3.0, 3.2, 3.1, 2.6, 2.1, 1.7, 1.45, 1.75, 1.3, 1.0, 0.6, 0.3];
 
@@ -32,11 +32,11 @@ export const icTechQuestions: Draft[] = [
     difficulty: "easy",
     prompt:
       "A board built from standard TTL chips needs one more quad 2-input NOR gate. You want a **CMOS** part that can be connected directly to the TTL chips, i.e. one that is **electrically compatible** with TTL (similar voltage and current requirements), not merely pin-compatible. Which part should you choose?",
-    options: ["4001", "74C02", "74HC02", "74HCT02", "74LS02"],
+    options: ["4001", "74C02", "74HC02", "74HCT02", "74ALS02"],
     answer: 3,
     solution:
-      "- **74HCT** = high-speed CMOS that is electrically compatible with TTL: its input thresholds match TTL levels, so the chips can be wired together directly. **74HCT02** is the answer.\n- **74HC02** is pin-compatible with the TTL 7402 (same pinout) but its input thresholds are CMOS levels (e.g. $V_{IH(min)} = 3.5$ V), so a TTL high output (as low as 2.4–2.7 V) is not guaranteed to be read as 1.\n- **4001 / 74C02** are older CMOS series: not TTL compatible.\n- **74LS02** is low-power Schottky **TTL**, not CMOS.",
-    source: "Style: Lecture 6-14/6-15 (CMOS families)",
+      "- **74HCT** series: electrically compatible with TTL (similar voltage and current requirements), so the chips can be connected together. **74HCT02** is the answer.\n- **74HC02** (high speed) is only pin-compatible with TTL: it shares the same pin layout, not the same electrical requirements.\n- **4001** belongs to the old 40/140 series (seldom used, not compatible with TTL); **74C02** is the metal-gate series.\n- **74ALS02** has the TTL prefix 74ALS (advanced low-power Schottky): it is a TTL part, not CMOS.",
+    source: "Style: Lecture 6 slides 6-12 to 6-15",
   },
   {
     kind: "mcq",
@@ -53,8 +53,8 @@ export const icTechQuestions: Draft[] = [
     ],
     answer: 0,
     solution:
-      "A floating TTL input sits at about 1.4–1.8 V and acts like logic 1. With both inputs effectively 1, $(1 \\cdot 1)' = 0$.\nThis is still **not recommended**: the floating pin picks up noise. For **CMOS** a floating input is far worse (indeterminate level, both transistors partly on, possible overheating), so unused CMOS inputs must be tied to $V_{DD}$, GND or another input.",
-    source: "Style: Lecture 6-18",
+      "A floating TTL input acts like logic 1 (it measures a dc level between 1.4 and 1.8 V). With both inputs effectively 1, $(1 \\cdot 1)' = 0$.\nThis is still **not recommended**: the floating pin picks up noise. For **CMOS** a floating input gives a disastrous result (the IC may become overheated), so all unused CMOS inputs must be connected to $V_{DD}$, GND or another input.",
+    source: "Style: Lecture 6 slide 6-18",
   },
   // ---------------------------------------------------------------- CMOS
   {
@@ -72,7 +72,7 @@ export const icTechQuestions: Draft[] = [
     answer: 0,
     solution:
       "NOR = $(A + B + C)'$. The pull-down network must conduct when **any** input is 1, so the NMOS are in **parallel**; the pull-up must conduct only when **all** inputs are 0, so the PMOS are in **series** (the dual).\nWith $B = 1$: the NMOS on B conducts (NMOS is on for 1) and the PMOS on B is off (PMOS is on for 0), breaking the series chain to $V_{DD}$. Output $= 0$, as $(0 + 1 + 0)' = 0$.\nOption B describes a NAND pull-up; options C–D swap the transistor types or topologies.",
-    source: "Style: Lecture 6-36/6-37",
+    source: "Style: Lecture 6 slides 6-36 to 6-38",
   },
   {
     kind: "mcq",
@@ -83,8 +83,8 @@ export const icTechQuestions: Draft[] = [
     options: ["$F = (A + BC)'$", "$F = (A(B + C))'$", "$F = A + BC$", "$F = A'B'C'$", "$F = AB + C$"],
     answer: 0,
     solution:
-      "Read the **pull-down** (NMOS) network: F = 0 when there is a path to GND.\n- Q4 (A) is in parallel with the series pair Q5–Q6 (B, C), so the path exists when $A + BC = 1$.\n- Therefore $F = (A + BC)'$.\nCheck with the pull-up: Q1 (A) is in series with the parallel pair Q2 ∥ Q3 (B, C); PMOS conduct on 0, so F = 1 when $A'(B' + C') = 1$, which is $(A + BC)'$ by De Morgan. The two networks are complementary, as they must be.\n$(A(B+C))'$ swaps series and parallel; $A + BC$ forgets that a single CMOS stage always inverts.",
-    source: "Style: Tutorial 5 Q3",
+      "Read the **pull-down** (NMOS) network: F = 0 when there is a path to GND.\n- Q4 (A) is in parallel with the series pair Q5–Q6 (B, C), so the path exists when $A + BC = 1$.\n- Therefore $F = (A + BC)'$.\nCheck with the pull-up: Q1 (A) is in series with the parallel pair Q2 ∥ Q3 (B, C); PMOS conduct on 0, so F = 1 when $A'(B' + C') = 1$, which is $(A + BC)'$ by De Morgan, so both analyses agree.\n$(A(B+C))'$ swaps series and parallel; $A + BC$ forgets that a single CMOS stage always inverts.",
+    source: "Style: Tut 5 Q3, L10 practice",
   },
   {
     kind: "short",
@@ -98,39 +98,39 @@ export const icTechQuestions: Draft[] = [
     accept: ["(ABC + AD + CD)'", "(ABC + D(A + C))'", "(A'+B'+C')(A'+D')(C'+D')"],
     placeholder: "e.g. (AB + C)'",
     solution:
-      "**Pull-down (NMOS) paths from Z to GND:**\n- Q7–Q8–Q9 in series: conducts when $A = B = C = 1$, i.e. $ABC$.\n- Q10 (D) in series with Q11 ∥ Q12 (A, C): conducts when $D(A + C)$.\nThe two branches are in parallel, so Z = 0 exactly when $ABC + D(A + C) = 1$:\n$$Z = (ABC + AD + CD)'$$\n**Check with the pull-up:** (Q1 ∥ Q2 ∥ Q3) in series with (Q4 ∥ (Q5–Q6)), PMOS conducting on 0: $Z = 1$ when $(A' + B' + C')(D' + A'C')$, which is the complement of the pull-down condition, so the circuit never floats or shorts.\nCanonical form: $Z = \\Sigma m(0, 1, 2, 4, 5, 6, 8, 10, 12) = \\Pi M(3, 7, 9, 11, 13, 14, 15)$.",
-    source: "Style: PYP 2016-17 S1 Q2(d)",
+      "**Pull-down (NMOS) paths from Z to GND:**\n- Q7–Q8–Q9 in series: conducts when $A = B = C = 1$, i.e. $ABC$.\n- Q10 (D) in series with Q11 ∥ Q12 (A, C): conducts when $D(A + C)$.\nThe two branches are in parallel, so Z = 0 exactly when $ABC + D(A + C) = 1$:\n$$Z = (ABC + AD + CD)'$$\n**Check with the pull-up:** (Q1 ∥ Q2 ∥ Q3) in series with (Q4 ∥ (Q5–Q6)), PMOS conducting on 0: $Z = 1$ when $(A' + B' + C')(D' + A'C')$, which is the complement of the pull-down condition, so both analyses agree.\nCanonical form: $Z = \\Sigma m(0, 1, 2, 4, 5, 6, 8, 10, 12) = \\Pi M(3, 7, 9, 11, 13, 14, 15)$.",
+    source: "Style: PYP 2018-19 S2 Q2(d)",
   },
   {
     kind: "mcq",
     subtopic: "CMOS functional analysis",
-    difficulty: "hard",
+    difficulty: "medium",
     prompt:
-      "A student meant to build $Z = (A(B + C))'$ in CMOS but drew the pull-up network with the **same** series/parallel shape as the pull-down network (below). For which input combinations ABC is the output Z **floating** (neither network conducts)?",
-    figures: [{ kind: "svg", svg: cmosSvg(FAULT_PDN, FAULT_PDN, { out: "Z", numbered: true }), caption: "Faulty design: pull-up = Q1 in series with (Q2 ∥ Q3)." }],
-    options: ["ABC = 011 and ABC = 100", "ABC = 000 and ABC = 111", "ABC = 011 only", "ABC = 100, 101 and 110", "None: the output is always driven, but VDD shorts to GND for some inputs"],
+      "Figure Q2b shows a 4-input CMOS logic circuit with output Z. Which is the canonical product-of-maxterm expression for Z(A, B, C, D)?",
+    figures: [{ kind: "svg", svg: cmosGateSvg(PYP_NET, "Z", true), caption: "Figure Q2b (PMOS with gate bubbles form the network to VDD; NMOS form the network to GND)" }],
+    options: ["$Z = \\Pi M(7, 9, 11, 13, 15)$", "$Z = \\Sigma m(7, 9, 11, 13, 15)$", "$Z = \\Pi M(0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14)$", "$Z = \\Pi M(9, 11, 13, 15)$", "$Z = \\Pi M(1, 3, 5, 7, 9, 11, 13, 15)$"],
     answer: 0,
     solution:
-      "Pull-up (PMOS conduct on 0): $A'(B' + C')$. Pull-down (NMOS conduct on 1): $A(B + C)$.\n- Both can never conduct together (one needs $A = 0$, the other $A = 1$), so there is **no short**.\n- Neither conducts when $A = 0$ and $B'+C' = 0$ (B = C = 1): **ABC = 011**; or when $A = 1$ and $B + C = 0$: **ABC = 100**.\nAt those two inputs Z is disconnected from both rails (floating). The correct pull-up is the dual: Q1 (A) in **parallel** with the series pair (B, C).",
-    source: "Original",
+      "Paths to GND (NMOS, on for 1): the NMOS on D is in series with [the NMOS on A in parallel with the series pair on B and C]. Z = 0 when $D = 1$ and ($A = 1$ or $B = C = 1$):\n- D = 1, A = 1: rows 9, 11, 13, 15.\n- D = 1, B = C = 1: rows 7, 15.\nSo Z = 0 on rows 7, 9, 11, 13, 15 and **Z = ΠM(7, 9, 11, 13, 15)**.\nCheck with the paths from VDD (PMOS, on for 0): Z = 1 when D = 0, or when A = 0 and (B = 0 or C = 0), which is every other row.\nΣm(7, 9, 11, 13, 15) lists the 0-rows as if they were 1-rows. The third option lists the 1-rows as maxterms. ΠM(9, 11, 13, 15) misses the B–C path (row 7). ΠM(1, 3, …, 15) treats the D transistor alone as a path to GND.",
+    source: "PYP 2018-19 S2 Q2(d)(ii)",
   },
   {
     kind: "open",
-    subtopic: "CMOS design",
+    subtopic: "CMOS functional analysis",
     difficulty: "hard",
     prompt:
-      "Design a single-stage CMOS circuit (PMOS pull-up and NMOS pull-down networks) that implements\n$$F = (D + C(A + B))'$$\n(i) Sketch the transistor-level circuit, labelling VDD, GND, the output and every transistor's input. (ii) State how many transistors are needed and briefly explain how F = 0 and F = 1 are produced.",
+      "Figure Q shows a 4-input CMOS logic circuit.\n(i) Briefly describe how the inputs A, B, C, D may produce logic 1 and logic 0 at the circuit output F. (6 marks)\n(ii) Hence, write the canonical product-of-maxterm Boolean expression for the output F(A, B, C, D). (2 marks)",
+    figures: [{ kind: "svg", svg: cmosGateSvg(O3NET, "F", true), caption: "Figure Q" }],
     modelAnswer:
-      "**Pull-down (NMOS):** F must be 0 when $D + C(A + B) = 1$. Build $A + B$ as two NMOS in parallel, put that pair in series with an NMOS on C, and put the whole chain in parallel with an NMOS on D.\n**Pull-up (PMOS):** the dual network: A and B in **series**, that pair in **parallel** with C, and the result in **series** with a PMOS on D. It conducts when $D'(C' + A'B') = 1$, which equals $(D + C(A+B))'$.\n**Total: 8 transistors** (4 PMOS + 4 NMOS, one complementary pair per input).\nF = 0: D = 1, or C = 1 together with A or B = 1, gives a conducting NMOS path to GND while the PMOS path is broken. F = 1 otherwise: D = 0 and either C = 0 or A = B = 0 gives a PMOS path to VDD.",
-    modelFigures: [{ kind: "svg", svg: cmosGateSvg(O3NET, "F", true), caption: "One correct solution." }],
+      "(i) **Logic 0 (path from F to GND, NMOS on for 1):** the NMOS on D is in parallel with a branch made of [the NMOS on A in parallel with the NMOS on B] in series with the NMOS on C. F = 0 when D = 1, or when C = 1 together with A = 1 or B = 1: the condition is $D + C(A + B)$.\n**Logic 1 (path from VDD to F, PMOS on for 0):** the PMOS on D is in series with a branch made of [the PMOS on A in series with the PMOS on B] in parallel with the PMOS on C. F = 1 when D = 0 and either C = 0 or A = B = 0: the condition is $D'(C' + A'B')$.\nThese two conditions are complements of each other (De Morgan), so $F = (D + C(A + B))'$.\n(ii) F = 0 on the rows with D = 1 (1, 3, 5, 7, 9, 11, 13, 15) and on the rows with C = 1 and A or B = 1 (6, 7, 10, 11, 14, 15).\n**F = ΠM(1, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15)** (equivalently F = Σm(0, 2, 4, 8, 12)).",
     rubric: [
-      { point: "NMOS pull-down: (A ∥ B) in series with C, all in parallel with D", marks: 3 },
-      { point: "PMOS pull-up is the dual: (A series B) ∥ C, in series with D", marks: 3 },
-      { point: "VDD/GND/output/inputs labelled; 8 transistors stated", marks: 1 },
-      { point: "Explanation of when F = 0 and F = 1 (complementary paths)", marks: 1 },
+      { point: "Identifies the NMOS paths to GND: D alone, or C in series with (A ∥ B)", marks: 2 },
+      { point: "Identifies the PMOS paths from VDD: D in series with (C ∥ (A series B))", marks: 2 },
+      { point: "States clearly which input conditions give F = 0 and F = 1", marks: 2 },
+      { point: "F = ΠM(1, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15)", marks: 2 },
     ],
-    solution: "Draw the NMOS network straight from the un-inverted expression (AND → series, OR → parallel), then take the dual for the PMOS network.",
-    source: "Style: Lecture 6-38 (complex CMOS gate)",
+    solution: "Follow the L10 practice method: list the transistor pair each input controls, find every path to GND (rows with F = 0) and every path from VDD (rows with F = 1), then collect the 0-rows as maxterms.",
+    source: "Style: PYP 2018-19 S2 Q2(d), L10 practice",
   },
   // ---------------------------------------------------------------- active levels
   {
@@ -143,26 +143,26 @@ export const icTechQuestions: Draft[] = [
       "LOAD* is active high, because a load happens at a definite logic level",
       "LOAD* is asserted when it is 1, since asserted always means high",
       "LOAD* = 1 means the signal is asserted and the register holds",
-      "The * marks the signal as a clock input",
+      "The * means the signal is a don't care",
     ],
     answer: 0,
     solution:
-      "A signal is **active low** if it produces its named effect (here: loading) when it is 0. The * (or an overbar, or a trailing `_n`) flags active-low signals.\n**Asserted** means 'in its active state': 1 for an active-high signal, 0 for an active-low one. So LOAD* is asserted at 0 (load) and **negated** at 1 (hold).",
-    source: "Style: Lecture 6-19 to 6-22",
+      "A signal is **active low** if it produces its named effect (here: loading) when it is 0. The * flags an active-low signal (the lecture also shows other conventions such as /RECEIVE and TRANSMIT_L).\n**Asserted** means 'in its active state': 1 for an active-high signal, 0 for an active-low one. So LOAD* is asserted at 0 (load) and **negated** at 1 (hold).",
+    source: "Style: Lecture 6 slides 6-19 to 6-22",
   },
   {
     kind: "mcq",
     subtopic: "Asserted and negated",
     difficulty: "medium",
     prompt:
-      "The waveforms show three memory control signals: CS\* (chip select, active low), RD (read, active high) and WR\* (write, active low). A write takes place only while CS\* and WR\* are **both asserted**. During which interval does a write take place?",
+      "The waveforms show three signals: CS\* (active low), Read (active high) and Write\* (active low). Signal W is asserted only while CS\* and Write\* are **both asserted**. During which interval is W asserted?",
     figures: [
       {
         kind: "wave",
         signals: [
           { name: "CS*", wave: "1100000011" },
-          { name: "RD", wave: "0001110000" },
-          { name: "WR*", wave: "1111110011" },
+          { name: "Read", wave: "0001110000" },
+          { name: "Write*", wave: "1111110011" },
         ],
         ticks: ["0", "5", "10", "15", "20", "25", "30", "35", "40", "45"],
         caption: "Time in ms (each division 5 ms).",
@@ -171,8 +171,8 @@ export const icTechQuestions: Draft[] = [
     options: ["30 ms to 40 ms", "0 ms to 10 ms and 40 ms to 50 ms", "15 ms to 30 ms", "10 ms to 40 ms", "30 ms to 50 ms"],
     answer: 0,
     solution:
-      "Both signals are active low, so each is asserted while it is **0**.\n- CS* = 0 from 10 ms to 40 ms.\n- WR* = 0 from 30 ms to 40 ms.\nBoth asserted: **30–40 ms**.\n'0–10 and 40–50 ms' is where both are **high**, i.e. both negated (the classic mistake of treating asserted as 'high'). 15–30 ms is the read cycle (CS* asserted and RD = 1).",
-    source: "Style: PYP 2016-17 S1 Q2(c)",
+      "Both signals are active low, so each is asserted while it is **0**.\n- CS* = 0 from 10 ms to 40 ms.\n- Write* = 0 from 30 ms to 40 ms.\nBoth asserted: **30–40 ms**.\n'0–10 and 40–50 ms' is where both are **high**, i.e. both negated (the classic mistake of treating asserted as 'high'). 15–30 ms is when CS* and Read are both asserted.",
+    source: "Style: PYP 2018-19 S2 Q2(c), PYP 2016-17 S1 Q1(d)",
   },
   {
     kind: "mcq",
@@ -197,7 +197,7 @@ export const icTechQuestions: Draft[] = [
     answer: 0,
     solution:
       "An OR gate with bubbled inputs is a NAND drawn in its 'active-low input' form. Each bubble on X's inputs meets the bubble on a NAND output, and matched bubbles cancel:\n- G1's output bubble meets X's input bubble: that input carries $AB$.\n- G2 has a bubble on its C input, so it ANDs $C'$ and $D$; its output bubble also meets a bubble: $C'D$.\nSo X is high when **A and B are both 1, or C = 0 and D = 1**: $X = AB + C'D$.\nAlgebraically: $X = (G1)' + (G2)' = AB + C'D$.",
-    source: "Style: Tutorial 5 Q2",
+    source: "Style: Tut 5 Q2",
   },
   // ---------------------------------------------------------------- electrical characteristics
   {
@@ -223,7 +223,7 @@ export const icTechQuestions: Draft[] = [
     placeholder: "volts",
     solution:
       "- High-state noise margin: $V_{NH} = V_{OH(min)} - V_{IH(min)} = 4.40 - 3.15 = 1.25$ V.\n- Low-state noise margin: $V_{NL} = V_{IL(max)} - V_{OL(max)} = 1.35 - 0.33 = 1.02$ V.\nA spike must be tolerated whichever state the line is in, so the guaranteed figure is the smaller one: **1.02 V**.",
-    source: "Style: L11 practice Q1(a)",
+    source: "Style: L11 practice Q1(a), PYP 2017-18 S1 Q2(c)",
   },
   {
     kind: "mcq",
@@ -249,8 +249,8 @@ export const icTechQuestions: Draft[] = [
     ],
     answer: 0,
     solution:
-      "Driving is reliable when $V_{OH(min)}$ of the driver $\\ge V_{IH(min)}$ of the receiver **and** $V_{OL(max)}$ of the driver $\\le V_{IL(max)}$ of the receiver.\n- **Q → P:** $4.9 \\ge 2.0$ (margin 2.9 V) and $0.1 \\le 0.8$ (margin 0.7 V). OK.\n- **P → Q:** $2.7 < 3.5$: a guaranteed-high output of P may sit in Q's indeterminate region (margin $-0.8$ V). Not reliable, although the low state works ($0.4 \\le 1.0$).\nThis is the TTL → 74HC problem; 74HCT parts (with $V_{IH(min)} = 2.0$ V) solve it. A shared supply voltage says nothing about compatibility.",
-    source: "Style: L11 practice Q1(d)",
+      "Driving is reliable when $V_{OH(min)}$ of the driver $\\ge V_{IH(min)}$ of the receiver **and** $V_{OL(max)}$ of the driver $\\le V_{IL(max)}$ of the receiver.\n- **Q → P:** $4.9 \\ge 2.0$ (margin 2.9 V) and $0.1 \\le 0.8$ (margin 0.7 V). OK.\n- **P → Q:** $2.7 < 3.5$: a guaranteed-high output of P may sit in Q's indeterminate region (margin $-0.8$ V). Not reliable, although the low state works ($0.4 \\le 1.0$).\nA shared supply voltage says nothing about compatibility: compare the voltage parameters.",
+    source: "Style: L11 practice Q1(d), PYP 2018-19 S1 Q2(c)(i)",
   },
   {
     kind: "short",
@@ -261,8 +261,8 @@ export const icTechQuestions: Draft[] = [
     match: "number",
     accept: ["10"],
     solution:
-      "Check both states and take the smaller result:\n- High state: $I_{OH}/I_{IH} = 1\\text{ mA} / 40\\ \\mu\\text{A} = 25$.\n- Low state: $I_{OL}/I_{IL} = 16 / 1.6 = 10$.\nFan-out $= \\min(25, 10) = $ **10**. Exceeding it would pull $V_{OL}$ up (or $V_{OH}$ down) and eat into the noise margins.",
-    source: "Style: L11 practice Q1(b)",
+      "Check both states and take the smaller result:\n- High state: $I_{OH}/I_{IH} = 1\\text{ mA} / 40\\ \\mu\\text{A} = 25$.\n- Low state: $I_{OL}/I_{IL} = 16 / 1.6 = 10$.\nFan-out $= \\min(25, 10) = $ **10**. More loads than this may reduce the DC noise margins and the switching speed.",
+    source: "Style: L11 practice Q1(b), PYP 2017-18 S1 Q2(c)",
   },
   {
     kind: "short",
@@ -274,7 +274,7 @@ export const icTechQuestions: Draft[] = [
     accept: ["25"],
     placeholder: "mW",
     solution: "$P = CV^2f = (50 \\times 10^{-12})(5^2)(20 \\times 10^6) = 0.025$ W $=$ **25 mW**.",
-    source: "Style: Lecture 6-48",
+    source: "Style: Lecture 6 slide 6-48",
   },
   {
     kind: "mcq",
@@ -285,8 +285,8 @@ export const icTechQuestions: Draft[] = [
     options: ["0.87 × the old power", "1.32 × the old power", "0.44 × the old power", "0.66 × the old power", "2 × the old power"],
     answer: 0,
     solution:
-      "$P = CV^2f$, so $\\dfrac{P_{new}}{P_{old}} = \\left(\\dfrac{3.3}{5}\\right)^2 \\times 2 = 0.4356 \\times 2 \\approx 0.87$.\n1.32 forgets to square the voltage ratio; 0.44 forgets the frequency doubling. This is why low-voltage CMOS allows faster clocks at similar power.",
-    source: "Original",
+      "$P = CV^2f$, so $\\dfrac{P_{new}}{P_{old}} = \\left(\\dfrac{3.3}{5}\\right)^2 \\times 2 = 0.4356 \\times 2 \\approx 0.87$.\n1.32 forgets to square the voltage ratio; 0.44 forgets the frequency doubling.",
+    source: "Style: Lecture 6 slide 6-48",
   },
   {
     kind: "mcq",
@@ -315,7 +315,7 @@ export const icTechQuestions: Draft[] = [
     answer: 0,
     solution:
       "The subscript names the **output** transition.\n- Y goes High → Low at 20 ns, after A rose at 10 ns: $t_{PHL} = 10$ ns.\n- Y goes Low → High at 55 ns, after A fell at 40 ns: $t_{PLH} = 15$ ns.\n- $t_{PD} = (t_{PHL} + t_{PLH})/2 = 12.5$ ns.\nOption B labels the delays by the input edge instead; option D measures from t = 0 instead of from the causing input edge.",
-    source: "Style: Lecture 6-49/6-50",
+    source: "Style: Lecture 6 slides 6-49, 6-50, PYP 2017-18 S2 Q2(d)",
   },
   {
     kind: "short",
@@ -328,7 +328,7 @@ export const icTechQuestions: Draft[] = [
     placeholder: "ns",
     solution:
       "Track the edge through each stage; each inverter flips its direction:\n- A falls → G1 output **rises**: $t_{PLH} = 12$ ns.\n- G2 output **falls**: $t_{PHL} = 8$ ns.\n- G3 output (Y) **rises**: $t_{PLH} = 12$ ns.\nTotal $= 12 + 8 + 12 = $ **32 ns**. (For a rising A it would be $8 + 12 + 8 = 28$ ns.)",
-    source: "Style: PYP 2021-22 S1 Q2 (gate delays)",
+    source: "Style: PYP 2021-22 S1 Q2(b) (gate delays)",
   },
   {
     kind: "mcq",
@@ -340,7 +340,7 @@ export const icTechQuestions: Draft[] = [
     answer: 0,
     solution:
       "Rise time is measured between the **10 %** and **90 %** points of the swing: 0.5 V and 4.5 V here. $t_r = 30 - 12 = $ **18 ns**.\n22 ns uses 0 %–100 %; 10 ns is 50 %–90 %; 8 ns is 10 %–50 % (the 50 % point is used for propagation delay, not rise time).",
-    source: "Style: Lecture 6-49 (timing parameters)",
+    source: "Style: Lecture 6 slide 6-50, PYP 2017-18 S2 Q2(d)",
   },
   // ---------------------------------------------------------------- tri-state and open drain
   {
@@ -366,8 +366,8 @@ export const icTechQuestions: Draft[] = [
     options: ["E1 = 1, E2 = 1, A = 0, B = 0", "E1 = 1, E2 = 1, A = 1, B = 0", "E1 = 0, E2 = 0, A = 0, B = 1", "E1 = 1, E2 = 0, A = 0, B = 1", "E1 = 0, E2 = 1, A = 1, B = 0"],
     answer: 0,
     solution:
-      "Contention needs **both** devices enabled **and** driving different values.\n- A: U drives $A' = 1$, V drives $B = 0$: one output pulls up while the other pulls down. Large current flows, F is indeterminate and the devices may be damaged.\n- B: both enabled but U drives $A' = 0$ and V drives 0: they agree (still poor practice).\n- C: both disabled, F is high impedance (floating).\n- D: only U is enabled: F = $A'$ = 1.\n- E: only V is enabled: F = B = 0.",
-    source: "Style: CE1005 2018-19 S1 Q2(b)",
+      "Contention needs **both** devices enabled **and** driving different values.\n- A: U drives $A' = 1$, V drives $B = 0$: two enabled outputs disagree. This is bus contention, which can damage the devices.\n- B: both enabled but U drives $A' = 0$ and V drives 0: they agree (but only one, or no, output should be enabled at a time).\n- C: both disabled, F is high impedance (floating).\n- D: only U is enabled: F = $A'$ = 1.\n- E: only V is enabled: F = B = 0.",
+    source: "Style: PYP 2016-17 S1 Q2(b)",
   },
   {
     kind: "mcq",
@@ -378,8 +378,8 @@ export const icTechQuestions: Draft[] = [
     options: ["$Z = (A + B + C + D + E + F)'$", "$Z = (A + B)' + (C + D)' + (E + F)'$", "$Z = (A + B)(C + D)(E + F)$", "Undefined: tying outputs together always causes contention", "$Z = ABCDEF$"],
     answer: 0,
     solution:
-      "An open-drain output can only **pull low** (transistor on) or **let go** (transistor off). If any gate pulls low, Z = 0; Z = 1 (via the pull-up) only if every output lets go. That is **wired-AND**: $Z = UVW$.\n$Z = (A+B)'(C+D)'(E+F)' = (A + B + C + D + E + F)'$ by De Morgan.\nThere is no contention because no output actively drives high. Without the pull-up, Z would float whenever all outputs let go.",
-    source: "Style: Lecture 6-61/6-62",
+      "An open-drain output can only **pull low** (transistor on) or **let go** (transistor off). If any gate pulls low, Z = 0; Z = 1 (via the pull-up) only if every output lets go. That is **wired-AND**: $Z = UVW$.\n$Z = (A+B)'(C+D)'(E+F)' = (A + B + C + D + E + F)'$ by De Morgan.\nThe external pull-up resistor is needed to make Z = 1 when every output lets go.",
+    source: "Style: Lecture 6 slides 6-59 to 6-62, PYP 2017-18 S2 Q2(c)",
   },
   // ---------------------------------------------------------------- Schmitt trigger
   {
@@ -392,7 +392,7 @@ export const icTechQuestions: Draft[] = [
     answer: 0,
     solution:
       "The output goes 1 only when the input rises **above $V_{T+}$** and goes 0 only when it falls **below $V_{T-}$**; in between it keeps its previous value (hysteresis).\n- 0.4 → 0; 1.65 (< 2.0) → stays 0; 2.3 → **1**; 1.5 (> 1.2) → stays 1; 1.1 → **0**; 1.7 → stays 0; 2.1 → **1**; 0.9 → **0**.\nOption B is an ordinary buffer with one threshold of 1.6 V; option C is a Schmitt **inverter**; option D forgets that the output holds its value between the thresholds.",
-    source: "Style: L12 practice Q1",
+    source: "Style: L12 practice Q1, PYP 2016-17 S2 Q2(a)",
   },
   {
     kind: "short",
@@ -415,7 +415,7 @@ export const icTechQuestions: Draft[] = [
     accept: ["8"],
     solution:
       "Count the crossings of the 1.6 V line: the input crosses it **5 times** on the way up (1.5 → 1.8, 1.8 → 1.4, 1.4 → 1.9, 1.9 → 1.5, 1.5 → 1.75) and **3 times** on the way down (1.7 → 1.45, 1.45 → 1.75, 1.75 → 1.3). Total **8** output changes: the ordinary inverter chatters.\nThe Schmitt inverter switches low only when the input first exceeds 2.0 V (at 2.2 V) and back high only when it first drops below 1.2 V (at 1.0 V); the wobbles never span the whole 0.8 V hysteresis window, so it changes just twice.",
-    source: "Style: PYP 2016-17 S2 Q2(b)",
+    source: "Style: Lecture 7 slides 7-4, 7-5",
   },
   // ---------------------------------------------------------------- PLA
   {
@@ -440,7 +440,7 @@ export const icTechQuestions: Draft[] = [
     answer: 0,
     solution:
       "Read each product term, then OR the ones connected to Y.\n- P2 $= B'C'$: m0, m4. P3 $= A'BC$: m3. P4 $= AC$: m5, m7.\n- $Y = B'C' + A'BC + AC = \\Sigma m(0, 3, 4, 5, 7)$.\n$\\Sigma m(0,4,5)$ is output X ($AB' + B'C'$). P2 is **shared** by X and Y: a PLA's OR plane lets one product term feed several outputs, which is why designs try to reuse terms.",
-    source: "Style: Lecture 7-9/7-10",
+    source: "Style: Lecture 7 slides 7-9, 7-10",
   },
   {
     kind: "open",
@@ -492,27 +492,25 @@ export const icTechQuestions: Draft[] = [
     solution: "Minimise each output, then list the distinct product terms: each becomes one AND-plane row, and the OR plane picks the rows each output needs.",
     source: "Style: L12 practice Q2",
   },
-  // ---------------------------------------------------------------- tri-state inverter design
+  // ---------------------------------------------------------------- tri-state inverter
   {
     kind: "open",
     subtopic: "Tri-state outputs",
     difficulty: "medium",
     prompt:
-      "(i) Sketch the circuit diagram of a CMOS inverter and briefly describe how it works. (ii) Describe the modifications needed to turn it into a **tri-state inverter** with an active-high enable EN, and explain the output in each state.",
+      "(i) Sketch the circuit diagram of a CMOS inverter and briefly describe how it works. (4 marks)\n(ii) Describe the modifications that need to be made to the circuit in (i) for it to become a tri-state inverter with an enable input EN. You are not required to draw any circuit diagram for the modifications. (4 marks)",
     modelAnswer:
-      "(i) A PMOS transistor connects $V_{DD}$ to the output Y and an NMOS transistor connects Y to GND; both gates are driven by the input X. X = 0: the PMOS is on, the NMOS off, so Y is connected to $V_{DD}$: **Y = 1**. X = 1: the PMOS is off, the NMOS on, so Y is connected to GND: **Y = 0**. Only one transistor conducts in steady state, so static power is tiny.\n(ii) Add a second PMOS in series between $V_{DD}$ and the inverter's PMOS, driven by EN* (the complement of EN), and a second NMOS in series between the inverter's NMOS and GND, driven by EN.\n- EN = 1: both extra transistors are on and the circuit behaves as a normal inverter, Y = X'.\n- EN = 0: both extra transistors are off, so Y is disconnected from both $V_{DD}$ and GND: the output is in the **high-impedance (Hi-Z)** state and can share a bus with other tri-state outputs.",
-    modelFigures: [
-      { kind: "svg", svg: cmosGateSvg("X", "Y"), caption: "(i) CMOS inverter" },
-      { kind: "svg", svg: cmosSvg({ s: ["EN*", "X"] }, { s: ["X", "EN"] }, { out: "Y" }), caption: "(ii) Tri-state inverter: series PMOS on EN*, series NMOS on EN" },
-    ],
+      "(i) A PMOS transistor connects $V_{DD}$ to the output Y and an NMOS transistor connects Y to GND; both gates are driven by the input X. X = 0: the PMOS is on and the NMOS is off, so Y is connected to $V_{DD}$: **Y = 1**. X = 1: the PMOS is off and the NMOS is on, so Y is connected to GND: **Y = 0**.\n(ii) A tri-state inverter has a third output state, high impedance (Hi-Z), in which the output is neither 0 nor 1 and behaves like an open circuit. So the PMOS and NMOS must be controlled so that:\n- EN = 1 (enabled): they behave as in (i), one on and one off, giving Y = X'.\n- EN = 0 (disabled): **both** transistors are off, so Y is connected to neither $V_{DD}$ nor GND: Hi-Z.\nOne way, following the lecture's CMOS tri-state buffer: drive the PMOS gate with $X + EN'$ (e.g. a NAND of X' and EN) and the NMOS gate with $X \\cdot EN$ (e.g. a NOR of X' and EN'). When EN = 1 both gates follow X; when EN = 0 the PMOS gate is 1 (off) and the NMOS gate is 0 (off).",
+    modelFigures: [{ kind: "svg", svg: cmosGateSvg("X", "Y"), caption: "(i) CMOS inverter" }],
     rubric: [
-      { point: "CMOS inverter diagram: PMOS to VDD, NMOS to GND, common gate and drain", marks: 2 },
+      { point: "CMOS inverter diagram: PMOS to VDD, NMOS to GND, both driven by X, output at the junction", marks: 2 },
       { point: "Operation: which transistor is on for X = 0 and X = 1", marks: 2 },
-      { point: "Extra series PMOS (gate EN*) and NMOS (gate EN)", marks: 2 },
-      { point: "EN = 1 → inverter; EN = 0 → both paths open, Hi-Z output", marks: 2 },
+      { point: "Enabled: behaves as a normal inverter", marks: 1 },
+      { point: "Disabled: both transistors turned off, output in high impedance (open circuit)", marks: 2 },
+      { point: "Describes how EN controls the transistor gates (e.g. extra NAND/NOR gating)", marks: 1 },
     ],
-    solution: "The key idea: a tri-state output must be able to disconnect from **both** rails, so an enable-controlled switch goes in series with each network.",
-    source: "Style: PYP 2020-21 S2 Q2(c)",
+    solution: "The key idea: a tri-state output must be able to disconnect from **both** $V_{DD}$ and GND, so when disabled neither transistor may conduct (lecture slides 6-52, 6-53).",
+    source: "PYP 2020-21 S2 Q2(c)",
   },
   // ---------------------------------------------------------------- fixed and floating point
   {
@@ -520,62 +518,69 @@ export const icTechQuestions: Draft[] = [
     subtopic: "Fixed-point numbers",
     difficulty: "medium",
     prompt:
-      "A 12-bit signed fixed-point format stores numbers in 2's complement with the radix point placed so that there are **4 fraction bits** (8 integer bits including the sign). What is the **largest positive** value it can represent? (Give a decimal number.)",
+      "A digital system uses a 12-bit fixed-point representation for unsigned numbers, with 8 bits for the integer portion and 4 bits for the fractional portion (xxxx xxxx.yyyy). What is the **largest** value it can represent, in decimal?",
     match: "number",
-    accept: ["127.9375"],
+    accept: ["255.9375"],
     solution:
-      "The largest pattern is $0111\\,1111.1111_2$: integer part $127$, fraction $1 - 2^{-4} = 0.9375$. Largest value **127.9375**; the most negative is $1000\\,0000.0000_2 = -128$, and the resolution is $2^{-4} = 0.0625$.\nThis small, fixed range (and lost low-order digits in calculations) is the disadvantage of fixed point that floating point fixes.",
-    source: "Style: Lecture 7-11/7-12",
+      "The largest pattern is $1111\\,1111.1111_2$: integer part $255$, fraction $0.1111_2 = 0.5 + 0.25 + 0.125 + 0.0625 = 0.9375$. Largest value **255.9375** ($= 256 - 2^{-4}$).",
+    source: "Style: L12 practice Q3(b)",
   },
   {
     kind: "short",
-    subtopic: "IEEE 754 single precision",
+    subtopic: "Fixed-point numbers",
     difficulty: "medium",
-    prompt: "Encode $-13.375_{10}$ as an IEEE 754 **single-precision** number. Give the 32-bit pattern in hexadecimal.",
+    prompt:
+      "A 16-bit unsigned fixed-point format has 8 integer bits and 8 fraction bits (xxxx xxxx yyyy yyyy). Give the 16-bit representation of the decimal value 8.7 (fraction bits truncated), as 16 binary digits.",
     match: "text",
-    accept: ["C1560000", "0xC1560000", "C156 0000", "C1560000h"],
-    placeholder: "8 hex digits",
+    accept: ["0000100010110011", "0000 1000 1011 0011", "00001000.10110011", "0000 1000.1011 0011"],
+    placeholder: "16 bits",
     solution:
-      "- Sign: negative, **S = 1**.\n- $13.375 = 1101.011_2 = 1.101011_2 \\times 2^{3}$.\n- Biased exponent: $3 + 127 = 130 = 1000\\,0010_2$.\n- Fraction (drop the hidden leading 1): $101011\\,0000\\ldots$ (23 bits).\nPattern: `1 10000010 10101100000000000000000` → group in fours: `1100 0001 0101 0110 0000 …` = **C156 0000**.",
-    source: "Style: Lecture 7-15",
+      "- Integer part: $8 = 0000\\,1000$.\n- Fraction: multiply by 2 repeatedly and keep the integer parts: $0.7 \\to 1.4\\ (1)$, $0.4 \\to 0.8\\ (0)$, $0.8 \\to 1.6\\ (1)$, $0.6 \\to 1.2\\ (1)$, $0.2 \\to 0.4\\ (0)$, $0.4 \\to 0.8\\ (0)$, $0.8 \\to 1.6\\ (1)$, $0.6 \\to 1.2\\ (1)$ → $1011\\,0011$.\n- Result: **0000 1000 1011 0011**, which is $8 + 179/256 = 8.69921875$.\nThe pattern 0110 keeps repeating, so 8.7 has **no exact** representation in this format.",
+    source: "L12 practice Q3(c)",
   },
   {
-    kind: "short",
-    subtopic: "IEEE 754 single precision",
+    kind: "mcq",
+    subtopic: "Floating-point numbers",
     difficulty: "easy",
-    prompt: "The 32-bit pattern $41A40000_{16}$ is an IEEE 754 single-precision number. What decimal value does it represent?",
-    match: "number",
-    accept: ["20.5"],
-    solution:
-      "`41A40000` = `0100 0001 1010 0100 0000 …`\n- S = 0 (positive).\n- Exponent field `1000 0011` = 131, so the true exponent is $131 - 127 = 4$.\n- Fraction `0100100…`, so the significand is $1.01001_2$.\n- Value $= 1.01001_2 \\times 2^4 = 10100.1_2 = $ **20.5**.",
-    source: "Style: Lecture 7-15",
-  },
-  {
-    kind: "mcq",
-    subtopic: "IEEE 754 single precision",
-    difficulty: "medium",
-    prompt: "What is stored in the 8-bit **exponent field** when $0.15625_{10}$ is written in IEEE 754 single precision?",
-    options: ["0111 1100", "1000 0010", "1111 1101", "0000 0011", "0111 1101"],
-    answer: 0,
-    solution:
-      "$0.15625 = 0.00101_2 = 1.01_2 \\times 2^{-3}$. The field holds the exponent plus the bias 127: $-3 + 127 = 124 = $ **0111 1100**.\n- `1000 0010` (130) is the field for $2^{+3}$: sign of the exponent wrong.\n- `1111 1101` is $-3$ in 8-bit 2's complement: the real standard uses a **biased** (excess-127) exponent, not 2's complement.\n- `0111 1101` (125) is an off-by-one from normalising as $0.101 \\times 2^{-2}$ instead of $1.01 \\times 2^{-3}$.",
-    source: "Style: Lecture 7-15",
-  },
-  {
-    kind: "mcq",
-    subtopic: "IEEE 754 range and precision",
-    difficulty: "hard",
-    prompt: "Which statement about IEEE 754 single precision is correct?",
+    prompt: "A floating-point number is represented as $Z = S \\times R^E$. According to the lecture, which statement is correct?",
     options: [
-      "The largest finite value is about $3.4 \\times 10^{38}$ and the smallest positive normalised value is about $1.2 \\times 10^{-38}$",
-      "An exponent field of 1111 1111 with a zero fraction encodes the largest finite number",
-      "Because the leading 1 is hidden, the significand carries 23 bits of precision, about 10 significant decimal digits",
-      "Zero is encoded with exponent field 0111 1111 and an all-zero fraction",
-      "Every integer up to $2^{31}$ can be stored exactly",
+      "S is the significand, usually a signed fractional fixed-point number; R is the radix; E is the exponent, usually a signed fixed-point integer",
+      "S is the sign bit, R is the remainder and E is the exponent",
+      "S is the exponent, R is the radix and E is the significand",
+      "S is always an integer and E is always a fraction",
+      "R is the number of bits in the significand",
     ],
     answer: 0,
     solution:
-      "- Largest finite: $(2 - 2^{-23}) \\times 2^{127} \\approx 3.40 \\times 10^{38}$; smallest normalised: $2^{-126} \\approx 1.18 \\times 10^{-38}$. **Correct.**\n- Exponent all 1s with fraction 0 is **±∞** (e.g. `FF800000` = −∞); a nonzero fraction there is NaN.\n- The hidden 1 **adds** a bit: 24 bits of significand ≈ 7 decimal digits.\n- Field `0111 1111` (= 127, true exponent 0) with fraction 0 is **1.0**; zero has an all-zero exponent field.\n- Integers are exact only up to $2^{24} = 16\\,777\\,216$; $2^{24} + 1$ already rounds.",
-    source: "Original",
+      "Floating point is the machine equivalent of scientific notation, e.g. $2.99792458 \\times 10^5$. In $Z = S \\times R^E$:\n- **S** is the significand, usually a signed fractional fixed-point number.\n- **R** is the radix (2 for binary, 8 for octal, 10 for decimal, …).\n- **E** is the exponent, usually a signed fixed-point integer.",
+    source: "Lecture 7 slides 7-13, 7-14",
+  },
+  {
+    kind: "mcq",
+    subtopic: "Floating-point numbers",
+    difficulty: "medium",
+    prompt: "In the IEEE 754 single-precision (32-bit) format shown in the lecture, which bits hold the exponent, and how many bits hold the magnitude of the significand?",
+    options: [
+      "Exponent in bits 30–23; 23 significand bits (bits 22–0)",
+      "Exponent in bits 31–24; 24 significand bits (bits 23–0)",
+      "Exponent in bits 30–20; 20 significand bits (bits 19–0)",
+      "Exponent in bits 7–0; 23 significand bits (bits 31–9)",
+      "Exponent in bits 62–52; 52 significand bits (bits 51–0)",
+    ],
+    answer: 0,
+    solution:
+      "Single precision (32 bits): bit 31 is the sign of the significand, bits 30–23 (8 bits) hold the exponent and bits 22–0 (**23 bits**) hold the significand magnitude.\nBits 62–52 and 51–0 are the exponent and significand fields of **double** precision (64 bits). The slide also states: radix 2, significand in sign-magnitude notation.",
+    source: "Lecture 7 slide 7-15",
+  },
+  {
+    kind: "short",
+    subtopic: "Fixed-point numbers",
+    difficulty: "easy",
+    prompt:
+      "A 16-bit unsigned fixed-point format has 8 integer bits and 8 fraction bits. What is the smallest non-zero value it can represent, in decimal?",
+    match: "number",
+    accept: ["0.00390625"],
+    solution: "The smallest non-zero pattern is 0000 0000.0000 0001, i.e. only the last fraction bit set: $2^{-8} = 1/256 =$ **0.00390625**.",
+    source: "L12 practice Q3(a)",
   },
 ];

@@ -3,7 +3,7 @@ import type { Lesson } from "@/lib/sc1005/types";
 export const booleanLesson: Lesson = {
   topic: "boolean",
   bigPicture:
-    "Every digital circuit, from a parity checker to a CPU, is built from a handful of **logic gates**, and **Boolean algebra** is the language for describing, analysing and simplifying them. This chapter runs in a loop: a gate's behaviour is fixed by its **truth table**; a network of gates has a **Boolean expression** you can read straight off the diagram (and you can draw the diagram straight from an expression); real gates take time to switch, so outputs follow inputs only after a **propagation delay** and can glitch; the **theorems** (absorption, consensus, De Morgan) let you shrink an expression so the circuit needs fewer gates; **NAND** and **NOR** are universal, so any circuit can be rebuilt from one gate type; **alternate symbols** and **bubble-to-bubble matching** make a diagram say *when* the output is 0 or 1; and **XOR/XNOR** give comparators and parity generators/checkers. Exam questions mix these: read a circuit, sketch its waveforms with gate delays, simplify algebraically, count NAND/NOR gates, redraw with matched bubbles.",
+    "Digital circuits (in smart phones, computers, washing machines, cars) are built from **logic gates**, and **Boolean algebra** is used to describe, design and simplify them. This chapter runs in a loop: a gate's behaviour is fixed by its **truth table**; a network of gates has a **Boolean expression** you can read straight off the diagram (and you can draw the diagram straight from an expression); real gates take time to switch, so outputs follow inputs only after a **propagation delay**; the **theorems** (absorption, consensus, De Morgan) let you shrink an expression so the circuit needs fewer gates; **NAND** and **NOR** are universal, so any circuit can be rebuilt from one gate type; **alternate symbols** and **bubble-to-bubble matching** make a diagram say *when* the output is 0 or 1; and **XOR/XNOR** give comparators and parity generators/checkers. Exam questions mix these: read a circuit, sketch its waveforms with gate delays, simplify algebraically, count NAND/NOR gates, redraw with matched bubbles.",
   sections: [
     {
       title: "Logic levels, the basic gates and truth tables",
@@ -15,12 +15,12 @@ export const booleanLesson: Lesson = {
         "**OR** ($X = A + B$, logical addition): output is 1 if **at least one** input is 1.",
         "**AND** ($X = A\\cdot B = AB$, logical multiplication): output is 1 only if **all** inputs are 1.",
         "**NOT** (inverter, $X = A'$): output is the complement of its single input. The bubble on the symbol means inversion.",
-        "**Buffer** ($X = A$): no change in logic; used to boost drive strength or add delay.",
+        "**Buffer** ($X = A$): no change in logic.",
         "A truth table lists all $2^N$ input combinations in **binary counting order** (first input = MSB), so the row number equals the input pattern read as a binary number.",
         "Multi-input AND/OR work the same way: a 3-input AND is 1 only on row 111, a 3-input OR is 0 only on row 000.",
-        "A 2-input truth table has 4 rows and each row's output can be 0 or 1, so there are $2^4 = 16$ different 2-input functions (in general $2^{2^N}$ for $N$ inputs).",
+        "A 2-input truth table has 4 rows and each row's output can be 0 or 1, so there are $2^4 = 16$ different 2-input truth tables (one output).",
         "Logic behaviour can be described by a truth table or a timing diagram; a circuit by an expression or a circuit diagram. A timing diagram that visits every input combination gives the whole truth table: read the output during each input pattern.",
-        "An output may drive one or more inputs, but outputs must **not** be connected together unless they are designed for it (open-drain or tri-state outputs).",
+        "An output can connect to one or more inputs, but outputs should **not** be connected together unless one is very sure. A logic circuit also needs a power supply to operate.",
       ],
       figures: [
         {
@@ -61,7 +61,7 @@ export const booleanLesson: Lesson = {
       recall: [
         { q: "When is a 3-input OR gate's output 0?", a: "Only when all three inputs are 0 (row 000)." },
         { q: "How many rows does the truth table of a 5-input function have?", a: "$2^5 = 32$." },
-        { q: "What does a buffer do logically?", a: "Nothing: $X = A$. It only restores/strengthens the signal (and adds delay)." },
+        { q: "What does a buffer do logically?", a: "No change in logic: $X = A$." },
       ],
     },
     {
@@ -117,14 +117,13 @@ export const booleanLesson: Lesson = {
     {
       title: "Timing diagrams and propagation delay",
       intuition:
-        "A timing diagram applies the truth table at every instant. Real gates are not instantaneous: each output changes only after a propagation delay, so a signal that passes through more gates arrives later, and paths of different lengths can produce short false pulses (glitches).",
+        "A timing diagram applies the truth table at every instant. Real gates are not instantaneous: each output changes only after a propagation delay, so a change that passes through more gates reaches the output later.",
       visuals: ["prop-delay"],
       keyIdeas: [
         "Ideal waveforms: in each time interval, read the input levels and apply the gate's truth table.",
-        "**Propagation delay** $t_{pd}$: time from an input change to the resulting output change (measured at the 50% points). $t_{PLH}$ is for the output going LOW→HIGH, $t_{PHL}$ for HIGH→LOW.",
-        "**Rise time** $t_r$ / **fall time** $t_f$: time for an edge to go between 10% and 90% of the swing.",
+        "**Propagation delay**: the time for a signal to propagate from input to output (measured between the 50% points). $t_{PLH}$ is the delay when the output changes LOW→HIGH, $t_{PHL}$ when it changes HIGH→LOW.",
+        "**Rise time** $t_r$ / **fall time** $t_f$: time for an edge to go between the 10% and 90% levels.",
         "With several levels of gates, a change reaches the output after the **sum** of the delays along its path. With 50 ns per gate, a change that passes through 3 gates appears 150 ns later.",
-        "If an input reaches the output gate by two paths of different lengths, the output can briefly take a wrong value: a **glitch** (hazard). The width of the glitch equals the difference in path delays.",
         "When sketching (exam style): mark the time axis in delay units, then propagate each gate in order of depth: an output can only change one delay after one of its inputs changed.",
       ],
       figures: [
@@ -151,18 +150,6 @@ export const booleanLesson: Lesson = {
           marks: [2, 5],
           caption: "$Z = (A + BC)'$ built from AND → OR → NOT, 50 ns per gate. $ABC$ changes 000 → 011 at $t = 0$; $Z$ falls only at $t = 150$ ns.",
         },
-        {
-          kind: "wave",
-          signals: [
-            { name: "A", wave: "11000000" },
-            { name: "A'", wave: "00011111" },
-            { name: "AB", wave: "11100000" },
-            { name: "A'C", wave: "00001111" },
-            { name: "F", wave: "11110111" },
-          ],
-          ticks: ["-20", "-10", "0", "10", "20", "30", "40", "50"],
-          caption: "Glitch: $F = AB + A'C$ with $B = C = 1$ should stay 1, but when $A$ falls the $A'C$ path is one gate longer, so $F$ dips to 0 for one gate delay (20–30 ns).",
-        },
       ],
       example: {
         problem:
@@ -171,31 +158,30 @@ export const booleanLesson: Lesson = {
           "Before $t = 0$: $BC = 0$, $A + BC = 0$, so $Z = 1$. After everything settles: $BC = 1$, $A + BC = 1$, $Z = 0$.",
           "$B$ and $C$ rise at $t = 0$, so the AND output $BC$ rises one delay later, at $t = 50$ ns.",
           "The OR output follows $BC$ one delay later, at $t = 100$ ns.",
-          "The inverter output $Z$ falls one more delay later, at $t = 150$ ns. There is only one path from $B, C$ to $Z$, so there is no glitch.",
+          "The inverter output $Z$ falls one more delay later, at $t = 150$ ns.",
         ],
         answer: "$Z$ stays 1 until $t = 150$ ns, then falls to 0.",
       },
       pitfalls: [
         "Do not move the output edge to the input edge: with delays, every output edge is shifted right by the path delay.",
         "Add delays along the path through which the change travels, not the total number of gates in the circuit.",
-        "A glitch-free Boolean expression can still glitch in hardware: equal expressions are not equal waveforms when path delays differ.",
       ],
       recall: [
         { q: "Three gates in series each with $t_{pd} = 20$ ns. How long after an input change does the output change?", a: "60 ns." },
-        { q: "What is a glitch?", a: "A short unwanted pulse at an output, caused by a change reaching a gate through paths with different delays." },
-        { q: "Define rise time.", a: "The time for an edge to go from 10% to 90% of the voltage swing." },
+        { q: "What is $t_{PHL}$?", a: "The propagation delay when the output changes from HIGH to LOW." },
+        { q: "Define rise time.", a: "The time for an edge to go from the 10% level to the 90% level." },
       ],
     },
     {
       title: "Boolean theorems and algebraic simplification",
       intuition:
-        "Fewer literals means fewer gates and gate inputs, so a simpler circuit is cheaper and more reliable. The theorems are the legal moves for shrinking an expression without changing its truth table.",
+        "The theorems can be used to simplify logic expressions and therefore logic circuits, and simpler circuits cost less to build and are less prone to failure. They are the legal moves for shrinking an expression without changing its truth table.",
       visuals: ["equiv-checker"],
       keyIdeas: [
         "Single-variable: $X\\cdot0 = 0$, $X\\cdot1 = X$, $X\\cdot X = X$, $X\\cdot X' = 0$; $X + 0 = X$, $X + 1 = 1$, $X + X = X$, $X + X' = 1$; $(X')' = X$.",
         "Commutative and associative laws hold for both AND and OR.",
-        "Distributive: $A(B + C) = AB + AC$ and also (unlike ordinary algebra) $A + BC = (A + B)(A + C)$.",
-        "**Absorption**: $A + AB = A$ and $A(A + B) = A$. **Redundant complement**: $A + A'B = A + B$ and $A(A' + B) = AB$.",
+        "Distributive: $A(B + C) = AB + AC$ and $(A + B)(C + D) = AC + BC + AD + BD$.",
+        "**Absorption laws**: $A + AB = A$ (proof: $A(1 + B) = A$) and $A + A'B = A + B$ (proof: $A + AB + A'B = A + (A + A')B = A + B$).",
         "**Consensus**: $AB + A'C + BC = AB + A'C$ (the term $BC$ is redundant).",
         "Consensus in words (lecture example): with $A$ = male, $B$ = classmate, $C$ = friend, everyone who is a classmate **and** a friend ($BC$) is already a male classmate ($AB$) or a female friend ($A'C$), so $BC$ adds nothing.",
         "Absorption in words: \"A must come; B may come with A\" is just \"A must come\" ($A + AB = A$); \"A must come; if A cannot, B must\" is \"A or B must come\" ($A + A'B = A + B$).",
@@ -206,7 +192,7 @@ export const booleanLesson: Lesson = {
       formulas: [
         "A + AB = A, \\qquad A + A'B = A + B",
         "AB + A'C + BC = AB + A'C",
-        "A + BC = (A + B)(A + C)",
+        "(A + B)(C + D) = AC + BC + AD + BD",
       ],
       example: {
         problem: "Simplify $X = A'B'C'D' + A'B'CD' + A'BCD' + ABCD' + AB'CD'$.",
@@ -219,7 +205,7 @@ export const booleanLesson: Lesson = {
         answer: "$X = A'B'D' + CD'$.",
       },
       pitfalls: [
-        "$A + BC \\ne (A + B)C$. The correct factorisation is $A + BC = (A + B)(A + C)$.",
+        "$A + BC \\ne (A + B)C$: AND is done before OR, so $A + BC$ means $A + (BC)$. Row $A = 1, C = 0$ tells them apart.",
         "You may reuse a term ($X + X = X$) to complete two different groupings; this is often the trick in the long SOP simplifications.",
         "The dual is **not** the complement: you swap the operators and constants, but variables keep their primes.",
       ],
@@ -278,7 +264,7 @@ export const booleanLesson: Lesson = {
     {
       title: "Universal gates: NAND-only and NOR-only circuits",
       intuition:
-        "A NAND with its inputs tied together is an inverter, and inverting a NAND gives AND; De Morgan turns a NAND with inverted inputs into OR. Since NOT, AND and OR can all be made, any Boolean function can be built from NANDs alone (and likewise NORs), which is how many ICs are built.",
+        "A NAND with its inputs tied together is an inverter, and inverting a NAND gives AND; De Morgan turns a NAND with inverted inputs into OR. Since NOT, AND and OR can all be made, any Boolean function can be built from NANDs alone (and likewise NORs).",
       visuals: ["nand-nor-builder"],
       keyIdeas: [
         "From NAND: NOT $= $ NAND$(A, A)$ (1 gate); AND $=$ NAND followed by a NAND-inverter (2 gates); OR $=$ NAND$(A', B')$ (3 gates, since $(A'B')' = A + B$).",
@@ -402,16 +388,15 @@ export const booleanLesson: Lesson = {
     {
       title: "XOR, XNOR, parity generators/checkers and logic ICs",
       intuition:
-        "XOR answers \"are these different?\" and, with more inputs, \"is the number of 1s odd?\". That makes it the gate for comparators and parity, and a chain of XORs is all a parity generator or checker needs.",
+        "XOR answers \"are these different?\" and, with more inputs, \"is the number of 1s odd?\". That makes it the gate for bit-wise comparison and for parity generators/checkers.",
       visuals: ["parity-tree"],
       keyIdeas: [
         "**XOR**: $X = A \\oplus B = AB' + A'B$; output 1 when the inputs **differ**. **XNOR**: $X = (A \\oplus B)' = AB + A'B'$; output 1 when they are **equal**.",
-        "Multi-input XOR is associative: $A \\oplus B \\oplus C = (A \\oplus B) \\oplus C$. It outputs 1 when an **odd** number of inputs are 1 (odd function).",
-        "Useful identities: $A \\oplus 0 = A$, $A \\oplus 1 = A'$, $A \\oplus A = 0$, $A \\oplus A' = 1$.",
-        "**Comparator**: two $n$-bit words are equal when every bit pair is equal: $n$ XNORs into an AND (or $n$ XORs into a NOR). An XOR output of 1 flags a bit that differs.",
+        "Multi-input XOR: $A \\oplus B \\oplus C = (A \\oplus B) \\oplus C = A \\oplus (B \\oplus C)$. It is essentially an **odd-function generator**: the output is 1 when an **odd** number of inputs are 1 (for 3 inputs: one or three 1s).",
+        "**Bit-wise comparator** (application of XOR): XOR each pair of bits of the two multi-bit inputs; an output of 1 means the inputs are different in that bit.",
         "**Even-parity generator**: $P = D_3 \\oplus D_2 \\oplus D_1 \\oplus D_0$ makes the total number of 1s (data + P) even. Odd parity uses the complement.",
-        "**Parity checker**: XOR all received bits including $P$. For even parity the result $E = 1$ means an error. A single-bit error is always caught; two flipped bits cancel and go undetected.",
-        "Logic ICs: small-scale ICs in 14-pin DIPs, e.g. 7400 (quad 2-input NAND), 7402 (quad NOR), 7404 (hex inverter), 7408 (quad AND), 7432 (quad OR), 7486 (quad XOR). Pin 14 = $V_{CC}$, pin 7 = GND. A **connection diagram** shows which pins are wired together, including power.",
+        "**Parity checker**: XOR all received bits including $P$. For even parity the result $E = 1$ means an error. Limitation: parity can only detect a 1-bit error.",
+        "Logic devices: a physical circuit can be built from standard logic ICs, application-specific ICs (ASICs) or programmable logic devices. Small-scale integrated devices provide AND, OR, NOT, NAND, NOR, XOR and XNOR gates, e.g. the 7404 (hex NOT) and 7408 (quad AND) in a dual-in-line package, with pin 14 = $V_{CC}$ and pin 7 = GND. A **connection diagram** shows which pins are wired together, including power.",
       ],
       figures: [
         {
@@ -473,24 +458,24 @@ export const booleanLesson: Lesson = {
       pitfalls: [
         "XOR and OR differ only on row 11: OR gives 1, XOR gives 0.",
         "A multi-input XOR is not \"exactly one input is 1\"; it is \"an odd number of inputs are 1\".",
-        "Parity detects any odd number of bit errors but never an even number, and it cannot tell which bit is wrong.",
+        "Parity can only detect a 1-bit error: if two bits flip, the received word has an even number of 1s again and the even-parity checker gives $E = 0$.",
         "In a connection diagram every IC needs $V_{CC}$ and GND connected even though they are not part of the logic.",
       ],
       recall: [
         { q: "Output of a 4-input XOR for input 1101?", a: "1 (three 1s, odd)." },
-        { q: "Simplify $A \\oplus 1$.", a: "$A'$." },
+        { q: "When is the output of a 3-input XOR equal to 1?", a: "When one or three of the inputs are 1 (an odd number of 1s)." },
         { q: "Which gate gives 1 exactly when two bits are equal?", a: "XNOR." },
       ],
     },
   ],
   playbook: [
     "**Circuit given, expression asked** → label each gate output left to right; an output bubble wraps the whole gate expression in a prime. Then simplify with De Morgan.",
-    "**Waveforms with gate delays** → mark time in delay units; propagate gate by gate in order of depth (each output changes one delay after its input changed); look for two paths of different length into one gate: that is where a glitch appears.",
+    "**Waveforms with gate delays** → mark time in delay units; propagate gate by gate in order of depth (each output changes one delay after its input changed); write the steady values before and after the change first.",
     "**\"Simplify algebraically\"** → De Morgan from the outside in to remove long bars, multiply out to SOP, then $X + X' = 1$, absorption $A + A'B = A + B$, consensus. Check two or three truth-table rows at the end.",
     "**Long SOP with many minterms** → group pairs that differ in one variable; reuse a term ($X + X = X$) when it helps two groupings.",
     "**NAND-only / NOR-only gate count** → SOP maps to NAND–NAND, POS to NOR–NOR (same wiring, no extra gates). Every complemented input or wrong-form conversion costs inverters; cancel inverter pairs.",
     "**\"Show how logic 0 (or 1) is obtained at the output\"** → pick the output symbol (bubble for 0, none for 1), then choose each earlier gate's symbol so bubbles meet bubbles, and read \"0\" at bubbles, \"1\" elsewhere.",
-    "**Equality / mismatch detection** → XNOR per bit then AND (or XOR per bit then NOR).",
+    "**Bit-wise comparison** → XOR each bit pair; a 1 marks a bit where the two inputs differ.",
     "**Parity** → generator: XOR the data bits (complement for odd parity). Checker: XOR everything received including $P$; for even parity, 1 = error.",
     "**Connection diagram** → write pin numbers on every gate input/output from the datasheet table, and connect pin 14 to $V_{CC}$, pin 7 to GND on every chip.",
   ],

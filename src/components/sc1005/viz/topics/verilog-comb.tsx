@@ -337,38 +337,31 @@ const INIT_SIGS: Record<string, string> = { a: "0110", b: "1010", X: "10010110",
 const PRESETS: Record<"literal" | "operator", [string, number][]> = {
   literal: [
     ["8'hA5", 8],
-    ["-4'd3", 4],
-    ["-4'd3", 8],
+    ["8'b0100_1111", 8],
+    ["16'h2E69", 16],
     ["4'd-3", 8],
     ["{{3{X[7]}}, X}", 11],
     ["{3{X[7]}, X}", 11],
     ["{a, b}", 8],
+    ["{a[3:0], 4'b0000}", 8],
     ["X[5:2]", 4],
     ["4'b1001", 6],
     ["6'b110011", 4],
-    ["3'b1011", 6],
-    ["'hABC", 8],
-    ["4'b1x0z", 4],
     ["{3{2'b10}}", 6],
   ],
   operator: [
     ["a & b", 4],
     ["a && b", 4],
     ["a | b", 4],
+    ["a ^ b", 4],
     ["~a", 4],
     ["!a", 4],
-    ["&a", 1],
-    ["|a", 1],
-    ["^X", 1],
     ["a + b", 4],
     ["a + b", 5],
-    ["a - b", 6],
-    ["a << 2", 4],
-    ["X >> 3", 8],
+    ["a - b", 4],
     ["a > b", 1],
-    ["a == 4'b0x10", 1],
+    ["a == 4'b0110", 1],
     ["sel ? a : b", 4],
-    ["{a, b} >> 1", 8],
   ],
 };
 
@@ -381,7 +374,7 @@ function Bits({ bits, onClick }: { bits: B4[]; onClick?: (k: number) => void }) 
         <span
           key={k}
           onClick={onClick ? () => onClick(k) : undefined}
-          title={onClick ? "click: 0 → 1 → x → z" : undefined}
+          title={onClick ? "click to flip the bit" : undefined}
           style={{
             display: "inline-block",
             minWidth: 18,
@@ -427,7 +420,7 @@ function ExprLab({ kind }: { kind: "literal" | "operator" }) {
     }
   }, [expr, W, sigBits]);
   const cycle = (name: string, k: number) => {
-    const nx: Record<B4, B4> = { "0": "1", "1": "x", x: "z", z: "0" };
+    const nx: Record<B4, B4> = { "0": "1", "1": "0", x: "0", z: "0" };
     setSigBits({ ...sigBits, [name]: sigBits[name].map((b, j) => (j === k ? nx[b] : b)) });
   };
   const seen = new Set<string>();
@@ -444,8 +437,8 @@ function ExprLab({ kind }: { kind: "literal" | "operator" }) {
     : [];
   return (
     <VizFrame
-      title={kind === "literal" ? "Literal and vector decoder" : "Operator playground: widths, &, &&, reductions"}
-      hint="Type a Verilog expression or pick a preset; set the width of the target y. Click the bits of a, b, X, sel to edit them (0 → 1 → x → z)."
+      title={kind === "literal" ? "Literal and vector decoder" : "Operator playground: widths, & vs &&"}
+      hint="Type a Verilog expression or pick a preset; set the width of the target y. Click the bits of a, b, X, sel to flip them."
       onReset={() => {
         setExpr(presets[kind === "literal" ? 2 : 0][0]);
         setW(presets[kind === "literal" ? 2 : 0][1]);
@@ -506,7 +499,7 @@ function ExprLab({ kind }: { kind: "literal" | "operator" }) {
             <Read label="y" tex={`**${res.bits.join("")}** (${fmtVal(res.bits)})`} tone="good" />
             <Read
               label="Width"
-              tex={`expression is ${res.selfWidth} bit${res.selfWidth > 1 ? "s" : ""} on its own; evaluated at max(${res.selfWidth}, ${W}) = ${res.ctx} bits${res.ctx > W ? `, then **truncated** to ${W} (top ${res.ctx - W} bit${res.ctx - W > 1 ? "s" : ""} dropped)` : res.selfWidth < W ? ", so narrower operands are **zero-extended first**" : ""}`}
+              tex={`expression is ${res.selfWidth} bit${res.selfWidth > 1 ? "s" : ""} wide, y is ${W} bit${W > 1 ? "s" : ""}${res.ctx > W ? `: **truncated at the MSB** (top ${res.ctx - W} bit${res.ctx - W > 1 ? "s" : ""} dropped)` : res.selfWidth < W ? ": the wider y has room for extra MSBs (a carry is kept, otherwise **zero-padded at the MSB**)" : ": widths match"}`}
             />
             {rows.length > 0 && <TableView head={["sub-expression", "width", "value", "note"]} rows={rows} />}
           </>
@@ -517,16 +510,16 @@ function ExprLab({ kind }: { kind: "literal" | "operator" }) {
       tasks={
         kind === "literal"
           ? [
-              "Predict the bits of **-4'd3** with y 4 bits, then with y 8 bits. Why is the 8-bit answer not **0000_1101**?",
-              "Try **4'd-3**. Where must the minus sign go?",
+              "Predict the bits of **8'hA5** and **16'h2E69**, then check. Does **8'b0100_1111** equal **8'h4F**?",
+              "Try **4'd-3** (PYP 2021-22 S1 Q1(1)). Why does it not fit the form <size>'<radix><value>?",
               "Compare **{{3{X[7]}}, X}** with **{3{X[7]}, X}**. Then flip X[7] and watch the sign extension follow it.",
               "Try **4'b1001** into 6 bits and **6'b110011** into 4 bits: which end is padded, which end is cut?",
             ]
           : [
               "Predict **a & b** and **a && b** for a = 0110, b = 1010, then check. Why is one 4 bits and the other 1 bit?",
               "Compare **a + b** with y = 4 and y = 5 bits. Where did the carry go?",
-              "Try **a - b** with y = 6. Why is the answer not just the 4-bit difference padded with zeros?",
-              "Set a bit of a to x (click it twice) and try **a == 4'b0x10**, **a & b** and **|a**. When does a single known bit decide the answer?",
+              "Set a = 0011 and b = 0101 and try **a - b** with y = 4. Read the result as a 4-bit two's complement number.",
+              "Try **a > b** and **a == 4'b0110**. Why is the result always a single bit, 1 (true) or 0 (false)?",
             ]
       }
     />
@@ -777,14 +770,14 @@ function parseV(src: string, sigs: Record<string, VSig>): Node {
       while (eat(",")) es.push(cond());
       if (eat("{")) fail('a replication must be wrapped in its own braces, e.g. {{3{X[7]}}, X}');
       expect("}");
-      for (const x of es) if (x.t === "num" && !x.sized) fail("unsized constants are not allowed in a concatenation");
+      for (const x of es) if (x.t === "num" && !x.sized) fail("give every constant in a concatenation a size, e.g. 4'b0000");
       return { t: "cat", es, n: 1, s, e: i };
     }
     // literal: [size]'[s]base digits, or plain decimal
     const rest = src.slice(i);
-    if (/^\d*\s*'\s*[sS]?[bBoOdDhH]\s*-/.test(rest)) fail("illegal literal: a minus sign goes in front of the whole literal (-4'd3), never after the base");
-    if (/^\d+\s*'\s*-/.test(rest)) fail("illegal literal: a minus sign goes in front of the whole literal (-4'd3), never after the apostrophe");
-    if (/^\d+\s*[bBoOdDhH]\s*'/.test(rest)) fail("illegal literal: the form is <size>'<base><digits>, e.g. 4'd3 (apostrophe before the base)");
+    if (/^\d*\s*'\s*[sS]?[bBoOdDhH]\s*-/.test(rest)) fail("illegal literal: the form is <size>'<radix><value>, e.g. 4'd3; a minus sign does not fit inside it");
+    if (/^\d+\s*'\s*-/.test(rest)) fail("illegal literal: the form is <size>'<radix><value>, e.g. 4'd3; a minus sign does not fit inside it");
+    if (/^\d+\s*[bBoOdDhH]\s*'/.test(rest)) fail("illegal literal: the form is <size>'<radix><value>, e.g. 4'd3 (apostrophe before the radix)");
     const lit = /^(\d+)?\s*'\s*([sS]?)([bBoOdDhH])\s*([0-9a-fA-FxXzZ?_]+)/.exec(rest);
     if (lit) {
       i += lit[0].length;

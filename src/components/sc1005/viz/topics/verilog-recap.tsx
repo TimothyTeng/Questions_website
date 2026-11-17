@@ -229,7 +229,7 @@ function RegWireHelper() {
       }
       readout={
         <>
-          {n === 0 && <CRead label="Problem" tex="y has no driver, so it floats (z). Every output needs exactly one source." tone="warn" />}
+          {n === 0 && <CRead label="Problem" tex="y has no driver. Every output needs exactly one source." tone="warn" />}
           {n > 1 && <CRead label="Illegal" tex={`y is driven from **${n} places**. A signal may be assigned from only one assign, one always block or one instance output: two drivers would fight.`} tone="bad" />}
           {need && (
             <>
@@ -347,7 +347,6 @@ function ParamOverride() {
             options={[
               { v: "none", label: "no override" },
               { v: "named", label: "#(.N(…)) named" },
-              { v: "positional", label: "#(…) positional" },
             ]}
           />
           {mode !== "none" && <Slider label="N =" value={N} min={4} max={16} step={1} onChange={setN} format={(v) => String(v)} />}
@@ -385,7 +384,6 @@ const LITS = [
   { src: "8'hA5", size: 8, v: 0xa5, neg: false },
   { src: "4'd12", size: 4, v: 12, neg: false },
   { src: "3'd5", size: 3, v: 5, neg: false },
-  { src: "-4'd3", size: 4, v: 3, neg: true },
 ];
 
 type Part = { t: "sl"; hi: number; lo: number } | { t: "k"; bits: string } | { t: "rep"; n: number; part: Part[] };
@@ -433,7 +431,7 @@ function VectorSizing() {
     const litBits = bin(L.neg ? (2 ** L.size - L.v) % 2 ** L.size : L.v, L.size);
     const resBits = bin(res, T);
     const maxBits = Math.max(L.size, T);
-    const action = T < L.size ? `truncated: the top ${L.size - T} bit(s) are lost` : T > L.size ? (L.neg ? `evaluated at ${T} bits, so the negation fills the top ${T - L.size} bit(s) correctly` : `zero-padded with ${T - L.size} MSB zero(s)`) : "exact fit";
+    const action = T < L.size ? `truncated: the top ${L.size - T} bit(s) are lost` : T > L.size ? (L.neg ? `${T - L.size} extra MSB(s) filled` : `zero-padded with ${T - L.size} MSB zero(s)`) : "exact fit";
     return (
       <VizFrame
         title="Sized literals: padding and truncation happen at the MSB end"
@@ -470,7 +468,6 @@ function VectorSizing() {
           "Predict: `6'b110011` assigned to a 4-bit wire. Which bits survive? Set the width to 4 and check.",
           "Assign `4'b1001` to 6 bits. Where do the new zeros go, and is the value unchanged?",
           "`3'd5` into 2 bits gives 01, not 5: the compiler only warns. Why is this catastrophic inside an adder?",
-          "Choose `-4'd3` and widen the wire to 8 bits: the result is 11111101 = −3, because the negation is evaluated at the larger width.",
         ])}
       />
     );
@@ -523,7 +520,7 @@ function VectorSizing() {
 }
 
 // ---------------------------------------------------------------------------------------------
-// 4. Sensitivity-list mismatch: simulation only re-runs the block on listed signals; hardware ignores the list.
+// 4. Sensitivity-list mismatch: the block only re-runs on listed signals, so y misses changes of c.
 
 type ABC = { a: Bit; b: Bit; c: Bit };
 const SENS_PRESET: ABC[] = [
@@ -556,14 +553,14 @@ function SensitivityMismatch() {
     { name: "a", wave: wave((i) => steps[i].a) },
     { name: "b", wave: wave((i) => steps[i].b) },
     { name: "c", wave: wave((i) => steps[i].c) },
-    { name: "y (sim)", wave: wave((i) => sim[i]) },
-    { name: "y (hw)", wave: wave((i) => hw[i]) },
+    { name: "y (block)", wave: wave((i) => sim[i]) },
+    { name: "y expected", wave: wave((i) => hw[i]) },
   ];
   const lines = [star ? "always @*" : "always @(a or b)", "begin", "  x = a & b;", "  y = x | c;", "end"];
   return (
     <VizFrame
-      title="Missing a signal from the sensitivity list: simulation ≠ hardware"
-      hint="Each button toggles one input and adds a time step. Dashed markers show steps where the simulated y disagrees with the real circuit."
+      title="Missing a signal from the sensitivity list: the block is not triggered"
+      hint="Each button toggles one input and adds a time step. Dashed markers show steps where y differs from the expected output ab + c."
       onReset={() => {
         setSteps(SENS_PRESET);
         setStar(false);
@@ -588,15 +585,15 @@ function SensitivityMismatch() {
       }
       readout={
         <>
-          <CRead label="Synthesised" tex="$y = ab + c$ (the tools ignore the list and build the logic from the statements)" />
-          <CRead label="Last step" tex={fired[fired.length - 1] ? "block **ran** (a listed signal changed)" : "block did **not** run: y kept its old value in simulation"} tone={fired[fired.length - 1] ? undefined : "warn"} />
+          <CRead label="Expected" tex="$y = ab + c$ (what the statements describe)" />
+          <CRead label="Last step" tex={fired[fired.length - 1] ? "block **ran** (a listed signal changed)" : "block did **not** run: y kept its old value"} tone={fired[fired.length - 1] ? undefined : "warn"} />
           <CRead label="Mismatched steps" tex={bad.length ? `**${bad.length}** (at t = ${bad.join(", ")})` : "none"} tone={bad.length ? "bad" : "good"} />
         </>
       }
       tasks={plain([
-        "Predict: at t = 1 only c rises. What does the simulator show for y, and what does the real circuit do?",
-        "Toggle c a few more times with a = b = 0. Every change of c alone is missed by the simulator.",
-        "Tick `always @*`: all markers vanish. Explain why * is safer than writing the list by hand.",
+        "Predict: at t = 1 only c rises. What does the block give for y, and what is the expected value?",
+        "Toggle c a few more times with a = b = 0. Every change of c alone is missed by the block.",
+        "Tick `always @*`: all markers vanish. Explain why * (all input signals in the block) is safer than writing the list by hand.",
       ])}
     />
   );

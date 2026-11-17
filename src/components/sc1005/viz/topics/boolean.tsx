@@ -291,47 +291,19 @@ const DELAY_PRESETS: DelayPreset[] = [
     note: "PYP-style chain AND → OR → NOT: every output edge lags its cause by the sum of the delays on its path.",
   },
   {
-    name: "F = AB + A'C (hazard)",
+    name: "Z = (A + B'C)'",
     circuit: {
       inputs: ["A", "B", "C"],
       gates: [
-        { id: "A'", type: "NOT", in: ["A"] },
-        { id: "AB", type: "AND", in: ["A", "B"] },
-        { id: "A'C", type: "AND", in: ["A'", "C"] },
-        { id: "F", type: "OR", in: ["AB", "A'C"] },
+        { id: "B'", type: "NOT", in: ["B"] },
+        { id: "B'C", type: "AND", in: ["B'", "C"] },
+        { id: "A+B'C", type: "OR", in: ["A", "B'C"] },
+        { id: "Z", type: "NOT", in: ["A+B'C"] },
       ],
-      outputs: ["F"],
+      outputs: ["Z"],
     },
-    waves: { A: "11111000000001111111", B: "11111111111111111111", C: "11111111111111111111" },
-    note: "With B = C = 1 the ideal output is always 1, but the A'C path is one inverter longer than the AB path.",
-  },
-  {
-    name: "F = A·A' (pulse)",
-    circuit: {
-      inputs: ["A"],
-      gates: [
-        { id: "A'", type: "NOT", in: ["A"] },
-        { id: "F", type: "AND", in: ["A", "A'"] },
-      ],
-      outputs: ["F"],
-    },
-    waves: { A: "00011111110000111110" },
-    note: "Ideally always 0. In hardware, A and A' overlap for one inverter delay after A rises: a pulse generator.",
-  },
-  {
-    name: "XOR from 4 NANDs",
-    circuit: {
-      inputs: ["A", "B"],
-      gates: [
-        { id: "G1", type: "NAND", in: ["A", "B"] },
-        { id: "G2", type: "NAND", in: ["A", "G1"] },
-        { id: "G3", type: "NAND", in: ["B", "G1"] },
-        { id: "X", type: "NAND", in: ["G2", "G3"] },
-      ],
-      outputs: ["X"],
-    },
-    waves: { A: "00011111111000000000", B: "00011111111000111100" },
-    note: "Each input reaches X through two or three NANDs. When A and B rise together the ideal X stays 0, but the unequal paths make X twitch.",
+    waves: { A: "00000000000000000000", B: "11100000000001111111", C: "11111111111111111111" },
+    note: "Chain NOT → AND → OR → NOT: a change in B passes through four gates, so Z changes four gate delays after B.",
   },
 ];
 
@@ -433,7 +405,7 @@ function PropDelay() {
   const at = vals[cursor];
   return (
     <VizFrame
-      title="Propagation delay and glitches"
+      title="Propagation delay in timing waveforms"
       hint="Click any cell of an input waveform to flip it. Drag the time slider to see the wire values at that instant. One time unit = 10 ns."
       onReset={() => {
         setWaves(p.waves);
@@ -501,18 +473,18 @@ function PropDelay() {
           <Read label="Longest path" tex={`**${depth[out] * 10} ns** from an input change to ${out}`} />
           <Read label={`At t = ${cursor * 10} ns`} tex={`${c.inputs.map((i) => `${i} = ${at[i]}`).join(", ")} ⇒ ${out} = **${at[out]}** (ideal ${idealOut[cursor]})`} tone={at[out] !== idealOut[cursor] ? "warn" : undefined} />
           <Read
-            label="Glitches"
-            tex={glitches ? `**${glitches}** extra pulse${glitches > 1 ? "s" : ""}: the real ${out} changes ${changes(realAll)} times, the ideal ${changes(idealAll)} times` : `none: the real ${out} changes ${changes(realAll)} times, same as the ideal`}
-            tone={glitches ? "bad" : "good"}
+            label="Output changes"
+            tex={`the delayed ${out} changes ${changes(realAll)} time${changes(realAll) === 1 ? "" : "s"}, the ideal ${out} ${changes(idealAll)} time${changes(idealAll) === 1 ? "" : "s"}`}
+            tone={glitches ? "warn" : "good"}
           />
-          <Read tex="Dashed line = ideal (zero-delay) output; shaded cells = real output differs (late, or a glitch)." />
+          <Read tex="Dashed line = ideal (zero-delay) output; shaded cells = the delayed output differs from the ideal one." />
         </>
       }
       tasks={[
         "Predict: in the $Z = (A + BC)'$ preset, how long after B and C rise does Z fall? Check it against the longest-path line, then set every delay to 0 ns and watch the edges line up.",
-        "Hazard preset: with the inverter delay at 10 ns, where is the glitch and how wide is it? Set the inverter delay to 20 ns and to 0 ns: what decides the glitch width?",
-        "In the hazard preset, the glitch appears when A falls but not when A rises. Use the time cursor to explain why (look at AB and A'C at the moment of each edge).",
-        "Pulse preset: Boolean algebra says $A\\cdot A' = 0$. Explain the pulse in hardware, and say how its width would change with a slower inverter.",
+        "In the $Z = (A + BC)'$ preset, set the AND/OR delay to 20 ns and then 30 ns. By how much does the falling edge of Z move each time, and why?",
+        "$Z = (A + B'C)'$ preset: B falls at t = 30 ns. Predict when B', B'C, A + B'C and Z change, then check with the time cursor.",
+        "Click A high for a few time units in the $Z = (A + B'C)'$ preset. Through how many gates does a change in A pass, compared with a change in B?",
       ]}
     />
   );
@@ -525,7 +497,7 @@ const EQ_PRESETS: { l: string; r: string; label: string }[] = [
   { l: "A + AB", r: "A", label: "Absorption" },
   { l: "A + A'B", r: "A + B", label: "A + A'B" },
   { l: "AB + A'C + BC", r: "AB + A'C", label: "Consensus" },
-  { l: "(A + B)(A + C)", r: "A + BC", label: "Distributive" },
+  { l: "(A + B)(A + C)", r: "A + BC", label: "(A + B)(A + C)" },
   { l: "(AB)'", r: "A' + B'", label: "De Morgan" },
   { l: "(AB)'", r: "A'B'", label: "Mistake: (AB)'" },
   { l: "A + BC", r: "(A + B)C", label: "Mistake: A + BC" },

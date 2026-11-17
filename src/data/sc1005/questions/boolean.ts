@@ -10,8 +10,8 @@ export const booleanQuestions: Draft[] = [
     options: ["Logic 0, because it is below 2.5 V", "Logic 1, because it is above 0.8 V", "Indeterminate: it lies between 0.8 V and 2.0 V", "Logic 0, because it is below 2.0 V", "Logic 1, because it is above 0 V"],
     answer: 2,
     solution:
-      "For TTL, an input is a guaranteed logic 0 only from 0 to 0.8 V and a guaranteed logic 1 only from 2.0 V to 5 V. 1.4 V lies in the gap 0.8–2.0 V, so the input level is **indeterminate**: the gate may read it either way and a correctly designed circuit never drives an input there.\nThe 2.5 V \"halfway\" idea is wrong: TTL thresholds are not symmetric about 2.5 V.",
-    source: "Original (lecture 3-3)",
+      "For TTL, logic 0 is the range 0 to 0.8 V and logic 1 is the range 2.0 V to 5 V. 1.4 V lies in the gap 0.8–2.0 V, so the input level is **indeterminate**.\nThe 2.5 V \"halfway\" idea is wrong: the TTL ranges are not symmetric about 2.5 V.",
+    source: "Style: Lecture 3-3 (logic-level voltage ranges)",
   },
   {
     kind: "mcq",
@@ -23,7 +23,7 @@ export const booleanQuestions: Draft[] = [
     answer: 0,
     solution:
       "Compare the truth tables row by row:\n- 00: NAND = 1, XOR = 0 (different)\n- 01: NAND = 1, XOR = 1\n- 10: NAND = 1, XOR = 1\n- 11: NAND = 0, XOR = 0\nOnly 00 gives different outputs: output 1 ⇒ NAND, output 0 ⇒ XOR. The rows 01, 10 and 11 give identical outputs for both gates, so they tell you nothing.",
-    source: "Style: L1 practice Q2 (Tocci 3-9)",
+    source: "Style: L1-L12 practice, L1 Q2",
   },
   {
     kind: "mcq",
@@ -50,7 +50,7 @@ export const booleanQuestions: Draft[] = [
     answer: 0,
     solution:
       "Write the expression: $X = (AB + C')\\cdot(B + D)'$.\n$X = 1$ needs both factors to be 1.\n- $(B + D)' = 1$ requires $B = 0$ and $D = 0$. This rules out 0100, 1100 and 1001.\n- With $B = 0$, $AB = 0$, so the first factor is $C'$: we need $C = 0$. This rules out 0010.\n- 1000: $AB + C' = 0 + 1 = 1$ and $(0 + 0)' = 1$, so $X = 1$.\n(In fact $X = B'C'D'$, so both 0000 and 1000 give $X = 1$.)",
-    source: "Style: lecture 3-23 / 3-24",
+    source: "Style: Lecture 3-23 / 3-24",
   },
   {
     kind: "short",
@@ -79,7 +79,7 @@ export const booleanQuestions: Draft[] = [
     placeholder: "e.g. (A + B')C",
     solution:
       "Label the gates from left to right:\n- G1 $= A'$\n- G2 (NAND) $= (A'B)'$\n- G3 $= B + C$\n- G4 $= (A'B)'(B + C)$\n- $X$ (NOR) $= [(A'B)'(B + C) + C]'$\nSimplifying: $(A'B)' = A + B'$, so G4 $= (A + B')(B + C) = AB + AC + B'C$. Then $G4 + C = AB + C$ (absorption: $AC$ and $B'C$ are inside $C$). Finally $X = (AB + C)' = (A' + B')C'$.",
-    source: "Style: Tutorial 2 Q1(a)",
+    source: "Style: Tut 2 Q1(a)",
   },
   {
     kind: "short",
@@ -90,7 +90,7 @@ export const booleanQuestions: Draft[] = [
     match: "number",
     solution:
       "Apply De Morgan to the outer bar: $Y = (A'B + C)' + D$, and $(A'B + C)' = (A'B)'C' = (A + B')C'$. So $Y = (A + B')C' + D$.\n- $D = 1$: $Y = 1$ on all 8 of these rows.\n- $D = 0$: $Y = 1$ when $C = 0$ and ($A = 1$ or $B = 0$). With $C = 0$ the pairs $AB = 00, 10, 11$ work and $01$ does not: 3 rows.\nTotal $8 + 3 = 11$ rows.",
-    source: "Style: Tutorial 2 Q2(b)",
+    source: "Style: Tut 2 Q2(b)",
   },
   {
     kind: "mcq",
@@ -119,7 +119,7 @@ export const booleanQuestions: Draft[] = [
     match: "number",
     solution:
       "- Inverters: $A'$, $B'$, $C'$ → 3 (each complemented variable needs one inverter, shared wherever it is used).\n- AND gates: $AB'$, $A'C$, $BC'D$ → 3 (the last is a 3-input AND).\n- One 3-input OR gate to sum the three terms → 1.\nTotal $3 + 3 + 1 = 7$ gates.",
-    source: "Style: lecture 3-25",
+    source: "Style: Lecture 3-25",
   },
   {
     kind: "mcq",
@@ -143,7 +143,7 @@ export const booleanQuestions: Draft[] = [
     answer: 4,
     solution:
       "The NAND gives $(BC)'$ and the OR adds $A$: $Y = A + (BC)'$ (option B).\nBy De Morgan $(BC)' = B' + C'$, so $Y = A + B' + C'$ (option C) is the same function. Hence there are multiple correct answers.\n- $(A + BC)'$ puts the inversion over the whole expression: wrong.\n- $A + B'C'$ is the classic De Morgan mistake (the bar was broken without changing AND to OR); e.g. $ABC = 010$ gives $Y = 1$ in the circuit but $A + B'C' = 0$.",
-    source: "Style: lecture 3-21 (precedence)",
+    source: "Style: Lecture 3-21 (precedence), 3-34 to 3-36 (De Morgan)",
   },
   // ------------------------------------------------------------------ timing
   {
@@ -181,7 +181,7 @@ export const booleanQuestions: Draft[] = [
         ticks: ["t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7"],
       },
     ],
-    source: "Style: Tutorial 2 Q1(b)",
+    source: "Style: Tut 2 Q1(b), Lecture 3-18",
   },
   {
     kind: "short",
@@ -193,50 +193,37 @@ export const booleanQuestions: Draft[] = [
     match: "number",
     placeholder: "time in ns",
     solution:
-      "Before $t = 0$: $A' = 0$, $A'B = 0$, $A'B + C = 0$, $Z = 1$. After settling: $A' = 1$, $A'B = 1$, $A'B + C = 1$, $Z = 0$.\nThe change in $A$ travels through four gates in series:\n- $A'$ rises at 40 ns\n- $A'B$ rises at 80 ns\n- $A'B + C$ rises at 120 ns\n- $Z$ falls at **160 ns**.\n$B$ and $C$ do not change, so there is no second path and no glitch.",
+      "Before $t = 0$: $A' = 0$, $A'B = 0$, $A'B + C = 0$, $Z = 1$. After settling: $A' = 1$, $A'B = 1$, $A'B + C = 1$, $Z = 0$.\nThe change in $A$ travels through four gates in series:\n- $A'$ rises at 40 ns\n- $A'B$ rises at 80 ns\n- $A'B + C$ rises at 120 ns\n- $Z$ falls at **160 ns**.\n$B$ and $C$ do not change, so only the path from $A$ matters.",
     source: "Style: PYP 2021-22 S1 Q2(b)",
   },
   {
     kind: "mcq",
     subtopic: "Timing & propagation delay",
-    difficulty: "hard",
+    difficulty: "medium",
     prompt:
-      "$F = AB + A'C$ is built from one inverter, two 2-input AND gates and a 2-input OR gate; every gate has 10 ns propagation delay. $B = C = 1$ throughout, and $A$ falls from 1 to 0 at $t = 0$. Which statement describes $F$?",
+      "The input of an inverter falls from HIGH to LOW and later rises back to HIGH. Which statement about the timing parameters of the inverter is correct?",
     options: [
-      "$F$ stays at 1 throughout, because $AB + A'C = 1$ whenever $B = C = 1$",
-      "$F$ falls to 0 at $t = 10$ ns and returns to 1 at $t = 20$ ns",
-      "$F$ falls to 0 at $t = 20$ ns and returns to 1 at $t = 30$ ns",
-      "$F$ falls to 0 at $t = 20$ ns and stays at 0",
-      "$F$ falls to 0 at $t = 10$ ns and returns to 1 at $t = 30$ ns",
+      "$t_{PLH}$ is measured from the 50% point of the falling input edge to the 50% point of the rising output edge",
+      "$t_{PLH}$ is measured from the 10% level to the 90% level of the rising output edge",
+      "$t_{PHL}$ is the delay when the output changes from LOW to HIGH",
+      "The rise time $t_r$ is measured from the 50% point of the input edge to the 50% point of the output edge",
+      "$t_{PHL}$ and $t_{PLH}$ of a logic circuit are always equal",
     ],
-    answer: 2,
+    answer: 0,
     solution:
-      "Logically $F = A + A' = 1$ for $B = C = 1$, but the two paths from $A$ to the OR gate have different lengths.\n- Path 1: $A$ → AND ($AB$) → OR. $AB$ falls at 10 ns.\n- Path 2: $A$ → NOT → AND ($A'C$) → OR. $A'$ rises at 10 ns, so $A'C$ rises at 20 ns.\n- Between 10 ns and 20 ns both OR inputs are 0. The OR output follows its inputs one delay later: it falls at $10 + 10 = 20$ ns and rises again at $20 + 10 = 30$ ns.\nSo $F$ has a 10 ns **glitch** (static-1 hazard) from 20 ns to 30 ns. Option A ignores delays; options B and E forget the OR gate's own delay or mix up the path lengths.",
-    solutionFigures: [
-      {
-        kind: "wave",
-        signals: [
-          { name: "A", wave: "11000000" },
-          { name: "A'", wave: "00011111" },
-          { name: "AB", wave: "11100000" },
-          { name: "A'C", wave: "00001111" },
-          { name: "F", wave: "11110111" },
-        ],
-        ticks: ["-20", "-10", "0", "10", "20", "30", "40", "50"],
-      },
-    ],
-    source: "Original (lecture 3-19, propagation delay)",
+      "When the inverter's input falls, its output rises (LOW → HIGH), so the delay is $t_{PLH}$. A propagation delay is measured between the 50% points of the input and output edges: **A** is correct.\n- B describes the **rise time** $t_r$ (10% to 90% of the output's rising edge), not a propagation delay.\n- C mixes up the names: $t_{PHL}$ is the delay when the output changes from HIGH to LOW.\n- D describes a propagation delay, not the rise time.\n- E is false: the two delays are separate parameters (e.g. circuit A in the L11 practice table has $t_{PLH} = 10$ ns and $t_{PHL} = 8$ ns).",
+    source: "Style: PYP 2017-18 S2 Q2(d); Lecture 6-49 / 6-50",
   },
   {
     kind: "open",
     subtopic: "Timing & propagation delay",
     difficulty: "hard",
     prompt:
-      "Implement the Boolean expression $Z = (A + B'C)'$ using basic logic gates (NOT, AND, OR).\n(a) Sketch the logic circuit diagram for your implementation. (4 marks)\n(b) The inputs $A, B, C$ change from $1, 1, 1$ to $0, 0, 1$ at $t = 0$ with negligible rise and fall times. Each logic gate has 50 ns propagation delay. Sketch the waveforms of $A$, $B$, $C$, the internal signals and $Z$ from $t = -100$ ns to $t = 300$ ns. (8 marks)",
+      "Implement the Boolean expression $Z = (A + B'C)'$ using basic logic gates (NOT, AND, OR).\n(a) Sketch the logic circuit diagram for your implementation. (4 marks)\n(b) The inputs $A, B, C$ change from $0, 1, 1$ to $0, 0, 1$ at $t = 0$ with negligible rise time. Each logic gate has 50 ns propagation delay. Sketch the waveforms of $A$, $B$, $C$, the internal signals and $Z$ from $t = -100$ ns to $t = 300$ ns. (8 marks)",
     solution:
-      "The $B$ path has four gates (NOT → AND → OR → NOT) but the $A$ path only two (OR → NOT). When $A$ falls at 0 the OR output falls at 50 ns, but $B'C$ only rises at 100 ns, so the OR is low from 50 to 150 ns and $Z$ (one delay later) is high from 100 ns to 200 ns: a glitch, although $Z = 0$ before and after the change. See the model answer for the full waveforms.",
+      "Before the change $Z = 1$; after it $Z = 0$. The change in $B$ passes through four gates (NOT → AND → OR → NOT), each adding 50 ns: $B'$ rises at 50 ns, $B'C$ at 100 ns, $A + B'C$ at 150 ns, and $Z$ falls at **200 ns**. See the model answer for the full waveforms.",
     modelAnswer:
-      "(a) Four gates: an inverter makes $B'$; a 2-input AND makes $B'C$; a 2-input OR makes $A + B'C$; an output inverter makes $Z$.\n(b) Before $t = 0$: $B' = 0$, $B'C = 0$, $A + B'C = 1$, $Z = 0$. After settling: $B' = 1$, $B'C = 1$, $A + B'C = 1$, $Z = 0$. So the steady-state output does not change, but the paths have different delays:\n- $A$ falls at 0, so the OR loses its only 1 input: OR falls at 50 ns.\n- $B'$ rises at 50 ns, $B'C$ rises at 100 ns, so the OR rises again at 150 ns.\n- $Z$ is the OR output inverted one delay later: $Z$ rises at 100 ns and falls at 200 ns.\nResult: a 100 ns **glitch** on $Z$ (high from 100 ns to 200 ns) even though $Z = 0$ before and after.",
+      "(a) Four gates: an inverter makes $B'$; a 2-input AND makes $B'C$; a 2-input OR makes $A + B'C$; an output inverter makes $Z$.\n(b) Before $t = 0$ ($ABC = 011$): $B' = 0$, $B'C = 0$, $A + B'C = 0$, $Z = 1$. After settling ($ABC = 001$): $B' = 1$, $B'C = 1$, $A + B'C = 1$, $Z = 0$.\n- $B$ falls at $t = 0$; $A$ and $C$ do not change.\n- The inverter output $B'$ rises 50 ns later, at 50 ns.\n- The AND output $B'C$ rises at 100 ns.\n- The OR output $A + B'C$ rises at 150 ns.\n- The output inverter makes $Z$ fall at 200 ns.",
     modelFigures: [
       {
         kind: "circuit",
@@ -255,13 +242,13 @@ export const booleanQuestions: Draft[] = [
       {
         kind: "wave",
         signals: [
-          { name: "A", wave: "11000000" },
+          { name: "A", wave: "00000000" },
           { name: "B", wave: "11000000" },
           { name: "C", wave: "11111111" },
           { name: "B'", wave: "00011111" },
           { name: "B'C", wave: "00001111" },
-          { name: "A+B'C", wave: "11100111" },
-          { name: "Z", wave: "00001100" },
+          { name: "A+B'C", wave: "00000111" },
+          { name: "Z", wave: "11111100" },
         ],
         ticks: ["-100", "-50", "0", "50", "100", "150", "200", "250"],
         marks: [2],
@@ -269,8 +256,9 @@ export const booleanQuestions: Draft[] = [
     ],
     rubric: [
       { point: "Correct circuit: inverter on B, AND with C, OR with A, output inverter (or equivalent NOR at the output)", marks: 4 },
-      { point: "B', B'C and OR output edges at 50, 100 and 50/150 ns respectively", marks: 4 },
-      { point: "Z shows the glitch: rises at 100 ns, falls at 200 ns, 0 before and after", marks: 4 },
+      { point: "Steady values before and after the change (Z = 1 before, Z = 0 after)", marks: 2 },
+      { point: "B', B'C and OR output rise at 50, 100 and 150 ns respectively", marks: 4 },
+      { point: "Z falls at 200 ns", marks: 2 },
     ],
     source: "Style: PYP 2021-22 S1 Q2",
   },
@@ -283,8 +271,8 @@ export const booleanQuestions: Draft[] = [
     options: ["$X + X'Y = X + Y$", "$X(X' + Y) = XY$", "$X + XY = X$", "$(X + Y)(X + Z) = X + YZ$", "$X + YZ = (X + Y)Z$"],
     answer: 4,
     solution:
-      "A and B are the redundant-complement rules, C is absorption, D is the second distributive law (valid in Boolean algebra).\nE is false: try $X = 1, Z = 0$: left side $1 + 0 = 1$, right side $(1 + Y)\\cdot0 = 0$. The correct factorisation is $X + YZ = (X + Y)(X + Z)$.",
-    source: "Style: lecture 3-28 to 3-33",
+      "- A is absorption law (ii) and C is absorption law (i).\n- B is the dual of A (swap AND and OR): $X(X' + Y) = XX' + XY = 0 + XY = XY$.\n- D: multiply out with the distributive law: $(X + Y)(X + Z) = XX + XZ + XY + YZ = X + XZ + XY + YZ = X + YZ$ (absorption removes $XZ$ and $XY$).\n- E is false: try $X = 1, Z = 0$: left side $1 + 0 = 1$, right side $(1 + Y)\\cdot0 = 0$. AND is done before OR, so $X + YZ$ is not $(X + Y)Z$.",
+    source: "Style: Lecture 3-28 to 3-33",
   },
   {
     kind: "mcq",
@@ -295,7 +283,7 @@ export const booleanQuestions: Draft[] = [
     answer: 0,
     solution:
       "To form the dual, swap AND ↔ OR (and 0 ↔ 1) everywhere but **leave the variables and their complements unchanged**.\n$A + (A'\\cdot B)$ becomes $A\\cdot(A' + B)$, and $A + B$ becomes $A\\cdot B$. So the dual is $A(A' + B) = AB$, which is indeed true.\nB and C complement the variables (that is substituting $A \\to A'$, not taking the dual). D forgets to change the inner AND, and E is not an identity.",
-    source: "Style: lecture 3-28 (duality)",
+    source: "Style: Lecture 3-28 (duality)",
   },
   {
     kind: "mcq",
@@ -306,7 +294,7 @@ export const booleanQuestions: Draft[] = [
     answer: 0,
     solution:
       "This is the consensus theorem $AB + A'C + BC = AB + A'C$ with $A = X$, $B = Y'$, $C = Z$: the term $Y'Z$ (the product of the parts left after removing $X$ and $X'$) is redundant.\nProof: $Y'Z = XY'Z + X'Y'Z$; the first is absorbed by $XY'$, the second by $X'Z$.\nThe other options are not equivalent: B and C each drop a needed term (B gives 0 at $XYZ = 011$ where $F = X'Z = 1$; C gives 0 at $XYZ = 100$ where $F = XY' = 1$), and D and E are too big (at $XYZ = 111$, D gives 1 but $F = 0$; at $XYZ = 000$, E gives 1 but $F = 0$).",
-    source: "Style: lecture 3-33 (consensus)",
+    source: "Style: Lecture 3-33 (consensus)",
   },
   {
     kind: "short",
@@ -319,8 +307,8 @@ export const booleanQuestions: Draft[] = [
     minimal: true,
     placeholder: "minimum SOP",
     solution:
-      "- $AB'C' + A'B'C' = B'C'(A + A') = B'C'$.\n- $ABC'D + A'BC'D = BC'D(A + A') = BC'D$.\n- $X = B'C' + BC'D = C'(B' + BD) = C'(B' + D)$ (redundant complement: $B' + BD = B' + D$).\nSo $X = B'C' + C'D$ (4 literals).",
-    source: "Style: Tutorial 2 Q3(a)",
+      "- $AB'C' + A'B'C' = B'C'(A + A') = B'C'$.\n- $ABC'D + A'BC'D = BC'D(A + A') = BC'D$.\n- $X = B'C' + BC'D = C'(B' + BD) = C'(B' + D)$ (absorption: $B' + BD = B' + D$).\nSo $X = B'C' + C'D$ (4 literals).",
+    source: "Style: Tut 2 Q3(a)",
   },
   {
     kind: "short",
@@ -345,7 +333,7 @@ export const booleanQuestions: Draft[] = [
     answer: 0,
     solution:
       "Break the outer bar over the three-factor product and change AND to OR:\n$[A'\\cdot(B'C)'\\cdot(C + D')]' = (A')' + [(B'C)']' + (C + D')'$.\n- $(A')' = A$\n- $[(B'C)']' = B'C$ (double bar cancels)\n- $(C + D')' = C'D$ (De Morgan again)\nSo the result is $A + B'C + C'D$.\nOption C forgets to complement $D'$; option D forgets the double complement on $A$; option E complements the inner terms wrongly.",
-    source: "Style: lecture 3-37",
+    source: "Style: Lecture 3-37",
   },
   {
     kind: "mcq",
@@ -356,7 +344,7 @@ export const booleanQuestions: Draft[] = [
     answer: 0,
     solution:
       "- $C(CA)' = C(C' + A') = CC' + A'C = A'C$.\n- $A'C + A'BC' = A'(C + BC') = A'(C + B) = A'B + A'C$.\n- $A'B + ABC = B(A' + AC) = B(A' + C) = A'B + BC$.\nSo $X = A'B + A'C + BC$, which covers minterms $\\{1, 2, 3, 7\\}$. Each term covers a minterm no other term covers ($A'C$: 001, $A'B$: 010, $BC$: 111), so none can be dropped.\nOption D adds row 000, option E loses row 111, and B and C each lose a row.",
-    source: "Style: Tutorial 2 Q3(c)",
+    source: "Style: Tut 2 Q3(c)",
   },
   // ------------------------------------------------------------------ NAND / NOR
   {
@@ -368,7 +356,7 @@ export const booleanQuestions: Draft[] = [
     match: "number",
     solution:
       "$F = AB + CD$ is in SOP form, which maps directly onto NAND–NAND: $F = [(AB)'(CD)']'$.\nTwo NANDs make $(AB)'$ and $(CD)'$, and a third NAND combines them: **3 gates**.\nFewer is impossible: a function of four inputs needs at least three 2-input gates just to bring all four inputs together.",
-    source: "Style: Tutorial 2 Q5",
+    source: "Style: Tut 2 Q5",
   },
   {
     kind: "mcq",
@@ -380,7 +368,7 @@ export const booleanQuestions: Draft[] = [
     answer: 1,
     solution:
       "Rewrite in SOP form first: $F = (A + B)C = AC + BC$. SOP maps to NAND–NAND: $F = [(AC)'(BC)']'$, which is **3** NAND gates (two first-level NANDs and one output NAND), with no inverters needed.\nThe gate-by-gate conversion gives OR = 3 NANDs (two inverters + NAND) and AND = 2 NANDs, total 5.\n2 gates cannot work: a 2-gate NAND network has the form $[(xy)'z]' = xy + z'$ or simpler, which can never equal $(A + B)C$ with uncomplemented inputs (checked exhaustively).",
-    source: "Style: Tutorial 2 Q5 / lecture 3-44",
+    source: "Style: Tut 2 Q5; Tut 4 Q1(e) (NAND-only SOP)",
   },
   {
     kind: "mcq",
@@ -405,8 +393,8 @@ export const booleanQuestions: Draft[] = [
     options: ["$X = A \\oplus B$", "$X = (A \\oplus B)'$", "$X = A + B$", "$X = AB$", "$X = (AB)'$"],
     answer: 0,
     solution:
-      "Let $G_1 = (AB)'$.\n- $G_2 = (A\\,G_1)' = A' + G_1' = A' + AB$, so $G_2' = A\\,G_1 = A(A' + B') = AB'$.\n- Similarly $G_3' = B\\,G_1 = A'B$.\n- $X = (G_2 G_3)' = G_2' + G_3' = AB' + A'B = A \\oplus B$.\nCheck with the truth table: 00 → 0, 01 → 1, 10 → 1, 11 → 0. This is the classic 4-NAND XOR.",
-    source: "Original (lecture 3-44, NAND universality)",
+      "Let $G_1 = (AB)'$.\n- $G_2 = (A\\,G_1)' = A' + G_1' = A' + AB$, so $G_2' = A\\,G_1 = A(A' + B') = AB'$.\n- Similarly $G_3' = B\\,G_1 = A'B$.\n- $X = (G_2 G_3)' = G_2' + G_3' = AB' + A'B = A \\oplus B$.\nCheck with the truth table: 00 → 0, 01 → 1, 10 → 1, 11 → 0, which is the XOR truth table.",
+    source: "Style: Lecture 3-44 / 3-45 (NAND gates), 3-53 (XOR)",
   },
   {
     kind: "mcq",
@@ -431,7 +419,7 @@ export const booleanQuestions: Draft[] = [
     answer: 0,
     solution:
       "- $G_1 = (A + B)'$.\n- $G_2 = (C + C)' = C'$ (a NOR with tied inputs is an inverter).\n- $X = (G_1 + G_2)' = G_1'\\,G_2' = (A + B)\\,C$ (De Morgan).\nThis is NOR–NOR realising a POS expression. Truth table: $X = 1$ only for $ABC = 011, 101, 111$.",
-    source: "Style: lecture 3-46 (basic gates from NOR)",
+    source: "Style: Lecture 3-46 (basic gates from NOR)",
   },
   {
     kind: "open",
@@ -482,7 +470,7 @@ export const booleanQuestions: Draft[] = [
       { point: "(b) A + B' and C' + D each from an inverter + NAND", marks: 2 },
       { point: "(b) final AND as NAND + NAND-inverter, total 6 gates", marks: 2 },
     ],
-    source: "Style: Tutorial 2 Q5",
+    source: "Style: Tut 2 Q5",
   },
   // ------------------------------------------------------------------ alternate symbols
   {
@@ -494,7 +482,7 @@ export const booleanQuestions: Draft[] = [
     answer: 3,
     solution:
       "The symbol computes $A'B'$. By De Morgan $A'B' = (A + B)'$, which is a **NOR** gate.\nRule: to get the standard symbol back, toggle every bubble (inputs lose theirs, the output gains one) and swap the AND shape for the OR shape: an OR with an output bubble, i.e. NOR.",
-    source: "Style: lecture 3-47",
+    source: "Style: Lecture 3-47 / 3-48",
   },
   {
     kind: "mcq",
@@ -525,7 +513,7 @@ export const booleanQuestions: Draft[] = [
     answer: 0,
     solution:
       "The output gate has no output bubble, so read it as \"$X = 1$ when ...\". Its inputs are bubbled: \"... G1 = 0 **and** C = 0\".\nG1 is a standard NAND: its output bubble matches the bubbled input (bubble-to-bubble), and it reads \"G1 = 0 when $A = 1$ **and** $B = 1$\".\nTogether: $X = 1$ when $A = 1$, $B = 1$ and $C = 0$. Algebra agrees: $X = G_1'C' = (AB)C' = ABC'$.\nB reads the NAND as if its output were not bubbled; D changes the AND into an OR.",
-    source: "Style: lecture 3-51 / L3 practice Q1",
+    source: "Style: Lecture 3-51; L1-L12 practice, L3 Q1",
   },
   {
     kind: "open",
@@ -573,8 +561,8 @@ export const booleanQuestions: Draft[] = [
     minimal: true,
     placeholder: "e.g. A'B",
     solution:
-      "Tabulate: \n- $AB = 00$: $0 \\oplus 0 = 0$\n- $01$: $1 \\oplus 0 = 1$\n- $10$: $1 \\oplus 0 = 1$\n- $11$: $0 \\oplus 1 = 1$\nThat is the OR function: $X = A + B$.\nAlgebraically: $A \\oplus B$ and $AB$ are never 1 together, and XOR of two disjoint terms equals their OR: $X = AB' + A'B + AB = A + B$.",
-    source: "Original (lecture 3-53)",
+      "Tabulate: \n- $AB = 00$: $0 \\oplus 0 = 0$\n- $01$: $1 \\oplus 0 = 1$\n- $10$: $1 \\oplus 0 = 1$\n- $11$: $0 \\oplus 1 = 1$\nThat is the OR function: $X = A + B$ (the OR truth table, lecture 3-9).",
+    source: "Style: Lecture 3-53 / 3-56 (XOR)",
   },
   {
     kind: "mcq",
@@ -601,18 +589,18 @@ export const booleanQuestions: Draft[] = [
     answer: 2,
     solution:
       "The XOR tree outputs 1 when an **odd** number of its five inputs are 1. With even parity every valid word has an even number of 1s, so $E = 1$ exactly when the count is odd.\n- 1011 1: four 1s → $E = 0$\n- 0110 0: two → 0\n- **1101 0: three → $E = 1$**\n- 1111 0: four → 0\n- 0000 0: zero → 0",
-    source: "Style: lecture 3-56 (parity checker)",
+    source: "Style: Lecture 3-56 (XOR odd function); L3 key concepts (parity generator/checker)",
   },
   {
     kind: "mcq",
     subtopic: "XOR & parity",
     difficulty: "medium",
-    prompt: "A circuit must output 1 when two 4-bit words $A_3..A_0$ and $B_3..B_0$ are equal. Which gate arrangements work?\n- (P) four XNOR gates ($A_i$, $B_i$) feeding a 4-input AND\n- (Q) four XOR gates feeding a 4-input AND\n- (R) four XOR gates feeding a 4-input NOR\n- (S) four XNOR gates feeding a 4-input OR",
+    prompt: "A bit-wise comparator must output 1 when two 4-bit words $A_3..A_0$ and $B_3..B_0$ are **different** (in at least one bit). Which gate arrangements work?\n- (P) four XOR gates ($A_i$, $B_i$) feeding a 4-input OR\n- (Q) four XOR gates feeding a 4-input AND\n- (R) four XNOR gates feeding a 4-input NAND\n- (S) four XNOR gates feeding a 4-input NOR",
     options: ["P only", "Q only", "P and R only", "R and S only", "P, R and S"],
     answer: 2,
     solution:
-      "Bit $i$ matches when $A_i \\oplus B_i = 0$, i.e. the XNOR is 1.\n- P: all XNORs 1 → AND = 1. Correct.\n- R: all XORs 0 → NOR = 1. Correct (De Morgan: $(x_3 + x_2 + x_1 + x_0)' = x_3'x_2'x_1'x_0'$).\n- Q is 1 only when **every** bit differs.\n- S is 1 when **any** bit matches.\nSo P and R only.",
-    source: "Style: lecture 3-55 (XOR comparator)",
+      "Bit $i$ differs when $A_i \\oplus B_i = 1$, i.e. the XOR is 1 and the XNOR is 0.\n- P: the OR is 1 when any XOR is 1, i.e. any bit differs. Correct.\n- R: the NAND is 0 only when all four XNORs are 1 (every bit the same), so it is 1 when any bit differs. Correct (it is the same function as P by De Morgan: $(y_3y_2y_1y_0)' = y_3' + y_2' + y_1' + y_0'$).\n- Q is 1 only when **every** bit differs.\n- S is 1 only when every XNOR is 0, which again means **every** bit differs.\nSo P and R only.",
+    source: "Style: Lecture 3-55 (XOR bit-wise comparator)",
   },
   {
     kind: "mcq",
@@ -643,7 +631,7 @@ export const booleanQuestions: Draft[] = [
     ],
     answer: 0,
     solution:
-      "Inverter 1 of the 7404 has input 1A = pin 1 and output 1Y = pin 2, so $B$ goes to pin 1 and $B'$ comes out of pin 2.\nAND gate 1 of the 7408 has inputs 1A = pin 1, 1B = pin 2 and output 1Y = pin 3: $A$ → pin 1, $B'$ → pin 2, $Y$ at pin 3.\nBoth chips need power: pin 14 = $V_{CC}$, pin 7 = GND.\nB uses pin 4 (gate 2's input), C reverses the inverter, D reverses the power pins (which would damage the chips), E swaps an input and the output of the AND.",
-    source: "Style: lecture 3-60 / L3 practice Q2",
+      "Inverter 1 of the 7404 has input 1A = pin 1 and output 1Y = pin 2, so $B$ goes to pin 1 and $B'$ comes out of pin 2.\nAND gate 1 of the 7408 has inputs 1A = pin 1, 1B = pin 2 and output 1Y = pin 3: $A$ → pin 1, $B'$ → pin 2, $Y$ at pin 3.\nBoth chips need power: pin 14 = $V_{CC}$, pin 7 = GND.\nB uses pin 4 (gate 2's input), C reverses the inverter, D reverses the power pins, E swaps an input and the output of the AND.",
+    source: "Style: Lecture 3-60 / 3-61; L1-L12 practice, L3 Q2",
   },
 ];

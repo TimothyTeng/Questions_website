@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { cmosLayout, conducts, dualNet, netExpr, type CmosNet } from "@/data/sc1005/lessons/ic-tech";
 import { minimalSop, rowEnv, type Bit } from "@/lib/sc1005/logic";
 import type { CircuitSpec } from "@/lib/sc1005/types";
-import { BitRow, bitsOf, Choice, CircuitSim, Read, Slider, TableView, Toggle, valueOf, VizFrame } from "../kit";
+import { BitRow, bitsOf, Choice, CircuitSim, Read, Slider, TableView, Toggle, VizFrame } from "../kit";
 
 // Interactive figures for the ic-tech lesson, chosen by id (see LessonSection.visuals).
 export default function IcTechVisual({ id }: { id: string }) {
@@ -21,8 +21,6 @@ export default function IcTechVisual({ id }: { id: string }) {
       return <SchmittDemo />;
     case "pla-grid":
       return <PlaGrid />;
-    case "ieee754":
-      return <Ieee754 />;
     default:
       return null;
   }
@@ -37,9 +35,8 @@ const CMOS_PRESETS: { label: string; pun?: CmosNet; pdn: CmosNet; note: string }
   { label: "Inverter", pdn: "A", note: "F = A'" },
   { label: "NAND", pdn: { s: ["A", "B"] }, note: "F = (AB)'" },
   { label: "NOR", pdn: { p: ["A", "B"] }, note: "F = (A + B)'" },
-  { label: "AOI", pdn: { p: ["A", { s: ["B", "C"] }] }, note: "F = (A + BC)'" },
-  { label: "Exam circuit", pdn: { s: ["D", { p: ["A", { s: ["B", "C"] }] }] }, note: "F = (D(A + BC))'" },
-  { label: "Faulty", pun: { s: ["A", { p: ["B", "C"] }] }, pdn: { s: ["A", { p: ["B", "C"] }] }, note: "pull-up is NOT the dual" },
+  { label: "(A + BC)'", pdn: { p: ["A", { s: ["B", "C"] }] }, note: "F = (A + BC)'" },
+  { label: "PYP 2018-19 circuit", pdn: { s: ["D", { p: ["A", { s: ["B", "C"] }] }] }, note: "F = (D(A + BC))'" },
 ];
 
 const netInputs = (n: CmosNet, out = new Set<string>()): Set<string> => {
@@ -149,9 +146,8 @@ function CmosSwitch() {
       }
       tasks={[
         "Predict: in the **NAND** preset, which inputs let the series NMOS chain reach GND? Toggle A and B to check that only $A = B = 1$ gives $F = 0$.",
-        "Pick **AOI** $(A + BC)'$. Find every input that makes F = 0 and say which NMOS path (Q4 alone, or Q5–Q6 in series) carries it.",
-        "In the **Exam circuit**, read the rows with F = 0 off the table and write $Z = \\Pi M(\\ldots)$. Check it against $(D(A + BC))'$.",
-        "Open **Faulty**: find the two inputs where F floats. Explain why redrawing the pull-up as the dual (Q1 in parallel with the B–C series pair) fixes every row.",
+        "Pick **(A + BC)'**. Find every input that makes F = 0 and say which NMOS path (Q4 alone, or Q5–Q6 in series) carries it.",
+        "In the **PYP 2018-19 circuit**, read the rows with F = 0 off the table and write $Z = \\Pi M(\\ldots)$. Check it against $(D(A + BC))'$.",
       ]}
     />
   );
@@ -201,20 +197,19 @@ function BubbleMatch() {
 // Noise margins
 
 const FAMILIES: Record<string, { voh: number; vol: number; vih: number; vil: number }> = {
-  "74 TTL": { voh: 2.4, vol: 0.4, vih: 2.0, vil: 0.8 },
-  "74LS": { voh: 2.7, vol: 0.5, vih: 2.0, vil: 0.8 },
-  "74HC": { voh: 4.9, vol: 0.1, vih: 3.5, vil: 1.0 },
-  "74HCT": { voh: 4.9, vol: 0.1, vih: 2.0, vil: 0.8 },
+  "5-V LSTTL": { voh: 2.7, vol: 0.5, vih: 2.0, vil: 0.8 },
+  "5-V CMOS": { voh: 4.44, vol: 0.5, vih: 3.5, vil: 1.5 },
+  "3.3-V LVTTL": { voh: 2.4, vol: 0.4, vih: 2.0, vil: 0.8 },
 };
 const FAM_NAMES = Object.keys(FAMILIES);
 
 function NoiseMargin() {
-  const [drv, setDrv] = useState("74LS");
-  const [rcv, setRcv] = useState("74LS");
-  const [voh, setVoh] = useState(FAMILIES["74LS"].voh);
-  const [vol, setVol] = useState(FAMILIES["74LS"].vol);
-  const [vih, setVih] = useState(FAMILIES["74LS"].vih);
-  const [vil, setVil] = useState(FAMILIES["74LS"].vil);
+  const [drv, setDrv] = useState("5-V LSTTL");
+  const [rcv, setRcv] = useState("5-V LSTTL");
+  const [voh, setVoh] = useState(FAMILIES["5-V LSTTL"].voh);
+  const [vol, setVol] = useState(FAMILIES["5-V LSTTL"].vol);
+  const [vih, setVih] = useState(FAMILIES["5-V LSTTL"].vih);
+  const [vil, setVil] = useState(FAMILIES["5-V LSTTL"].vil);
   const [noise, setNoise] = useState(0.3);
   const pickD = (f: string) => {
     setDrv(f);
@@ -256,8 +251,8 @@ function NoiseMargin() {
       title="Noise margins: what the output promises vs what the input needs"
       hint="Pick driver and receiver families, or drag the sliders. The bars between the columns are the noise margins."
       onReset={() => {
-        pickD("74LS");
-        pickR("74LS");
+        pickD("5-V LSTTL");
+        pickR("5-V LSTTL");
         setNoise(0.3);
       }}
       figure={
@@ -331,8 +326,8 @@ function NoiseMargin() {
         </>
       }
       tasks={[
-        "Predict: can a 74LS output drive a 74HC input? Choose them and read the verdict. Which margin fails, and why does 74HCT fix it?",
-        "With 74LS → 74LS, raise the noise slider until a dot turns red. Compare the noise value with $\\min(V_{NH}, V_{NL})$.",
+        "Predict: can a 5-V LSTTL output drive a 5-V CMOS input (lecture typical values)? Choose them and read the verdict. Which margin fails? Which CMOS series in the lecture is electrically compatible with TTL?",
+        "With 5-V LSTTL → 5-V LSTTL, raise the noise slider until a dot turns red. Compare the noise value with $\\min(V_{NH}, V_{NL})$.",
         "Drag $V_{OH(min)}$ down: which noise margin shrinks? Which parameters never appear in $V_{NL}$?",
       ]}
     />
@@ -443,7 +438,7 @@ function BusDrivers() {
             ))}
             <Read
               label="Bus F"
-              tex={bus === "Z" ? "**floating (Hi-Z)**: nobody drives the bus" : bus === "X" ? "**BUS CONTENTION**: enabled drivers disagree, large current flows" : `**${bus}**${active.length > 1 ? " (several drivers agree, but enabling more than one is still a design error)" : ""}`}
+              tex={bus === "Z" ? "**floating (Hi-Z)**: nobody drives the bus" : bus === "X" ? "**BUS CONTENTION**: enabled drivers disagree; this can damage the devices" : `**${bus}**${active.length > 1 ? " (they agree, but only one, or no, output should be enabled at any one time)" : ""}`}
               tone={bus === "X" ? "bad" : bus === "Z" || active.length > 1 ? "warn" : "good"}
             />
           </>
@@ -718,143 +713,6 @@ function PlaGrid() {
         "Complete the lesson target with only **three** product rows by sharing $B'C'$ between F1 and F2.",
         "Switch to the challenge. Minimise each output on paper first, then program it. How many rows do you need, and which term is shared?",
         "Connect both $A$ and $A'$ in one row. Why does that row never turn on?",
-      ]}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// IEEE 754 explorer
-
-const f32bits = (x: number) => {
-  const dv = new DataView(new ArrayBuffer(4));
-  dv.setFloat32(0, x);
-  return dv.getUint32(0);
-};
-const f32value = (u: number) => {
-  const dv = new DataView(new ArrayBuffer(4));
-  dv.setUint32(0, u >>> 0);
-  return dv.getFloat32(0);
-};
-
-function Ieee754() {
-  const [u, setU] = useState(f32bits(-13.375));
-  const [text, setText] = useState("-13.375");
-  const bits = bitsOf(u >>> 0, 32);
-  const s = bits[0];
-  const eBits = bits.slice(1, 9);
-  const fBits = bits.slice(9);
-  const e = valueOf(eBits);
-  const fInt = valueOf(fBits);
-  const val = f32value(u);
-  const setFromBits = (b: Bit[]) => {
-    const nu = b.reduce((a: number, x) => a * 2 + x, 0);
-    setU(nu);
-    setText(String(f32value(nu)));
-  };
-  const typed = Number(text);
-  const typedOk = text.trim() !== "" && !Number.isNaN(typed);
-  const encode = (x: number) => {
-    setU(f32bits(x));
-    setText(String(x));
-  };
-  const hex = (u >>> 0).toString(16).toUpperCase().padStart(8, "0");
-  const fracStr = fBits.join("").replace(/0+$/, "");
-  let kind: string;
-  let formula: string;
-  if (e === 255) {
-    kind = fInt === 0 ? "infinity" : "NaN (not a number)";
-    formula = fInt === 0 ? `exponent all 1s, fraction 0: $${s ? "-" : "+"}\\infty$` : "exponent all 1s, fraction ≠ 0: NaN";
-  } else if (e === 0) {
-    kind = fInt === 0 ? "zero" : "denormalised";
-    formula = fInt === 0 ? `exponent and fraction all 0: $${s ? "-" : "+"}0$` : `$(-1)^{${s}} \\times 0.${fBits.join("").replace(/0+$/, "")}_2 \\times 2^{-126}$ (no hidden 1)`;
-  } else {
-    kind = "normalised";
-    formula = `$(-1)^{${s}} \\times 1.${fracStr || "0"}_2 \\times 2^{${e} - 127} = ${s ? "-" : ""}1.${fracStr || "0"}_2 \\times 2^{${e - 127}}$`;
-  }
-  const PRESETS: [string, number][] = [
-    ["1.0", 1],
-    ["−13.375", -13.375],
-    ["0.1", 0.1],
-    ["0.15625", 0.15625],
-    ["max", 3.4028234663852886e38],
-    ["min normal", 1.1754943508222875e-38],
-    ["∞", Infinity],
-  ];
-  return (
-    <VizFrame
-      title="IEEE 754 single precision, bit by bit"
-      hint="Click any bit to flip it, type a decimal number to encode it, or pick a preset."
-      onReset={() => encode(-13.375)}
-      figure={
-        <div style={{ display: "grid", gap: 14, padding: 10, background: "var(--surface-2)", borderRadius: 10 }}>
-          <div>
-            <div className="small" style={{ color: "var(--bad)", fontWeight: 700 }}>
-              S (bit 31)
-            </div>
-            <BitRow bits={[s]} onChange={(b) => setFromBits([b[0], ...eBits, ...fBits])} size={26} />
-          </div>
-          <div>
-            <div className="small" style={{ color: "var(--accent)", fontWeight: 700 }}>
-              exponent e (bits 30–23) = {e}
-            </div>
-            <BitRow bits={eBits} onChange={(b) => setFromBits([s, ...b, ...fBits])} size={26} />
-          </div>
-          <div>
-            <div className="small" style={{ color: "var(--good)", fontWeight: 700 }}>
-              fraction f (bits 22–0)
-            </div>
-            <BitRow bits={fBits} onChange={(b) => setFromBits([s, ...eBits, ...b])} size={22} />
-          </div>
-          <div className="small muted" style={{ fontFamily: "monospace" }}>
-            hex {hex.slice(0, 4)} {hex.slice(4)}
-          </div>
-        </div>
-      }
-      controls={
-        <>
-          <label className="small muted">
-            Decimal to encode
-            <input
-              className="answer-input"
-              value={text}
-              onChange={(ev) => {
-                setText(ev.target.value);
-                const x = Number(ev.target.value);
-                if (ev.target.value.trim() !== "" && !Number.isNaN(x)) setU(f32bits(x));
-              }}
-            />
-          </label>
-          <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
-            {PRESETS.map(([l, x]) => (
-              <button key={l} className="btn small" onClick={() => encode(x)}>
-                {l}
-              </button>
-            ))}
-          </div>
-        </>
-      }
-      readout={
-        <>
-          <Read label="Sign" tex={`S = ${s} → **${s ? "negative" : "positive"}**`} />
-          <Read label="Exponent" tex={`field ${eBits.join("")} = ${e}${e > 0 && e < 255 ? `, true exponent $${e} - 127 = ${e - 127}$` : ""}`} />
-          <Read label="Pattern" tex={`**${kind}**`} />
-          <Read label="Value" tex={formula} />
-          <Read label="Decimal" tex={`**${Number.isNaN(val) ? "NaN" : String(val)}**`} tone="good" />
-          {typedOk && Number.isFinite(typed) && Math.abs(typed) < 3.5e38 && (
-            <Read
-              label="Stored exactly?"
-              tex={Math.fround(typed) === typed ? "yes" : `no: nearest float is ${Math.fround(typed)} (error ${(Math.fround(typed) - typed).toExponential(2)})`}
-              tone={Math.fround(typed) === typed ? "good" : "warn"}
-            />
-          )}
-        </>
-      }
-      tasks={[
-        "Predict the hex pattern of $-13.375$ before reading it: sign, $1.101011 \\times 2^3$, exponent $130$. Then check.",
-        "Flip only bit 31. What changes in the value? Why is the significand not 2's-complemented?",
-        "Encode 0.1. Why is it not stored exactly, while 0.15625 is?",
-        "Set the exponent to all 1s, then change one fraction bit. What special values do you get?",
       ]}
     />
   );

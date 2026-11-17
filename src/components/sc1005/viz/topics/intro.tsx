@@ -2,13 +2,11 @@
 
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import type { Bit } from "@/lib/sc1005/logic";
-import { BitRow, bitsOf, Choice, Read, Slider, Toggle, useStepper, valueOf, VizFrame, WaveSvg } from "../kit";
+import { BitRow, bitsOf, Choice, Read, Slider, useStepper, valueOf, VizFrame, WaveSvg } from "../kit";
 
 // Interactive figures for the intro lesson, chosen by id (see LessonSection.visuals).
 export default function IntroVisual({ id }: { id: string }) {
   switch (id) {
-    case "sampling-quantisation":
-      return <SamplingViz />;
     case "bit-capacity":
       return <BitCapacityViz />;
     case "logic-levels":
@@ -30,121 +28,6 @@ const HALO: CSSProperties = { paintOrder: "stroke", stroke: "var(--surface-2)", 
 const inputStyle: CSSProperties = { font: "inherit", padding: "4px 8px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface)", color: "var(--text)", width: 130 };
 const fmtNum = (x: number, d = 3) => (Math.abs(x - Math.round(x)) < 1e-9 ? String(Math.round(x)) : Number(x.toPrecision(d)).toString());
 const big = (x: number) => x.toLocaleString("en-US");
-
-// ---------------------------------------------------------------------------------------------
-// Sampling and quantisation
-
-const VFS = 5;
-const analog = (t: number) => 2.5 + 1.8 * Math.sin(2 * Math.PI * 1.5 * t) + 0.5 * Math.sin(2 * Math.PI * 4.5 * t + 0.7);
-
-function SamplingViz() {
-  const [bits, setBits] = useState(3);
-  const [samples, setSamples] = useState(16);
-  const [k, setK] = useState(5);
-  const [showLevels, setShowLevels] = useState(true);
-  const [showErr, setShowErr] = useState(true);
-  const W = 380;
-  const H = 230;
-  const x0 = 44;
-  const x1 = W - 34;
-  const yTop = 16;
-  const yBot = H - 26;
-  const X = (t: number) => x0 + t * (x1 - x0);
-  const Y = (v: number) => yBot - (v / VFS) * (yBot - yTop);
-  const L = 2 ** bits;
-  const q = VFS / (L - 1);
-  const kk = Math.min(k, samples - 1);
-  const pts = useMemo(
-    () =>
-      Array.from({ length: samples }, (_, i) => {
-        const t = i / samples;
-        const v = analog(t);
-        const code = Math.round(v / q);
-        return { t, v, code, vq: code * q };
-      }),
-    [samples, q],
-  );
-  const curve = Array.from({ length: 241 }, (_, i) => `${i ? "L" : "M"}${X(i / 240).toFixed(1)} ${Y(analog(i / 240)).toFixed(1)}`).join(" ");
-  const stairs = pts.map((p, i) => `${i ? "L" : "M"}${X(p.t).toFixed(1)} ${Y(p.vq).toFixed(1)} H${X((i + 1) / samples).toFixed(1)}`).join(" ");
-  const maxErr = Math.max(...pts.map((p) => Math.abs(p.v - p.vq)));
-  const usedCodes = new Set(pts.map((p) => p.code)).size;
-  const s = pts[kk];
-  return (
-    <VizFrame
-      title="Sampling and quantisation: what an ADC keeps"
-      hint="The blue curve is the analog input (0–5 V). Each sample is rounded to the nearest of 2^N evenly spaced levels and held until the next sample (green staircase)."
-      onReset={() => {
-        setBits(3);
-        setSamples(16);
-        setK(5);
-      }}
-      figure={
-        <svg viewBox={`0 0 ${W} ${H}`} className="viz-svg" role="img" aria-label="Sampled and quantised waveform">
-          {showLevels &&
-            L <= 64 &&
-            Array.from({ length: L }, (_, c) => <line key={c} x1={x0} x2={x1} y1={Y(c * q)} y2={Y(c * q)} stroke="var(--border)" strokeWidth={L > 16 ? 0.4 : 0.8} />)}
-          <line x1={x0} x2={x0} y1={yTop} y2={yBot} stroke="var(--muted)" />
-          <line x1={x0} x2={x1} y1={yBot} y2={yBot} stroke="var(--muted)" />
-          <text x={x0 - 6} y={Y(VFS) + 4} textAnchor="end" style={MUTED}>
-            5 V
-          </text>
-          <text x={x0 - 6} y={Y(0) + 4} textAnchor="end" style={MUTED}>
-            0 V
-          </text>
-          {showLevels && L <= 16 && (
-            <>
-              {Array.from({ length: L }, (_, c) => (
-                <text key={c} x={x1 + 4} y={Y(c * q) + 3} textAnchor="start" style={{ ...MUTED, fontSize: 8 }}>
-                  {c.toString(2).padStart(bits, "0")}
-                </text>
-              ))}
-            </>
-          )}
-          <path d={curve} fill="none" stroke="var(--accent)" strokeWidth={2} opacity={0.75} />
-          <path d={stairs} fill="none" stroke="var(--good)" strokeWidth={2.2} />
-          {pts.map((p, i) => (
-            <g key={i} opacity={i === kk ? 1 : 0.8}>
-              {showErr && Math.abs(p.v - p.vq) > 1e-9 && <line x1={X(p.t)} x2={X(p.t)} y1={Y(p.v)} y2={Y(p.vq)} stroke="var(--bad)" strokeWidth={i === kk ? 2.4 : 1.4} />}
-              <circle cx={X(p.t)} cy={Y(p.v)} r={i === kk ? 4 : 2.5} fill="var(--accent)" />
-              <circle cx={X(p.t)} cy={Y(p.vq)} r={i === kk ? 4.5 : 3} fill="var(--good)" stroke={i === kk ? "var(--text)" : "none"} />
-            </g>
-          ))}
-          <text x={(x0 + x1) / 2} y={H - 8} textAnchor="middle" style={MUTED}>
-            time → ({samples} samples in this window)
-          </text>
-        </svg>
-      }
-      controls={
-        <>
-          <Slider label="Bits per sample $N$" value={bits} min={1} max={8} step={1} onChange={setBits} format={(v) => String(v)} />
-          <Slider label="Samples in the window" value={samples} min={4} max={48} step={1} onChange={setSamples} format={(v) => String(v)} />
-          <Slider label="Inspect sample" value={kk} min={0} max={samples - 1} step={1} onChange={setK} format={(v) => `#${v}`} />
-          <Toggle label="Show the levels" value={showLevels} onChange={setShowLevels} />
-          <Toggle label="Show quantisation error (red)" value={showErr} onChange={setShowErr} />
-        </>
-      }
-      readout={
-        <>
-          <Read label="Levels" tex={`$2^{${bits}} = ${L}$ codes, $0$ to $${L - 1}$`} />
-          <Read label="Step" tex={`$\\dfrac{5\\text{ V}}{2^{${bits}}-1} = \\dfrac{5}{${L - 1}} = ${fmtNum(q * 1000, 4)}$ mV`} />
-          <Read
-            label={`Sample #${kk}`}
-            tex={`$v = ${s.v.toFixed(3)}$ V → $v/\\text{step} = ${(s.v / q).toFixed(2)}$ → code **${s.code.toString(2).padStart(bits, "0")}** $(= ${s.code})$ → $${s.vq.toFixed(3)}$ V`}
-            tone="good"
-          />
-          <Read label="Worst error here" tex={`$${(maxErr * 1000).toFixed(1)}$ mV $\\le \\tfrac12\\,\\text{step} = ${fmtNum((q / 2) * 1000, 4)}$ mV`} tone={maxErr <= q / 2 + 1e-9 ? "good" : "bad"} />
-          <Read label="Codes used" tex={`${usedCodes} of ${L} · data: ${samples} × ${bits} = **${samples * bits} bits** for this window`} />
-        </>
-      }
-      tasks={[
-        "Predict: with $N = 2$, how many different heights can the green staircase take? Set $N = 2$ and count them.",
-        "Go from $N = 3$ to $N = 4$. Predict the new step before reading it. Why is it $5/15$ V and not $5/16$ V here?",
-        "Set $N = 8$ but only 5 samples. Is the staircase a faithful copy now? Which slider fixes it, and why can't the other one?",
-        "Explain: change $N$ and watch the worst error. Why can rounding never be off by more than half a step?",
-      ]}
-    />
-  );
-}
 
 // ---------------------------------------------------------------------------------------------
 // Bits, counting and capacity
@@ -270,7 +153,7 @@ function BitCapacityViz() {
         "Predict: starting from 0111, which single count makes four bits change at once? Set the value to 7, press +1 and watch the orange bars.",
         "Set $N = 12$. Compare the largest binary and largest BCD values. How many of the $4096$ codes does BCD never use?",
         "Tutorial 1 Q2 asks for 350 000. Before typing it, predict from $2^{18} = 262\\,144$ and $2^{19} = 524\\,288$. Then check, and compare with BCD.",
-        "Explain why bit $k$ toggles once every $2^k$ counts (count from 0 with +1 and watch bit 2).",
+        "Set $N = 3$ and count from 0 with +1. Write down the 8 codes: this is the binary counting sequence used to list truth-table rows. What comes after 111?",
       ]}
     />
   );
@@ -284,8 +167,8 @@ const PER_BIT = 12;
 const VOL = 0.2;
 const VOH = 4.6;
 const FAMILIES = {
-  ttl: { name: "TTL-style", vil: 0.8, vih: 2.0 },
-  cmos: { name: "5 V CMOS", vil: 1.5, vih: 3.5 },
+  ttl: { name: "TTL", vil: 0.8, vih: 2.0 },
+  cmos: { name: "CMOS (74AC)", vil: 1.5, vih: 3.5 },
 } as const;
 
 function rng(seed: number) {
@@ -390,8 +273,8 @@ function LogicLevelsViz() {
             value={fam}
             onChange={setFam}
             options={[
-              { v: "ttl", label: "TTL: 0–0.8 V / 2–5 V" },
-              { v: "cmos", label: "CMOS: 0–1.5 V / 3.5–5 V" },
+              { v: "ttl", label: "TTL: 0–0.8 V / 2.0–5.0 V" },
+              { v: "cmos", label: "CMOS (74AC): 0–1.5 V / 3.5–5.0 V" },
             ]}
           />
           <Slider label="Noise amplitude (peak)" value={noise} min={0} max={2.5} step={0.05} onChange={setNoise} format={(v) => `±${v.toFixed(2)} V`} />
@@ -404,8 +287,8 @@ function LogicLevelsViz() {
       }
       readout={
         <>
-          <Read label="Bands" tex={`0: $0$–$${f.vil}$ V · invalid: $${f.vil}$–$${f.vih}$ V · 1: $${f.vih}$–$5$ V`} />
-          <Read label="Bits recovered" tex={`**${nOk} / ${SENT.length}**${nInv ? ` · ${nInv} invalid` : ""}${nWrong ? ` · ${nWrong} wrong` : ""}`} tone={nOk === SENT.length ? "good" : nWrong ? "bad" : "warn"} />
+          <Read label="Bands" tex={`0: $0$–$${f.vil}$ V · indeterminate: $${f.vil}$–$${f.vih}$ V · 1: $${f.vih}$–$5$ V`} />
+          <Read label="Bits recovered" tex={`**${nOk} / ${SENT.length}**${nInv ? ` · ${nInv} indeterminate` : ""}${nWrong ? ` · ${nWrong} wrong` : ""}`} tone={nOk === SENT.length ? "good" : nWrong ? "bad" : "warn"} />
           <Read label="Room for noise" tex={`a 0 survives up to $${f.vil} - ${VOL} = ${mLow.toFixed(1)}$ V; a 1 up to $${VOH} - ${f.vih} = ${mHigh.toFixed(1)}$ V`} />
           <Read
             tex={
@@ -420,14 +303,14 @@ function LogicLevelsViz() {
       tasks={[
         "Predict: with TTL bands, is a 0 or a 1 more easily upset by noise? Raise the noise slowly until the first ? or wrong bit appears.",
         "Switch to CMOS bands. Which bit value now fails first? Use the 'room for noise' line to explain.",
-        "Set the noise to ±0.5 V and press 'New noise pattern' several times. Does the received data ever change? Why does that make digital storage and copying lossless?",
+        "Set the noise to ±0.5 V and press 'New noise pattern' several times. Does the received data ever change? Relate this to the lecture's phone illustration (F0-6): why is the digital signal recovered cleanly while a purely analog one keeps the noise?",
       ]}
     />
   );
 }
 
 // ---------------------------------------------------------------------------------------------
-// Waveform explorer: period, frequency, duty cycle, rise/fall time
+// Waveform explorer: period, frequency, rise/fall time
 
 /** Trapezoidal pulse train: rising 50% point at offset + kT, falling at +tW, full edges tr/0.8 and tf/0.8 wide. */
 function pulseLevel(t: number, T: number, tW: number, tr: number, tf: number, offset: number) {
@@ -483,8 +366,8 @@ function WaveformViz() {
   );
   return (
     <VizFrame
-      title="Waveform explorer: T, f, duty cycle, rise and fall time"
-      hint="A 0–5 V pulse train. Dashed lines mark 10%, 50% and 90% of the swing; the brackets show where each quantity is measured."
+      title="Waveform explorer: T, f, rise and fall time"
+      hint="A 0–5 V pulse train. Dashed lines mark 10%, 50% and 90% of the swing; rise and fall times are measured between the 10% and 90% levels (slide 6-50)."
       onReset={() => {
         setT(100);
         setDuty(30);
@@ -504,7 +387,7 @@ function WaveformViz() {
           <path d={path} fill="none" stroke="var(--accent)" strokeWidth={2.2} />
           {bracket(X(r10), X(r90), yLo + 18, `tr = ${trE}`, "var(--good)", true)}
           {bracket(X(f90), X(f10), yLo + 18, `tf = ${tfE}`, "var(--warn)", true)}
-          {bracket(X(off), X(off + tW), Y(0.5) - 8, `tW ${fmtNum(tW)}`, "var(--text)")}
+          {bracket(X(off), X(off + tW), Y(0.5) - 8, `HIGH ${fmtNum(tW)}`, "var(--text)")}
           {bracket(X(off), X(off + T), 18, `T = ${T} ns`, "var(--bad)")}
           {[r10, r90, f90, f10].map((t, i) => (
             <line key={i} x1={X(t)} x2={X(t)} y1={Y(i === 0 || i === 3 ? 0.1 : 0.9)} y2={yLo + 18} stroke="var(--muted)" strokeWidth={0.6} />
@@ -517,7 +400,7 @@ function WaveformViz() {
       controls={
         <>
           <Slider label="Period $T$" value={T} min={20} max={200} step={10} onChange={setT} format={(v) => `${v} ns`} />
-          <Slider label="Duty cycle" value={duty} min={10} max={90} step={5} onChange={setDuty} format={(v) => `${v}%`} />
+          <Slider label="HIGH time (% of $T$)" value={duty} min={10} max={90} step={5} onChange={setDuty} format={(v) => `${v}%`} />
           <Slider label="Rise time $t_r$ (10%→90%)" value={tr} min={0} max={20} step={1} onChange={setTr} format={(v) => `${v} ns`} />
           <Slider label="Fall time $t_f$ (90%→10%)" value={tf} min={0} max={20} step={1} onChange={setTf} format={(v) => `${v} ns`} />
         </>
@@ -525,15 +408,15 @@ function WaveformViz() {
       readout={
         <>
           <Read label="Frequency" tex={`$f = 1/T = 1/${T}\\text{ ns} = ${fmtNum(1000 / T, 4)}$ MHz`} tone="good" />
-          <Read label="Duty cycle" tex={`$t_W/T = ${fmtNum(tW)}/${T} = ${duty}\\%$ (HIGH ${fmtNum(tW)} ns, LOW ${fmtNum(T - tW)} ns)`} />
+          <Read label="HIGH / LOW" tex={`HIGH ${fmtNum(tW)} ns, LOW ${fmtNum(T - tW)} ns in each period of ${T} ns`} />
           <Read label="Edges" tex={`$t_r = ${trE}$ ns, $t_f = ${tfE}$ ns; a full 0→100% edge takes $t_r/0.8 = ${fmtNum(trE / 0.8)}$ ns`} />
           {(tr > maxEdge || tf > maxEdge) && <Read tex={`edges limited to ${maxEdge} ns so the pulse still reaches its full level`} tone="warn" />}
         </>
       }
       tasks={[
         "Predict: what frequency is $T = 50$ ns? Set it and check the readout.",
-        "Keep $T$ fixed and move the duty cycle from 30% to 70%. Which of $f$, $t_W$ and the LOW time change?",
-        "Set $t_r = 16$ ns. The green bracket shows 16 ns, but the edge clearly takes longer from bottom to top. Why do we measure between 10% and 90%?",
+        "Keep $T$ fixed and move the HIGH time from 30% to 70% of $T$. Does the frequency change?",
+        "Set $t_r = 16$ ns. The green bracket shows 16 ns, but the edge takes longer from bottom to top. Which two levels define the rise time on slide 6-50?",
       ]}
     />
   );
@@ -766,13 +649,13 @@ function SerialParallelViz() {
           <Read label="Clock period" tex={`$T = 1/${mhz}\\text{ MHz} = ${fmtNum(T)}$ ns`} />
           <Read label="Serial" tex={`$N \\times T = ${n} \\times ${fmtNum(T)} = ${fmtNum(n * T)}$ ns on **1** wire`} tone={k >= n ? "good" : undefined} />
           <Read label="Parallel" tex={`$T = ${fmtNum(T)}$ ns on **${n}** wires`} tone={k >= 1 ? "good" : undefined} />
-          <Read label="Bit rate" tex={`serial $${fmtNum(mhz)}$ Mbit/s · parallel $${fmtNum(mhz * n)}$ Mbit/s`} />
+          <Read label="Bits per µs" tex={`serial $${fmtNum(mhz)}$ · parallel $${fmtNum(mhz * n)}$`} />
         </>
       }
       tasks={[
         "Predict: how many clock periods until the serial receiver holds the whole word? Step and check. When does the parallel receiver finish?",
         "Switch to 16 bits. How do the serial and parallel times change, and how many wires does each need?",
-        "Explain: a serial link at 1 GHz vs an 8-bit parallel bus at 100 MHz. Which moves more bits per second, and why do modern buses (USB, PCIe) choose serial?",
+        "Explain the lecture's 'speed versus cost' trade-off (F0-7) using the readout: at the same clock, which is faster, and which needs fewer wires?",
       ]}
     />
   );

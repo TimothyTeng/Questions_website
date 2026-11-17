@@ -12,8 +12,6 @@ export default function FsmVerilogVisual({ id }: { id: string }) {
       return <VerilogStepper />;
     case "case-vs-assign":
       return <CaseVsAssign />;
-    case "output-timing":
-      return <OutputTiming />;
     case "traffic-light":
       return <TrafficLight />;
     case "bug-lab":
@@ -143,7 +141,7 @@ const STEP_T10: StepPreset = {
   out: (st) => (st === "x" ? "x" : st === "C" || st === "D" ? 1 : 0),
   lines: [
     { t: "module twoones (input clk, rst, x, output z);" },
-    { t: "  localparam A = 2'b00, B = 2'b01, C = 2'b10, D = 2'b11;" },
+    { t: "  parameter A = 2'b00, B = 2'b01, C = 2'b10, D = 2'b11;" },
     { t: "  reg [1:0] st, nst;" },
     { t: "  always @(posedge clk)", edge: () => true },
     { t: "    if (rst) st <= A;", edge: (c) => c.rst, note: (c) => (c.rst ? "next edge: st <= A" : "") },
@@ -155,7 +153,7 @@ const STEP_T10: StepPreset = {
     { t: "      B: if (x) nst = C; else nst = A;", hot: (c) => c.st === "B", note: (c) => (c.st === "B" ? caseNote(c) : "") },
     { t: "      C: if (!x) nst = D;", hot: (c) => c.st === "C", note: (c) => (c.st === "C" ? caseNote(c) : "") },
     { t: "      D: if (x) nst = C; else nst = A;", hot: (c) => c.st === "D", note: (c) => (c.st === "D" ? caseNote(c) : "") },
-    { t: "      default: nst = A;", hot: (c) => c.st === "x", note: (c) => (c.st === "x" ? "st unknown: only default matches" : "") },
+    { t: "      default: nst = A;", hot: (c) => c.st === "x", note: (c) => (c.st === "x" ? "st unknown: no reset yet" : "") },
     { t: "    endcase" },
     { t: "  end" },
     { t: "  assign z = (st == C) | (st == D);", hot: () => true, note: (c) => `z = ${c.z}` },
@@ -255,7 +253,7 @@ const STEP_M111: StepPreset = {
   out: (st, x) => (st === "x" ? 0 : st === "S2" && x ? 1 : 0),
   lines: [
     { t: "module ones3 (input clk, rst, x, output reg z);" },
-    { t: "  localparam S0 = 2'd0, S1 = 2'd1, S2 = 2'd2;" },
+    { t: "  parameter S0 = 2'd0, S1 = 2'd1, S2 = 2'd2;" },
     { t: "  reg [1:0] st, nst;" },
     { t: "  always @(posedge clk)", edge: () => true },
     { t: "    if (rst) st <= S0;", edge: (c) => c.rst },
@@ -342,7 +340,7 @@ function VerilogStepper() {
   return (
     <VizFrame
       title="Step a Verilog FSM: which lines are working?"
-      hint="Start with rst = 1 and clock once (st is x before reset). Then set x and clock. Blue lines are the combinational logic active for the current st and x; amber lines will run at the next rising edge."
+      hint="Start with rst = 1 and clock once (st is unknown, shown as x, until the reset). Then set x and clock. Blue lines are the combinational logic active for the current st and x; amber lines will run at the next rising edge."
       onReset={reset}
       figure={
         <div style={{ display: "grid", gap: 8 }}>
@@ -377,7 +375,7 @@ function VerilogStepper() {
         </>
       }
       tasks={[
-        "Predict: before any reset, what is z? Clock once with rst = 0 in each preset. Which presets recover from x without a reset, and which line makes the difference?",
+        "Predict: before any reset the state is unknown. Set rst = 1 and clock once in each preset: which state does each enter? Why does the lecture insist the state register is reset to a valid state?",
         "Tutorial 10 preset: after reset, feed 1, 1, 0, 0. For each edge say which case item was blue before you clocked it.",
         "Mealy 111 preset: get to S2, then toggle x between 0 and 1 **without** clocking. Which signal changes immediately and which waits for the edge?",
         "Pulse3 preset: compare the green annotations with $n_1 = s_1 \\oplus s_0$ and $n_0 = s_1's_0'b + s_1s_0'$ for each state.",
@@ -392,7 +390,7 @@ function VerilogStepper() {
 const T10_STATES = ["A", "B", "C", "D"];
 const ENCODINGS: { v: string; label: string; codes: number[] }[] = [
   { v: "bin", label: "Binary A00 B01 C10 D11", codes: [0, 1, 2, 3] },
-  { v: "gray", label: "Gray A00 B01 C11 D10", codes: [0, 1, 3, 2] },
+  { v: "gray", label: "A00 B01 C11 D10", codes: [0, 1, 3, 2] },
   { v: "odd", label: "A00 B11 C01 D10", codes: [0, 3, 1, 2] },
 ];
 const bc = (x: number) => x.toString(2).replace(/0/g, "").length;
@@ -454,7 +452,7 @@ function CaseVsAssign() {
     { name: "case: st", wave: busWave(view.map((t) => t.sCase)), data: view.map((t) => t.sCase) },
     { name: "assign: s1s0", wave: busWave(view.map((t) => String(t.bits))), data: view.map((t) => `${t.bits.toString(2).padStart(2, "0")}=${nameOf(t.bits)}`) },
   ];
-  const caseCode = `localparam A = 2'b${code("A").toString(2).padStart(2, "0")}, B = 2'b${code("B").toString(2).padStart(2, "0")}, C = 2'b${code("C").toString(2).padStart(2, "0")}, D = 2'b${code("D").toString(2).padStart(2, "0")};
+  const caseCode = `parameter A = 2'b${code("A").toString(2).padStart(2, "0")}, B = 2'b${code("B").toString(2).padStart(2, "0")}, C = 2'b${code("C").toString(2).padStart(2, "0")}, D = 2'b${code("D").toString(2).padStart(2, "0")};
 always @* begin
   nst = st;
   case (st)
@@ -512,7 +510,7 @@ assign z  = ${zV};`;
         </>
       }
       tasks={[
-        "Predict: with the Gray encoding, what single signal does $n_0$ copy? Check the generated assign and explain what s0 remembers.",
+        "Predict: with A = 00, B = 01, C = 11, D = 10, what single signal does $n_0$ copy? Check the generated assign and explain what s0 remembers.",
         "Switch to Binary. How many literals do $n_1$ and $n_0$ need now? Which encoding would you choose for Tutorial 10 Q1(b)?",
         "Feed 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1 (Tutorial 10 Q1(c)). Do the two versions ever disagree? Read z from the state each cycle.",
         "Use the table: pick the row for state C with x = 0 and verify that the generated $n_1$ and $n_0$ give D's code.",
@@ -522,92 +520,9 @@ assign z  = ${zV};`;
 }
 
 // ---------------------------------------------------------------------------------------------
-// 3. Output timing: Moore, Mealy and registered outputs
+// 11-detector transitions (used by the bug lab)
 
 const D11: Record<string, [string, string]> = { S0: ["S0", "S1"], S1: ["S0", "S2"], S2: ["S0", "S2"] };
-const STYLES = [
-  { key: "a", code: "assign z = (st == S2);", what: "Moore, combinational" },
-  { key: "b", code: "assign z = (st != S0) & x;", what: "Mealy, combinational" },
-  { key: "c", code: "always @(posedge clk) z <= (st == S2);", what: "registered from st" },
-  { key: "d", code: "always @(posedge clk) z <= (nst == S2);", what: "registered from nst" },
-];
-
-function OutputTiming() {
-  const { xs, setXs, cur, setCur, reset } = useFeed();
-  const [late, setLate] = useState(false);
-  type C = { s: string; x: Bit; px: Bit; zc: Bit; zd: Bit };
-  const cyc: C[] = [];
-  let s = "S0";
-  let px: Bit = 0;
-  let zc: Bit = 0;
-  let zd: Bit = 0;
-  [...xs, cur].forEach((x, k) => {
-    cyc.push({ s, x, px, zc, zd });
-    if (k < xs.length) {
-      const nst = D11[s][x];
-      zc = s === "S2" ? 1 : 0;
-      zd = nst === "S2" ? 1 : 0;
-      s = nst;
-    }
-    px = x;
-  });
-  const view = cyc.slice(-9);
-  const from = cyc.length - view.length;
-  const half = (c: C, f: (st: string, x: Bit) => Bit) => (late ? `${f(c.s, c.px)}${f(c.s, c.x)}` : `${f(c.s, c.x)}${f(c.s, c.x)}`);
-  const signals: WaveSignal[] = [
-    { name: "clk", wave: view.map(() => "10").join("") },
-    { name: "x", wave: view.map((c) => (late ? `${c.px}${c.x}` : `${c.x}${c.x}`)).join("") },
-    { name: "st", wave: busWave(view.map((c) => c.s)), data: view.map((c) => c.s) },
-    { name: "(a) Moore", wave: view.map((c) => half(c, (st) => (st === "S2" ? 1 : 0))).join("") },
-    { name: "(b) Mealy", wave: view.map((c) => half(c, (st, x) => (st !== "S0" && x ? 1 : 0))).join("") },
-    { name: "(c) reg st", wave: view.map((c) => `${c.zc}${c.zc}`).join("") },
-    { name: "(d) reg nst", wave: view.map((c) => `${c.zd}${c.zd}`).join("") },
-  ];
-  const now = cyc[cyc.length - 1];
-  const first = (f: (c: C) => Bit) => cyc.findIndex((c) => f(c) === 1);
-  const fa = first((c) => (c.s === "S2" ? 1 : 0));
-  const fb = first((c) => (c.s !== "S0" && c.x ? 1 : 0));
-  const fc = first((c) => c.zc);
-  return (
-    <VizFrame
-      title="Where the output is computed decides when it changes"
-      hint="One 11-detector (states S0, S1, S2), four ways to produce z. Feed bits and compare the four z waveforms."
-      onReset={reset}
-      figure={
-        <div style={{ display: "grid", gap: 8 }}>
-          <pre className="code" style={{ fontSize: "0.76rem", margin: 0 }}>
-            {STYLES.map((st) => `// (${st.key}) ${st.what}\n${st.code}`).join("\n")}
-          </pre>
-          <WaveSvg signals={signals} ticks={ticksFor(from, view.length)} cursor={(view.length - 1) * 2} />
-        </div>
-      }
-      controls={
-        <>
-          <FeedControls cur={cur} setCur={setCur} onClock={(b) => setXs((h) => [...h, b])} onUndo={() => setXs((h) => h.slice(0, -1))} canUndo={xs.length > 0} />
-          <Toggle label="x changes at the falling edge (mid-cycle)" value={late} onChange={setLate} />
-        </>
-      }
-      readout={
-        <>
-          <Read label="Now" tex={`st = ${now.s}, x = ${now.x}: (a) ${now.s === "S2" ? 1 : 0}, (b) ${now.s !== "S0" && now.x ? 1 : 0}, (c) ${now.zc}, (d) ${now.zd}`} />
-          <Read
-            label="First z = 1"
-            tex={fb < 0 ? "feed 1, 1 to detect the pattern" : `(b) Mealy cycle ${fb}; (a) and (d) cycle ${fa < 0 ? "–" : fa}; (c) cycle ${fc < 0 ? "–" : fc}`}
-            tone={fb >= 0 ? "good" : undefined}
-          />
-          <Read tex="(c) samples the **old** st at the edge (non-blocking), so it lags the state by one cycle; (d) samples nst, which is already the state being entered." />
-          {late && <Read tone="warn" tex="Mid-cycle input changes move (b) mid-cycle; (a), (c), (d) still only change at edges." />}
-        </>
-      }
-      tasks={[
-        "Predict: feed 0, 1, 1, 1, 0. In which cycle does each of (a)–(d) first become 1? Then check.",
-        "Which two outputs are always identical? Explain from the code why (d) is not late although it is registered.",
-        "Turn on mid-cycle input changes. Which output can now be 1 for only half a cycle?",
-        "An exam module writes `z <= (st == S2)` in the clocked block. Is it still the same machine as (a)? What would you change to keep the registered output but remove the delay?",
-      ]}
-    />
-  );
-}
 
 // ---------------------------------------------------------------------------------------------
 // 4. Traffic-light controller
@@ -738,8 +653,8 @@ function TrafficLight() {
             <button className="btn primary small" onClick={clock}>
               ⏵ Clock edge
             </button>
-            <button className="btn small" onClick={() => { setHist((h) => [...h, { st, car, rst }]); setSt(6); }} title="Simulate a glitch that loads the unused code 6">
-              Glitch: st = 3&apos;d6
+            <button className="btn small" onClick={() => { setHist((h) => [...h, { st, car, rst }]); setSt(6); }} title="Force the unused code 6 into the state register">
+              Load st = 3&apos;d6
             </button>
           </div>
         </>
@@ -755,7 +670,7 @@ function TrafficLight() {
       tasks={[
         "Predict: with car = 1 held from NS_G, how many clock edges until NS is green again? Count the states and check.",
         "Leave car = 0. Why does the controller stay in NS_G, and which line keeps it there?",
-        "Press **Glitch** to load code 6. What do the lights show, and what happens at the next edge? Which two pieces of code make this safe?",
+        "Press **Load st = 3'd6** to put the FSM in an unused code. What do the lights show, and what happens at the next edge? Which two pieces of code make this safe?",
         "Change the specification in your head: the side road should get three green cycles. Which lines and how many state bits would you need?",
       ]}
     />
@@ -778,12 +693,6 @@ const BUGS: { key: BugKey; label: string; good: string; bad: string }[] = [
     label: "Missing default + no reset",
     good: "// fixed\nalways @* begin\n  nst = st;\n  case (st)\n    S0: if (x) nst = S1;\n    S1: if (x) nst = S2; else nst = S0;\n    S2: if (!x) nst = S0;\n    default: nst = S0;\n  endcase\nend",
     bad: "// bug: no default item\nalways @* begin\n  nst = st;\n  case (st)\n    S0: if (x) nst = S1;\n    S1: if (x) nst = S2; else nst = S0;\n    S2: if (!x) nst = S0;\n  endcase\nend",
-  },
-  {
-    key: "block",
-    label: "Blocking = in the clocked block",
-    good: "// non-blocking\nalways @(posedge clk) begin\n  st <= nst;\n  z  <= (st == S2);   // old st\nend",
-    bad: "// blocking\nalways @(posedge clk) begin\n  st = nst;\n  z  = (st == S2);    // NEW st!\nend",
   },
 ];
 const CODE2: Record<string, string> = { S0: "00", S1: "01", S2: "10", "11": "11" };
@@ -898,18 +807,16 @@ function BugLab() {
           <Read label="First difference" tex={diff < 0 ? "none yet: keep feeding inputs" : `cycle ${diff}`} tone={diff < 0 ? undefined : "bad"} />
           {bug === "sens" && (
             <>
-              <Read tex="In **simulation**, always @(st) only runs when st changes. It reads x at that instant (before x moves), and then ignores every later change of x until st changes again. Synthesis ignores the list and builds the correct logic, so simulation and hardware disagree." />
+              <Read tex="always @(st) only runs when st changes. It reads x at that instant, and then ignores every later change of x until st changes again: the block is not triggered by x, so it does not give the expected circuit. always @* fixes it." />
               <Read label="Block ran in cycles" tex={woke.join(", ") || "none"} />
             </>
           )}
           {bug === "lock" && <Read tex={start === "11" ? "Code 11 matches no case item: only nst = st runs, so the buggy machine loads 11 forever (lock-up). The default item sends it to S0 after one edge." : "From a valid code both versions behave the same: the bug only shows from the unused code 11. Choose 11."} tone={start === "11" ? "bad" : undefined} />}
-          {bug === "block" && <Read tex="Non-blocking: z <= (st == S2) reads st **before** the edge's update, so z is one cycle late. Blocking: st = nst executes first and z reads the **new** st. Swapping the two blocking lines would change the behaviour again: the result depends on statement order." />}
         </>
       }
       tasks={[
-        "Sensitivity list: feed 1, 0, 1, 1, 1. In which cycle does the buggy simulation reach S2 although 11 has not been seen yet? Which value of x did its block read, and when did it run?",
-        "Lock-up: choose power-up 11 and feed any inputs. Then pick S0 and repeat. Why is the bug invisible in a simulation that starts from reset?",
-        "Blocking: feed 1, 1, 1, 0. Which z matches the combinational Moore output (st == S2)? Which one is one cycle late?",
+        "Sensitivity list: feed 1, 0, 1, 1, 1. In which cycle does the buggy version reach S2 although 11 has not been seen yet? Which value of x did its block read, and when did it run?",
+        "Lock-up: choose power-up 11 and feed any inputs. Then pick S0 and repeat. Why is the bug invisible if the FSM always starts from reset?",
       ]}
     />
   );

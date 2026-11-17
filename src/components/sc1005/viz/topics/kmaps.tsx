@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Choice, CircuitSvg, KMapSvg, Read, TableView, Toggle, VizFrame, WaveSvg } from "../kit";
 import { LOOP_COLORS } from "../../figures/KMap";
-import { covers, evalCircuit, minimalCover, primeImplicants, productString, rowEnv, sumString, type Bit, type Implicant, type Val } from "@/lib/sc1005/logic";
+import { covers, evalCircuit, minimalCover, productString, rowEnv, sumString, type Bit, type Implicant, type Val } from "@/lib/sc1005/logic";
 import type { CircuitSpec } from "@/lib/sc1005/types";
 
 // Interactive figures for the kmaps lesson (Ch 5: combinational logic & K-maps), chosen by id.
@@ -15,8 +15,6 @@ export default function KmapsVisual({ id }: { id: string }) {
       return <KmapAdjacency />;
     case "kmap-minimiser":
       return <KmapMinimiser />;
-    case "prime-essential":
-      return <PrimeEssential />;
     case "nand-nor":
       return <NandNor />;
     case "active-low-enable":
@@ -202,7 +200,7 @@ function KmapAdjacency() {
   const broken = nbrs.filter((x) => !touching(x.m) && !wrapEdge(x.m));
   return (
     <VizFrame
-      title="Why K-maps use Gray-code order: neighbours differ in one variable"
+      title="Why K-maps are labelled 00, 01, 11, 10: neighbours differ in one variable"
       hint="Click any cell. Its neighbours (one variable flipped) are outlined in green; wrap-around neighbours are marked ↺."
       onReset={() => {
         setN(4);
@@ -293,7 +291,7 @@ function KmapAdjacency() {
             value={order}
             onChange={setOrder}
             options={[
-              { v: "gray", label: "Gray order 00 01 11 10" },
+              { v: "gray", label: "K-map order 00 01 11 10" },
               { v: "binary", label: "Binary order 00 01 10 11" },
             ]}
           />
@@ -322,7 +320,7 @@ function KmapAdjacency() {
       }
       tasks={[
         "Predict: how many neighbours does a corner cell such as m0 have in a 4-variable map? Click it and count the outlines.",
-        "Click m8 (bottom-left in Gray order). Which neighbours are wrap-around ones, and which variable flips for each?",
+        "Click m8 (bottom-left in K-map order). Which neighbours are wrap-around ones, and which variable flips for each?",
         "Switch to **Binary order** and click m1. Which logical neighbour ends up away from m1 on the map? This is why the columns run 00, 01, 11, 10.",
         "Explain: two neighbouring minterms $A'BC'D$ and $A'BCD$ OR together to $A'BD$. Which theorem is that, and why does it need the cells to differ in exactly one bit?",
       ]}
@@ -421,114 +419,6 @@ function KmapMinimiser() {
         "On **BCD digit < 6**, change the don't cares at 12 and 13 to 0 one at a time. When does the minimum SOP get more literals, and why?",
         "On the lecture preset, switch to **Loop the 0s**. Compare $A + BCD$ with its POS. Which is cheaper in gate inputs?",
         "On **Blank**, build a checkerboard (1s where an odd number of A, B, C, D are 1). Why can no loop bigger than one cell form?",
-      ]}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------------------------
-// 4. Prime and essential prime implicants
-
-const PI_PRESETS: { label: string; n: number; ones: number[]; dcs?: number[] }[] = [
-  { label: "One essential", n: 4, ones: [0, 4, 5, 7, 8, 9, 13, 15] },
-  { label: "Three essentials", n: 4, ones: [1, 3, 4, 5, 6, 7, 9, 11, 13] },
-  { label: "Cyclic (no essentials)", n: 3, ones: [0, 1, 2, 5, 6, 7] },
-  { label: "Primes 2,3,5,7,11,13", n: 4, ones: [2, 3, 5, 7, 11, 13] },
-  { label: "With don't cares", n: 4, ones: [0, 5, 6, 8, 14], dcs: [2, 7, 15] },
-];
-
-function PrimeEssential() {
-  const [preset, setPreset] = useState(0);
-  const [vals, setVals] = useState(valuesOf(4, PI_PRESETS[0].ones));
-  const [view, setView] = useState<"all" | "ess" | "cover" | number>("all");
-  const n = Math.log2(vals.length);
-  const vars = varsFor(n);
-  const ones = idx(vals, "1");
-  const dcs = idx(vals, "x");
-  const primes = primeImplicants(n, ones, dcs).filter((p) => ones.some((m) => covers(p, m)));
-  const coverBy = (m: number) => primes.filter((p) => covers(p, m));
-  const essentialFor = primes.map((p) => ones.filter((m) => covers(p, m) && coverBy(m).length === 1));
-  const ess = primes.filter((_, i) => essentialFor[i].length > 0);
-  const left = ones.filter((m) => !ess.some((p) => covers(p, m)));
-  const cover = minimalCover(n, ones, dcs);
-  const name = (p: Implicant) => productString(p, vars);
-  const shown: number[] =
-    view === "all" ? primes.map((_, i) => i) : view === "ess" ? primes.flatMap((p, i) => (ess.includes(p) ? [i] : [])) : view === "cover" ? primes.flatMap((p, i) => (cover.some((q) => q.value === p.value && q.mask === p.mask) ? [i] : [])) : [view];
-  const load = (i: number) => {
-    const p = PI_PRESETS[i];
-    setPreset(i);
-    setVals(valuesOf(p.n, p.ones, p.dcs));
-    setView("all");
-  };
-  const click = (m: number) => {
-    setVals((v) => v.slice(0, m) + (v[m] === "0" ? "1" : v[m] === "1" ? "x" : "0") + v.slice(m + 1));
-    setView("all");
-  };
-  const full = primes.length === 1 && primes[0].mask === (1 << n) - 1;
-  return (
-    <VizFrame
-      title="Prime implicants, essential prime implicants and the minimum cover"
-      hint="Click a prime implicant below to show it alone; click cells to edit the map (0 → 1 → X)."
-      onReset={() => load(preset)}
-      figure={
-        <KMapSvg
-          vars={vars}
-          values={vals}
-          groups={full ? [] : shown.map((i) => name(primes[i]))}
-          groupColors={shown.map((i) => LOOP_COLORS[i % LOOP_COLORS.length])}
-          showIndex
-          onCellClick={click}
-        />
-      }
-      controls={
-        <>
-          <Choice value={preset} onChange={load} options={PI_PRESETS.map((p, i) => ({ v: i, label: p.label }))} />
-          <Choice
-            value={typeof view === "number" ? "all" : view}
-            onChange={(v) => setView(v)}
-            options={[
-              { v: "all" as const, label: "All prime implicants" },
-              { v: "ess" as const, label: "Essential only" },
-              { v: "cover" as const, label: "Minimum cover" },
-            ]}
-          />
-          <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
-            {primes.map((p, i) => (
-              <button
-                key={i}
-                className={`chip ${view === i ? "on" : ""}`}
-                style={{ borderColor: LOOP_COLORS[i % LOOP_COLORS.length], color: LOOP_COLORS[i % LOOP_COLORS.length] }}
-                onClick={() => setView(view === i ? "all" : i)}
-              >
-                {name(p)}
-                {essentialFor[i].length ? " ★" : ""}
-              </button>
-            ))}
-          </div>
-        </>
-      }
-      readout={
-        <>
-          <Read label="Prime implicants" tex={`**${primes.length}**: ${primes.map(name).join(", ") || "none"}`} />
-          <Read label="Essential (★)" tex={`**${ess.length}**${ess.length ? ": " + ess.map((p) => `${name(p)} (only loop on m${essentialFor[primes.indexOf(p)].join(", m")})`).join("; ") : ": none, every 1 is covered by at least two prime implicants"}`} tone={ess.length ? "good" : "warn"} />
-          <Read
-            label="After essentials"
-            tex={left.length ? `1s still uncovered: m${left.join(", m")}. Choose the fewest (then smallest-literal) prime implicants that cover them.` : "Every 1 is already covered: the essentials **are** the minimum cover."}
-          />
-          <Read label="Minimum SOP" tex={`**${exprOf(cover, n, vars, false, !ones.length)}**`} tone="good" />
-          {typeof view === "number" && primes[view] && (
-            <Read
-              tone="warn"
-              tex={`${name(primes[view])} covers 1s at m${ones.filter((m) => covers(primes[view], m)).join(", m")}${dcs.some((m) => covers(primes[view], m)) ? ` and X at ${dcs.filter((m) => covers(primes[view], m)).join(", ")}` : ""}. ${essentialFor[view].length ? `Essential: no other prime implicant covers m${essentialFor[view].join(", m")}.` : "Not essential: each of its 1s is also inside another prime implicant."}`}
-            />
-          )}
-        </>
-      }
-      tasks={[
-        "Predict: on **One essential**, which 1-cells are inside only one loop? Switch to **Essential only** to check.",
-        "Click each non-essential prime implicant. For **One essential**, why does the minimum cover pick $A'C'D'$ and $AB'C'$ rather than $B'C'D'$?",
-        "Load **Cyclic**: there are six prime implicants and no essentials. Show the minimum cover, then find a second, different three-term cover by hand.",
-        "On **With don't cares**, find a prime implicant that uses an X. Explain why a loop that covers only X cells is never listed.",
       ]}
     />
   );

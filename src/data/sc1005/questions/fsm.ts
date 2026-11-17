@@ -152,7 +152,92 @@ const DET101_FSM: Figure = {
     { from: "S3", to: "S2", label: "0" },
     { from: "S3", to: "S1", label: "1", bend: 0.3 },
   ],
-  caption: "Overlapping 101 detector (Moore). S1: seen 1, S2: seen 10, S3: seen 101 (z = 1).",
+  caption: "101 detector (Moore). S1: seen 1, S2: seen 10, S3: seen 101 (z = 1).",
+};
+
+const PYP_Q4_FSM: Figure = {
+  kind: "fsm",
+  initial: "A",
+  states: [
+    { id: "A", label: "A/0", x: 0, y: 0 },
+    { id: "B", label: "B/0", x: 2, y: 0 },
+    { id: "C", label: "C/0", x: 2, y: 1 },
+    { id: "D", label: "D/1", x: 0, y: 1 },
+  ],
+  edges: [
+    { from: "A", to: "A", label: "1", loop: "top" },
+    { from: "A", to: "B", label: "0" },
+    { from: "B", to: "A", label: "1" },
+    { from: "B", to: "C", label: "0" },
+    { from: "C", to: "A", label: "1" },
+    { from: "C", to: "D", label: "0" },
+    { from: "D", to: "D", label: "0", loop: "bottom" },
+    { from: "D", to: "A", label: "1" },
+  ],
+  caption: "Moore FSM (state/output), one input.",
+};
+
+const PYP_T_FSM: Figure = {
+  kind: "fsm",
+  initial: "A",
+  states: [
+    { id: "A", label: "A/0", x: 0, y: 0 },
+    { id: "B", label: "B/0", x: 2, y: 0 },
+    { id: "C", label: "C/1", x: 2, y: 1 },
+    { id: "D", label: "D/1", x: 0, y: 1 },
+  ],
+  edges: [
+    { from: "A", to: "A", label: "T=0", loop: "top" },
+    { from: "A", to: "B", label: "T=1" },
+    { from: "B", to: "A", label: "T=0" },
+    { from: "B", to: "C", label: "T=1" },
+    { from: "C", to: "B", label: "T=0" },
+    { from: "C", to: "D", label: "T=1" },
+    { from: "D", to: "C", label: "T=0" },
+    { from: "D", to: "D", label: "T=1", loop: "bottom" },
+  ],
+  caption: "States written as state/Y.",
+};
+
+const PYP_B_FSM: Figure = {
+  kind: "fsm",
+  initial: "00",
+  states: [
+    { id: "00", label: "00/0", x: 0, y: 0 },
+    { id: "11", label: "11/1", x: 2, y: 0 },
+    { id: "01", label: "01/0", x: 0, y: 1 },
+    { id: "10", label: "10/0", x: 2, y: 1 },
+  ],
+  edges: [
+    { from: "00", to: "00", label: "B'", loop: "left" },
+    { from: "00", to: "10", label: "B" },
+    { from: "11", to: "00", label: "B'" },
+    { from: "11", to: "10", label: "B" },
+    { from: "01", to: "11", label: "B'" },
+    { from: "01", to: "10", label: "B" },
+    { from: "10", to: "01", label: "B'" },
+    { from: "10", to: "10", label: "B", loop: "right" },
+  ],
+  caption: "Input: B. Output: X (state/X).",
+};
+
+const PULSE3_MEALY: Figure = {
+  kind: "fsm",
+  initial: "off",
+  states: [
+    { id: "off", x: 0, y: 0 },
+    { id: "on1", x: 1, y: 0 },
+    { id: "on2", x: 2, y: 0 },
+    { id: "on3", x: 3, y: 0 },
+  ],
+  edges: [
+    { from: "off", to: "off", label: "0/0", loop: "top" },
+    { from: "off", to: "on1", label: "1/0" },
+    { from: "on1", to: "on2", label: "/1" },
+    { from: "on2", to: "on3", label: "/1" },
+    { from: "on3", to: "off", label: "/1", bend: 0.35 },
+  ],
+  caption: "Lecture 11 p.36, Inputs/Outputs: b/x.",
 };
 
 export const fsmQuestions: Draft[] = [
@@ -161,12 +246,12 @@ export const fsmQuestions: Draft[] = [
     kind: "mcq",
     subtopic: "State encoding",
     difficulty: "easy",
-    prompt: "A controller FSM has 11 states. What is the minimum number of flip-flops needed with **binary** encoding, and the number needed with **one-hot** encoding?",
-    options: ["3 and 11", "4 and 11", "4 and 4", "11 and 4", "4 and 2048"],
+    prompt: "A controller FSM has 11 states and is implemented with a binary state encoding. What is the minimum number of flip-flops needed, and how many codes of the state register are unused?",
+    options: ["3 flip-flops, 0 unused codes", "4 flip-flops, 5 unused codes", "4 flip-flops, 11 unused codes", "11 flip-flops, 0 unused codes", "4 flip-flops, 16 unused codes"],
     answer: 1,
     solution:
-      "Binary encoding needs the smallest k with $2^k \\ge 11$: $2^3 = 8$ is too few, $2^4 = 16$ is enough, so **4** flip-flops (5 codes stay unused).\nOne-hot uses one flip-flop per state, so **11** flip-flops, with exactly one of them 1 at a time.\n3 flip-flops can only hold 8 distinct states; 2048 = $2^{11}$ is the number of codes that 11 flip-flops can hold, not a flip-flop count.",
-    source: "Style: Lecture 12 (state encoding)",
+      "For m states we need $\\lceil \\log_2 m \\rceil$ bits: $2^3 = 8$ codes are too few for 11 states, $2^4 = 16$ are enough, so **4** flip-flops.\nThe register then has $2^4 - 11 = $ **5** codes that no state uses. Because 11 is not a power of two, these unused codes are why the lecture insists on a reset to a valid state.\n16 is the total number of codes, not the unused ones; 11 unused confuses the two counts.",
+    source: "Style: Lecture 12 p.5, p.17",
   },
   // 2
   {
@@ -183,8 +268,8 @@ export const fsmQuestions: Draft[] = [
     ],
     answer: 1,
     solution:
-      "A Mealy output is a combinational function of the state **and** the inputs, $Z = \\lambda(S, X)$, so it follows an input change immediately, even mid-cycle.\n- A: that describes Mealy, not Moore ($Z = \\lambda(S)$).\n- C: it is the other way round: Mealy usually needs fewer states (an n-bit detector: n Mealy states vs n + 1 Moore).\n- D: Mealy outputs are on arrows; Moore outputs are in or beside the states.\n- E: a Moore output can only change after a clock edge moves the state.",
-    source: "Style: Lecture 11 (Moore and Mealy machines)",
+      "A Mealy output depends on the state **and** the current values of the inputs, so the outputs can change mid-state if the inputs change (Lecture 11 p.35).\n- A: that describes Mealy, not Moore (a Moore output depends only on the state).\n- C: the lecture says Mealy machines can be **more compact**, i.e. need fewer states, not more.\n- D: Mealy outputs are on arrows after a slash; Moore outputs are in or beside the states.\n- E: a Moore output can only change after a clock edge moves the state.",
+    source: "Style: Lecture 11 p.35-36",
   },
   // 3
   {
@@ -197,7 +282,7 @@ export const fsmQuestions: Draft[] = [
     answer: 0,
     solution:
       "Follow one arrow per edge and read the output of the state you land in:\n- S0 --1--> **S2** (z 0)\n- S2 --1--> **S3** (z 1)\n- S3 --0--> **S2** (z 0)\n- S2 --1--> **S3** (z 1)\n- S3 --0--> **S2** (z 0)\n- S2 --0--> **S0** (z 0)\nSo z = 0, 1, 0, 1, 0, 0. Option C lists the outputs of the states **before** each edge (one step behind); option B is the complement.",
-    source: "Original",
+    source: "Style: PYP 2016-17 S1 Q4(c)",
   },
   // 4
   {
@@ -210,7 +295,7 @@ export const fsmQuestions: Draft[] = [
     placeholder: "e.g. 000110010",
     solution:
       "For a Mealy machine the output of a cycle is the label after the slash on the arrow taken with that cycle's input:\n- A, x=1: arrow 1/0 → B, z = 0\n- B, x=1: 1/1 (self-loop), z = **1**\n- B, x=0: 0/0 → C, z = 0\n- C, x=0: 0/1 → A, z = **1**\n- A, x=1: → B, z = 0\n- B, x=0: → C, z = 0\n- C, x=1: 1/0 → B, z = 0\n- B, x=1: self-loop, z = **1**\n- B, x=0: → C, z = 0\nz = **010100010**.",
-    source: "Original",
+    source: "Style: Lecture 11 p.36 (Mealy outputs on arrows)",
   },
   // 5
   {
@@ -314,7 +399,7 @@ export const fsmQuestions: Draft[] = [
     solution:
       "$D_1 = Q_1^+$ is 1 only in the row Q1Q0 = 01, x = 0 (minterm 2). The unused code 11 gives don't-cares at minterms 6 and 7.\nOn the K-map (rows Q1, columns Q0x), minterm 2 (Q1Q0x = 010) pairs with the don't-care 6 (110): the loop drops Q1, giving $D_1 = Q_0x'$.\nWithout the don't-care you would get $Q_1'Q_0x'$ (3 literals), which works but is not minimal.",
     solutionFigures: [{ kind: "kmap", vars: ["Q1", "Q0", "x"], values: "001000xx", groups: ["Q0x'"], showIndex: true, caption: "D1 = Q0x'" }],
-    source: "Style: Lecture 12 (mapping example)",
+    source: "Style: PYP 2018-19 S2 Q4(b)(ii)",
   },
   // 8
   {
@@ -336,88 +421,85 @@ export const fsmQuestions: Draft[] = [
   // 9
   {
     kind: "mcq",
-    subtopic: "Sequence detectors",
+    subtopic: "Tracing a state diagram",
     difficulty: "medium",
-    prompt: "A detector outputs z = 1 whenever the last four inputs are 0, 1, 1, 0 (overlapping occurrences allowed). What is the minimum number of states for a **Mealy** implementation and for a **Moore** implementation?",
-    options: ["3 and 4", "4 and 4", "5 and 4", "5 and 5", "4 and 5"],
-    answer: 4,
+    prompt: "The Moore FSM below detects a particular bit sequence; it starts in A. Determine the output sequence for the inputs 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1 (one input per rising clock edge; give the output after each edge).",
+    figures: [PYP_Q4_FSM],
+    options: [
+      "0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0",
+      "0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0",
+      "0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0",
+      "0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0",
+      "0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1",
+    ],
+    answer: 0,
     solution:
-      "Mealy: one state per prefix still in progress: S0 (nothing), S1 (0), S2 (01), S3 (011). The completing 0 is detected on the arrow out of S3 (0/1), so **4** states.\nMoore: the output must belong to a state, so an extra state S4 (0110 seen, z = 1) is needed: **5** states.\nNone of these states are equivalent (each remembers a different amount of the pattern), so these counts are minimal. Answer: 4 and 5.",
-    source: "Original",
+      "Follow one arrow per edge and read the output of the state entered:\n- 1: A → A (0); 1: A → A (0)\n- 0: A → B (0); 0: B → C (0); 0: C → **D** (1)\n- 1: D → A (0)\n- 0: A → B (0); 0: B → C (0); 0: C → **D** (1)\n- 1: D → A (0); 1: A → A (0)\nOutput: 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0. The FSM outputs 1 once it has seen three consecutive 0s (and stays in D while more 0s arrive). Option B lists the outputs of the states **before** each edge (one step behind).",
+    source: "PYP 2016-17 S1 Q4(c)",
   },
   // 10
   {
     kind: "mcq",
-    subtopic: "Sequence detectors",
-    difficulty: "medium",
-    prompt: "A Moore FSM detects the pattern 1101. The input stream 1 1 0 1 1 0 1 1 0 1 is applied. How many times does z become 1 if overlapping patterns are detected, and how many times if they are not?",
-    options: ["4 and 2", "3 and 3", "2 and 2", "2 and 1", "3 and 2"],
-    answer: 4,
+    subtopic: "Moore vs Mealy",
+    difficulty: "easy",
+    prompt: "The state transition diagram of an FSM with inputs RESET, CLK and T and output Y is shown (RESET forces state A). Is it a Mealy or a Moore FSM?",
+    figures: [PYP_T_FSM],
+    options: [
+      "Moore: Y is written in each state, so it depends only on the current state.",
+      "Mealy: the transitions depend on the input T.",
+      "Mealy: Y changes as soon as T changes.",
+      "Moore: it has a RESET input.",
+      "It cannot be decided without the circuit.",
+    ],
+    answer: 0,
     solution:
-      "Index the stream 0–9: 1 1 0 1 1 0 1 1 0 1.\n- Overlapping: 1101 ends at positions 3, 6 and 9 (each match reuses the last 1 of the previous one, because the suffix 1 of 1101 is a prefix): **3**.\n- Non-overlapping: after the match ending at 3 the machine starts afresh at position 4: 1 0 1 1 0 1 → the next complete 1101 ends at 9 (positions 6–9). The one ending at 6 needed bit 3, already used: **2**.",
-    source: "Original",
+      "In a Moore machine the outputs depend only on the state, so they are written in (or beside) the state circles: here A and B have Y = 0, C and D have Y = 1. In a Mealy machine the outputs would have to be written on the arrows after a slash, because they would also depend on the present input.\n- B: every FSM's transitions depend on its inputs; that says nothing about the type.\n- C: here Y only changes when a clock edge moves the state.\n- D: a reset input is irrelevant to the type.",
+    source: "PYP 2017-18 S1 Q4(c)(i)",
   },
   // 11
   {
     kind: "short",
-    subtopic: "Sequence detectors",
+    subtopic: "Tracing a state diagram",
     difficulty: "medium",
-    prompt: "A Mealy FSM outputs z = 1 on the clock cycle in which the last four inputs form 1001 (overlapping allowed). For the input stream 1 0 0 1 0 0 1 1 0 0 1 0 0 1, in how many cycles is z = 1?",
-    accept: ["4"],
-    match: "number",
+    prompt: "A 3-bit odd/even up-counter has a 1-bit input In and output Count. When In = 0 it moves to the next even value above the current count, and when In = 1 to the next odd value. It stays at 6 (the maximum even count) when In = 0, and from 7 (the maximum odd count) it goes back to 0 at the next edge whatever In is. Starting from 0, the input sequence 1, 1, 0, 1, 0, 1, 0 is applied. Give Count after each edge as a string of 7 digits.",
+    accept: ["1345670", "1,3,4,5,6,7,0", "1, 3, 4, 5, 6, 7, 0"],
+    placeholder: "7 digits",
     solution:
-      "The pattern 1001 starts and ends with 1, so consecutive matches can share that 1.\nPositions 0–13: 1 0 0 1 0 0 1 1 0 0 1 0 0 1.\nMatches end at positions 3 (bits 0–3), 6 (bits 3–6, sharing bit 3), 10 (bits 7–10) and 13 (bits 10–13, sharing bit 10). Bits 4–7 = 0 0 1 1 is not a match. Total **4**.\nA Mealy detector raises z in the same cycle as the completing 1 each time.",
-    source: "Original",
+      "- 0, In = 1: next odd value above 0 → **1**\n- 1, In = 1: next odd → **3**\n- 3, In = 0: next even → **4**\n- 4, In = 1 → **5**\n- 5, In = 0 → **6**\n- 6, In = 1 → **7**\n- 7: back to **0** (In is ignored)\nCount = 1, 3, 4, 5, 6, 7, 0. In the state diagram each count value is a state with one arrow for In = 0 and one for In = 1; 6 has a self-loop on In = 0, and both arrows out of 7 go to 0.",
+    source: "Style: PYP 2017-18 S2 Q4(b)(ii)",
   },
   // 12
   {
     kind: "mcq",
-    subtopic: "Moore vs Mealy timing",
+    subtopic: "Moore vs Mealy",
     difficulty: "medium",
-    prompt:
-      "Two detectors for the pattern 11 (overlapping) start in their reset states: a 3-state Moore machine and a 2-state Mealy machine. x changes just after each rising edge and is sampled at the next rising edge, as shown. In which of the cycles 0–7 is z = 1 for each machine?",
-    figures: [
-      {
-        kind: "wave",
-        ticks: ["0", "", "1", "", "2", "", "3", "", "4", "", "5", "", "6", "", "7", ""],
-        signals: [
-          { name: "clk", wave: "1010101010101010" },
-          { name: "x", wave: "1100111100111111" },
-        ],
-      },
+    prompt: "The lecture redrew the 3-cycle pulse machine as a Mealy machine (below, Inputs/Outputs: b/x). The machine is in state **off**, and halfway through the clock cycle b changes from 0 to 1. What is x during this cycle?",
+    figures: [PULSE3_MEALY],
+    options: [
+      "x = 0 for the whole cycle, because both arrows leaving off output 0",
+      "x = 0, then 1 as soon as b rises, because a Mealy output follows the input",
+      "x = 1 for the whole cycle",
+      "x is undefined until the next clock edge",
+      "x = 1, then 0 when b rises",
     ],
-    options: ["Mealy: 3, 6, 7; Moore: 4, 7", "Mealy: 4, 7; Moore: 3, 6, 7", "Mealy: 3, 6, 7; Moore: 3, 6, 7", "Mealy: 2, 5, 6; Moore: 3, 6", "Mealy: 3, 7; Moore: 4"],
     answer: 0,
     solution:
-      "x per cycle: 1, 0, 1, 1, 0, 1, 1, 1.\nMealy (S0 = nothing, S1 = one 1): z = 1 in any cycle where the machine is in S1 **and** x = 1. States per cycle: S0, S1, S0, S1, S1, S0, S1, S1 → z = 1 in cycles **3, 6, 7**.\nMoore (S2 = 11 seen, z = 1): states per cycle S0, S1, S0, S1, S2, S0, S1, S2 → z = 1 in cycles **4, 7** (and it would stay 1 in cycle 8).\nEach Moore detection appears one cycle after the corresponding Mealy one: Mealy 3 → Moore 4, Mealy 6 → Moore 7, Mealy 7 → Moore 8 (just outside the window).",
-    solutionFigures: [
-      {
-        kind: "wave",
-        ticks: ["0", "", "1", "", "2", "", "3", "", "4", "", "5", "", "6", "", "7", ""],
-        signals: [
-          { name: "clk", wave: "1010101010101010" },
-          { name: "x", wave: "1100111100111111" },
-          { name: "Mealy", wave: "=.=.=.=.=.=.=.=.", data: ["S0", "S1", "S0", "S1", "S1", "S0", "S1", "S1"] },
-          { name: "z Mealy", wave: "0000001100001111" },
-          { name: "Moore", wave: "=.=.=.=.=.=.=.=.", data: ["S0", "S1", "S0", "S1", "S2", "S0", "S1", "S2"] },
-          { name: "z Moore", wave: "0000000011000011" },
-        ],
-      },
-    ],
-    source: "Style: Lecture 11 (Mealy machines)",
+      "A Mealy output is read from the arrow leaving the current state whose input label matches the present input. In off, b = 0 selects the self-loop 0/0 and b = 1 selects the arrow 1/0 to on1: both give x = 0. So x stays 0 for the whole cycle, even though b changes mid-cycle; the machine only moves to on1 at the next rising edge, and x = 1 then comes from the /1 arrows leaving on1, on2 and on3.\nA Mealy output **can** change mid-state when the inputs change (option B), but only if the arrows for the different input values carry different outputs.",
+    source: "Style: Lecture 11 p.36",
   },
   // 13
   {
     kind: "mcq",
-    subtopic: "One-hot encoding",
+    subtopic: "Next-state equations",
     difficulty: "medium",
-    prompt: "The Moore FSM below is implemented with **one-hot** encoding, using one D flip-flop per state (outputs S0, S1, S2, S3). What is the D input of flip-flop S2?",
-    figures: [M3_FSM],
-    options: ["$D_{S2} = S0\\,x' + S3\\,x$", "$D_{S2} = S0\\,x + S3\\,x'$", "$D_{S2} = S2\\,x + S0\\,x$", "$D_{S2} = S0 + S3$", "$D_{S2} = S1\\,x' + S3\\,x'$"],
-    answer: 1,
+    prompt: "The state transition diagram below has four states (codes S1S0), one input B and one output X (written as state/X). Using D flip-flops, what is the minimal SOP for $D_1$, the next value of S1?",
+    figures: [PYP_B_FSM],
+    options: ["$D_1 = B + S_1'S_0$", "$D_1 = B$", "$D_1 = S_1'S_0B'$", "$D_1 = B + S_1S_0'$", "$D_1 = B'(S_1 \\oplus S_0)$"],
+    answer: 0,
     solution:
-      "In one-hot, a state's flip-flop must be 1 after the edge exactly when the machine takes an arrow **into** that state. So OR together (source state bit · arrow condition) over every arrow entering S2:\n- S0 → S2 on x = 1: $S0\\,x$\n- S3 → S2 on x = 0: $S3\\,x'$\n$D_{S2} = S0\\,x + S3\\,x'$. Option C lists arrows **leaving** S2 instead of entering it; option D ignores the conditions.",
-    source: "Style: Lecture 12 (state encoding)",
+      "State table (S1S0, B → next S1S0):\n- 00: B = 0 → 00, B = 1 → 10\n- 01: B = 0 → 11, B = 1 → 10\n- 10: B = 0 → 01, B = 1 → 10\n- 11: B = 0 → 00, B = 1 → 10\nNext S1 is 1 for every B = 1 row (all go to 10) and for (01, B = 0) → 11. Over (S1, S0, B) that is minterms 1, 3, 5, 7 and 2. The B loop covers 1, 3, 5, 7; minterm 2 (010) pairs with 3 (011) to give $S_1'S_0$. So $D_1 = B + S_1'S_0$.\nOption E is $D_0$ (next S0 is 1 only for (01, B = 0) and (10, B = 0)); option B forgets the 01 → 11 arrow. The output is $X = S_1S_0$.",
+    solutionFigures: [{ kind: "kmap", vars: ["S1", "S0", "B"], values: "01110101", groups: ["B", "S1'S0"], showIndex: true, caption: "D1 = B + S1'S0" }],
+    source: "Style: PYP 2018-19 S2 Q4(b)(ii)",
   },
   // 14
   {
@@ -429,7 +511,7 @@ export const fsmQuestions: Draft[] = [
     answer: 4,
     solution:
       "The course convention: input conditions that are not shown on any arrow leaving a state cause a **self-transition**. With s = 0 the arrow to Start is not taken, so the FSM stays in Wait (the lecture later draws this explicitly as an s' self-loop).",
-    source: "Style: Lecture 11 (state diagram conventions)",
+    source: "Style: Lecture 11 p.7, p.22-24",
   },
   // 15
   {
@@ -441,7 +523,7 @@ export const fsmQuestions: Draft[] = [
     answer: 2,
     solution:
       "The conditions leaving one state must be **mutually exclusive**: no input combination may satisfy both. $a\\,r$ and $a\\,b$ are both true when a = r = b = 1 (two buttons pressed together), so the next state would be undefined. This is exactly why the lecture replaced \"a·r\" by $a\\,r\\,b'\\,g'$.\nEvery other pair is of the form $c$ and $c'$ (or two terms differing in one literal), which can never both be 1.",
-    source: "Style: Lecture 11 (door-lock example)",
+    source: "Style: Lecture 11 p.25",
   },
   // 16
   {
@@ -465,34 +547,34 @@ export const fsmQuestions: Draft[] = [
     options: ["S3 with S4 only", "S1 with S2 only", "S0 with S1, and S3 with S4", "S1 with S2, and S3 with S4", "No states can be merged"],
     answer: 3,
     solution:
-      "Partition by output: {S0, S1, S2} (z = 0) and {S3, S4} (z = 1).\n- S3, S4: on x = 0 each goes to a state in {S3, S4}; on x = 1 both go to S0 → stay together.\n- In {S0, S1, S2}, on x = 0: S0 → S1 (z=0 group) but S1 → S3 and S2 → S4 (z=1 group). Split into {S0} and {S1, S2}.\n- {S1, S2}: on 0 both go to {S3, S4}, on 1 both to S0 → equivalent.\nSo **S1 ≡ S2 and S3 ≡ S4**; the machine needs only 3 states. Option A stops after the obvious pair; S0 cannot merge with S1 because they react differently to x = 0.",
-    source: "Style: Lecture 11 (merging states)",
+      "States can merge when they have the same output and react identically to every future input (Lecture 11 p.31).\n- S3 and S4: both z = 1; on x = 0 each stays where it is, on x = 1 both go to S0. Whatever inputs follow, they produce the same outputs → **S3 ≡ S4**.\n- S1 and S2: both z = 0; on x = 1 both go to S0, and on x = 0 they go to S3 and S4, which behave identically → **S1 ≡ S2** (just as S2 and S4 merged in the lecture vending machine once the states after them had merged).\n- S0 cannot join S1/S2: on x = 0 it goes to S1 (z = 0) while S1 goes to S3 (z = 1).\nSo the machine needs only 3 states. Option A stops after the obvious pair.",
+    source: "Style: Lecture 11 p.31-33",
   },
   // 17
   {
     kind: "short",
     subtopic: "State minimisation",
     difficulty: "hard",
-    prompt: "What is the minimum number of states of a Mealy machine equivalent to the one in the table (entries are next state / output)?",
+    prompt: "After merging every pair of states that have the same output and react identically to all future inputs, how many states does this Moore FSM need?",
     figures: [
       {
         kind: "table",
-        head: ["State", "x = 0", "x = 1"],
+        head: ["State", "next (x=0)", "next (x=1)", "z"],
         rows: [
-          ["A", "B/0", "C/0"],
-          ["B", "A/0", "D/1"],
-          ["C", "A/0", "E/1"],
-          ["D", "F/0", "D/1"],
-          ["E", "F/0", "E/1"],
-          ["F", "B/1", "C/0"],
+          ["A", "B", "C", 0],
+          ["B", "D", "F", 0],
+          ["C", "E", "F", 0],
+          ["D", "A", "A", 1],
+          ["E", "A", "A", 1],
+          ["F", "A", "A", 0],
         ],
       },
     ],
     accept: ["4"],
     match: "number",
     solution:
-      "Mealy: first group states with identical output rows. Outputs (x=0, x=1): A 00, B 01, C 01, D 01, E 01, F 10 → groups {A}, {B, C, D, E}, {F}.\nRefine by next-state groups: B → (A, D), C → (A, E), D → (F, D), E → (F, E). On x = 0, B and C go to group {A} but D and E go to {F}: split into {B, C} and {D, E}.\nCheck again: B → (A, D), C → (A, E) with D, E in the same group → still equivalent; D → (F, D), E → (F, E) → equivalent.\nFinal classes {A}, {B, C}, {D, E}, {F}: **4** states.",
-    source: "Style: Lecture 11 (merging states)",
+      "- D and E: both z = 1 and both go to A on either input → identical, **D ≡ E**.\n- B and C: both z = 0, both go to F on x = 1, and on x = 0 to D and E, which are now one state → **B ≡ C**.\n- F does not merge: on x = 0 it goes to A (z = 0), whereas B goes to D (z = 1); and compared with A, two 0 inputs give A → B → D (z ends 1) but F → A → B (z ends 0).\n- A does not merge with B: on x = 0, A → B (z = 0) but B → D (z = 1).\nRemaining states {A}, {B, C}, {D, E}, {F}: **4**.",
+    source: "Style: Lecture 11 p.31-33",
   },
   // 18
   {
@@ -510,7 +592,7 @@ export const fsmQuestions: Draft[] = [
     answer: 0,
     solution:
       "6 states need $\\lceil \\log_2 6 \\rceil = 3$ flip-flops, which have $2^3 = 8$ codes, so $8 - 6 = 2$ codes are unused.\nThe lecture stresses that the register must have a reset to a valid state: at power-up the flip-flops can hold any code, and if the machine starts in an unused code whose transitions were left as don't-cares, it may never reach a valid state (lock-up) or produce wrong outputs. B is the dangerous assumption; C and E are arithmetic slips.",
-    source: "Style: Lecture 12 (reset in state machines)",
+    source: "Style: Lecture 12 p.17",
   },
   // 19
   {
@@ -541,7 +623,7 @@ export const fsmQuestions: Draft[] = [
     answer: 2,
     solution:
       "The don't-cares were resolved when the equations were chosen, so the hardware behaviour in 11 is fixed by the equations:\n- x = 0: $D_1 = Q_0x' = 1$, $D_0 = 0$ → **10** (R)\n- x = 1: $D_1 = 0$, $D_0 = 1$ → **01** (Q)\nand $z = Q_1 = 1$ while in 11. So the machine recovers after one edge (no lock-up), but it can emit one false z = 1. Always check the unused codes of the final equations.",
-    source: "Style: Lecture 12 (reset in state machines)",
+    source: "Style: Lecture 12 p.17",
   },
   // 20
   {
@@ -562,9 +644,9 @@ export const fsmQuestions: Draft[] = [
     subtopic: "FSM design",
     difficulty: "hard",
     prompt:
-      "Design a **Moore** FSM with one input x and one output z, where z = 1 in the cycle after the last three inputs were 1, 0, 1 (overlapping occurrences are detected, so 10101 gives two detections).\n(a) Draw the state diagram, stating what each state means. (5 marks)\n(b) Encode the states in binary (S0 = 00, S1 = 01, S2 = 10, S3 = 11) and write the encoded state table. (3 marks)\n(c) Derive minimal SOP next-state equations for D flip-flops. (6 marks)\n(d) Give the output equation. (2 marks)\n(e) Sketch the circuit. (4 marks)",
+      "Design a **Moore** FSM with one input x and one output z, where z = 1 in the cycle after the last three inputs were 1, 0, 1 (for example, the inputs 1, 0, 1, 0, 1 make z = 1 twice).\n(a) Draw the state diagram, stating what each state means. (5 marks)\n(b) Encode the states in binary (S0 = 00, S1 = 01, S2 = 10, S3 = 11) and write the encoded state table. (3 marks)\n(c) Derive minimal SOP next-state equations for D flip-flops. (6 marks)\n(d) Give the output equation. (2 marks)\n(e) Sketch the circuit. (4 marks)",
     modelAnswer:
-      "(a) S0: nothing useful seen; S1: last input 1; S2: last inputs 10; S3: 101 seen (z = 1).\n- S0: x=0 → S0, x=1 → S1\n- S1: x=0 → S2, x=1 → S1 (a further 1 is still a fresh start)\n- S2: x=0 → S0, x=1 → S3\n- S3: x=0 → S2 (the final 1 plus 0 is \"10\"), x=1 → S1 (overlap: the final 1 starts a new 1)\n(b) Q1Q0 x → Q1⁺Q0⁺: 00 0 → 00, 00 1 → 01, 01 0 → 10, 01 1 → 01, 10 0 → 00, 10 1 → 11, 11 0 → 10, 11 1 → 01. z = 1 only in 11.\n(c) $Q_1^+ = 1$ at minterms 2, 5, 6 → $D_1 = Q_0x' + Q_1Q_0'x$. $Q_0^+ = 1$ at minterms 1, 3, 5, 7 → $D_0 = x$.\n(d) $z = Q_1Q_0$.\n(e) Two D flip-flops on a common clock with reset to 00; $D_0$ wired to x; $D_1$ from an OR of two ANDs ($Q_0x'$ and $Q_1Q_0'x$); z from an AND of $Q_1$ and $Q_0$.",
+      "(a) S0: nothing useful seen; S1: last input 1; S2: last inputs 10; S3: 101 seen (z = 1).\n- S0: x=0 → S0, x=1 → S1\n- S1: x=0 → S2, x=1 → S1 (a further 1 is still a fresh start)\n- S2: x=0 → S0, x=1 → S3\n- S3: x=0 → S2 (the final 1 plus 0 is \"10\"), x=1 → S1 (the final 1 can start the next 101)\n(b) Q1Q0 x → Q1⁺Q0⁺: 00 0 → 00, 00 1 → 01, 01 0 → 10, 01 1 → 01, 10 0 → 00, 10 1 → 11, 11 0 → 10, 11 1 → 01. z = 1 only in 11.\n(c) $Q_1^+ = 1$ at minterms 2, 5, 6 → $D_1 = Q_0x' + Q_1Q_0'x$. $Q_0^+ = 1$ at minterms 1, 3, 5, 7 → $D_0 = x$.\n(d) $z = Q_1Q_0$.\n(e) Two D flip-flops on a common clock with reset to 00; $D_0$ wired to x; $D_1$ from an OR of two ANDs ($Q_0x'$ and $Q_1Q_0'x$); z from an AND of $Q_1$ and $Q_0$.",
     modelFigures: [
       DET101_FSM,
       { kind: "kmap", vars: ["Q1", "Q0", "x"], values: "00100110", groups: ["Q0x'", "Q1Q0'x"], showIndex: true, caption: "D1 = Q0x' + Q1Q0'x" },
@@ -587,15 +669,15 @@ export const fsmQuestions: Draft[] = [
     ],
     rubric: [
       { point: "Four states with meanings; S0 and S2 arrows correct", marks: 3 },
-      { point: "Overlap arrows from S3 (0 → S2, 1 → S1) and S1 self-loop on 1", marks: 2 },
+      { point: "Arrows from S3 (0 → S2, 1 → S1) reuse the final 1, and S1 self-loop on 1", marks: 2 },
       { point: "Encoded state table complete and consistent", marks: 3 },
       { point: "D1 = Q0x' + Q1Q0'x from a correct K-map", marks: 4 },
       { point: "D0 = x", marks: 2 },
       { point: "z = Q1Q0 (no x term: Moore)", marks: 2 },
       { point: "Circuit: two DFFs, common clock, correct gates and feedback", marks: 4 },
     ],
-    solution: "See the model answer: the key steps are the overlap arrows out of S3, then reading $D_1$ and $D_0$ from K-maps of the encoded table.",
-    source: "Style: CE1005 FSM design questions",
+    solution: "See the model answer: the key steps are the arrows out of S3 (the final 1 of one 101 can start the next), then reading $D_1$ and $D_0$ from K-maps of the encoded table.",
+    source: "Style: PYP 2018-19 S2 Q4(b) / Lecture 12 p.14",
   },
   // 22
   {
@@ -640,25 +722,25 @@ export const fsmQuestions: Draft[] = [
       { point: "Sensible handling of unused codes (reset / map to a valid state)", marks: 1 },
     ],
     solution: "See the model answer. Saturation is two self-loops; the reset input is a condition with priority on every state.",
-    source: "Style: CE1005 2018-19 S1 Q4(b)",
+    source: "Style: PYP 2016-17 S1 Q4(b)",
   },
   // 23
   {
     kind: "mcq",
     subtopic: "State encoding",
-    difficulty: "medium",
-    prompt: "A 4-state FSM always cycles A → B → C → D → A when enabled. It is encoded with a Gray code (A = 00, B = 01, C = 11, D = 10) instead of binary order. What is the main benefit?",
+    difficulty: "easy",
+    prompt: "Two students implement the lecture's 3-cycle pulse FSM (off, on1, on2, on3) with D flip-flops. Student 1 encodes off = 00, on1 = 01, on2 = 10, on3 = 11; student 2 encodes off = 00, on1 = 11, on2 = 01, on3 = 10. Which statement is correct?",
     options: [
-      "It reduces the number of flip-flops from 4 to 2.",
-      "It guarantees that the next-state logic needs no gates at all.",
-      "It removes the need for a reset.",
-      "It turns the Moore machine into a Mealy machine.",
-      "Only one flip-flop changes on each transition, reducing switching activity and the risk of glitches when the state is decoded.",
+      "Only student 1's encoding is valid, because the codes must follow binary counting order.",
+      "The two circuits have different next-state equations, but they behave identically: the same outputs for the same input sequence.",
+      "Student 2's circuit needs three flip-flops.",
+      "Student 2's encoding is invalid because off and on2 both have a 0 in the MSB.",
+      "Both encodings give exactly the same next-state equations.",
     ],
-    answer: 4,
+    answer: 1,
     solution:
-      "In the Gray sequence 00 → 01 → 11 → 10 → 00 exactly one bit changes per transition, so decoders that look at the state never see a momentary wrong code from two bits changing at slightly different times, and fewer flip-flops toggle. Binary order 01 → 10 changes two bits.\nBoth encodings use 2 flip-flops (A); encoding has nothing to do with reset, Moore/Mealy type, or removing the logic entirely.",
-    source: "Style: Lecture 12 (state encoding)",
+      "Any encoding works as long as each state gets a unique code (Lecture 12 p.7), and four states need $\\lceil \\log_2 4 \\rceil = 2$ flip-flops in both cases. Different encodings give different circuits, but the resulting functionality is identical (Lecture 12 p.14).\nFor example, student 1 gets $n_1 = s_1 \\oplus s_0$ (lecture), while student 2's table (00 → 11 on b, 11 → 01, 01 → 10, 10 → 00) gives $n_1 = s_1'(s_0 + b)$. Both still output x = 1 exactly in on1, on2 and on3.",
+    source: "Style: Lecture 12 p.7, p.14",
   },
   // 24
   {
@@ -689,8 +771,8 @@ export const fsmQuestions: Draft[] = [
     ],
     answer: 1,
     solution:
-      "$z = Q_1x$: the input x is one of the output gate's inputs, so z depends on the present state **and** the present input, $Z = \\lambda(S, X)$. That is a Mealy machine: z can change mid-cycle when x changes. A Moore output would be computed from $Q_1, Q_0$ only.\nThe number of flip-flops or the shared clock says nothing about the machine type, and the circuit clearly has state (two flip-flops in the loop).",
-    source: "Style: Lecture 11 (Moore and Mealy machines)",
+      "$z = Q_1x$: the input x is one of the output gate's inputs, so z depends on the present state **and** the present input. That is a Mealy machine: z can change mid-cycle when x changes. A Moore output would be computed from $Q_1, Q_0$ only.\nThe number of flip-flops or the shared clock says nothing about the machine type, and the circuit clearly has state (two flip-flops in the loop).",
+    source: "Style: PYP 2017-18 S1 Q4(c)(i)",
   },
   // 26
   {
@@ -703,7 +785,7 @@ export const fsmQuestions: Draft[] = [
     answer: 3,
     solution:
       "A T flip-flop toggles when T = 1 and holds when T = 0. $T_1 = Q_0x$, $T_0 = x' + Q_1$.\n- 10, x=1: $T_1 = 0$, $T_0 = 0 + 1 = 1$ → Q1 holds 1, Q0 toggles → **11**\n- 11, x=1: $T_1 = 1$, $T_0 = 1$ → both toggle → **00**\n- 00, x=0: $T_1 = 0$, $T_0 = 1$ → Q0 toggles → **01**\nTreating the T inputs as D inputs (loading T instead of toggling) gives wrong answers such as C.",
-    source: "Style: CE1005 flip-flop analysis questions",
+    source: "Style: Lecture 9 p.33 (T flip-flop) / PYP 2020-21 S2 Q4(a)",
   },
   // 27
   {
@@ -716,7 +798,7 @@ export const fsmQuestions: Draft[] = [
     match: "number",
     solution:
       "States by credit: idle (0), 50, 100, 150 cents, then vend (exactly 200) and vend + change (250, reached only from 150 + 100). However the credit was reached (50+50 or 100), states with equal credit react identically to future coins, so they merge, exactly as S2 and S4 merged in the lecture example.\nTotal: 0, 50, 100, 150, vend, vend+change = **6** states (3 flip-flops).",
-    source: "Style: Lecture 11 (vending machine example)",
+    source: "Style: Lecture 11 p.26-33",
   },
   // 28
   {
@@ -729,31 +811,51 @@ export const fsmQuestions: Draft[] = [
     answer: 3,
     solution:
       "z = 1 for the codes of S1 (01) and S3 (10), and 0 for S0 (00) and S2 (11). That is 1 exactly when the two bits differ: $z = Q_1'Q_0 + Q_1Q_0' = Q_1 \\oplus Q_0$.\nA Moore output equation uses only the state bits; with plain binary order (S1 = 01, S3 = 11) it would have been $z = Q_0$.",
-    source: "Original",
+    source: "Style: Lecture 12 p.11",
   },
   // 29
   {
     kind: "mcq",
-    subtopic: "Moore vs Mealy",
-    difficulty: "hard",
-    prompt: "The Mealy FSM below is converted to an equivalent Moore FSM (outputs in the states, reset state A with z = 0). How many states does the Moore machine need?",
-    figures: [M4_FSM],
-    options: ["3", "4", "9", "6", "5"],
-    answer: 4,
+    subtopic: "FSM from a word description",
+    difficulty: "medium",
+    prompt:
+      "A pedestrian crossing controller FSM has inputs start, stop, pedestrian, vehicle, timeout and outputs green, red:\n- It starts in **idle** (green = 0, red = 0) and moves to idle whenever stop is asserted.\n- idle: if start is asserted, go to **detect_pedestrian** (green = 0, red = 1).\n- detect_pedestrian: if pedestrian is de-asserted, go to **detect_vehicle** (green = 0, red = 1).\n- detect_vehicle: if vehicle is asserted, go to **timer** (green = 1, red = 0); if vehicle is de-asserted, go to detect_pedestrian.\n- timer: if timeout is asserted, go to detect_pedestrian.\nStarting in idle, six rising edges occur with only these inputs asserted (all others 0): (1) start, (2) none, (3) none, (4) vehicle, (5) none, (6) timeout. What are the state and the outputs after edge 6?",
+    options: [
+      "detect_pedestrian, green = 0, red = 1",
+      "detect_vehicle, green = 0, red = 1",
+      "timer, green = 1, red = 0",
+      "idle, green = 0, red = 0",
+      "timer, green = 0, red = 1",
+    ],
+    answer: 1,
     solution:
-      "Each Moore state must carry one output value, so split every Mealy state by the different outputs on the arrows **entering** it:\n- Into A: 0/0 (self-loop) and 0/1 (from C) → A/0 and A/1\n- Into B: 1/0 (from A, C) and 1/1 (self-loop) → B/0 and B/1\n- Into C: only 0/0 (from B) → C/0\nThe reset state A/0 is already in the list, so the Moore machine has **5** states, two more than the Mealy machine's 3.",
-    source: "Style: Lecture 11 (Moore and Mealy machines)",
+      "- Edge 1 (start): idle → detect_pedestrian\n- Edge 2 (none): pedestrian is de-asserted → detect_vehicle\n- Edge 3 (none): vehicle is de-asserted → detect_pedestrian\n- Edge 4 (vehicle): detect_pedestrian only looks at pedestrian, which is de-asserted → detect_vehicle\n- Edge 5 (none): vehicle de-asserted → detect_pedestrian\n- Edge 6 (timeout): timeout only matters in timer; pedestrian is de-asserted → **detect_vehicle**\nThe outputs depend only on the state (Moore): detect_vehicle has green = 0, red = 1.\nOption A comes from treating \"no input\" as \"stay\" in detect_vehicle (then edge 4 would reach timer and edge 6 would leave it); the specification says a de-asserted vehicle sends it back to detect_pedestrian.",
+    source: "Style: PYP 2020-21 S2 Q4(b)",
   },
   // 30
   {
     kind: "short",
-    subtopic: "State encoding",
-    difficulty: "easy",
-    prompt: "A 5-state FSM uses one-hot encoding. How many bit patterns of its state register are **illegal** (not used by any state)?",
-    accept: ["27"],
-    match: "number",
-    solution: "One-hot uses 5 flip-flops, which have $2^5 = 32$ patterns. Only the 5 patterns with exactly one 1 are used, so $32 - 5 = $ **27** are illegal. (Binary encoding would use 3 flip-flops with only 3 unused codes.)",
-    source: "Style: Lecture 12 (state encoding)",
+    subtopic: "FSM from a table",
+    difficulty: "medium",
+    prompt: "An autonomous vehicle moves between five locations. Its 1-bit input MOVE chooses the next location at each clock edge according to the table, and it starts at SCSE. Give the MOVE sequence (as a string of bits) for which the vehicle visits every other location exactly once and then returns to SCSE.",
+    figures: [
+      {
+        kind: "table",
+        head: ["Current location", "MOVE = 0", "MOVE = 1"],
+        rows: [
+          ["SCSE", "Student Gym", "Innovation Center"],
+          ["Student Gym", "SCSE", "Auditorium"],
+          ["Auditorium", "Auditorium", "Library"],
+          ["Innovation Center", "SCSE", "Library"],
+          ["Library", "Innovation Center", "Auditorium"],
+        ],
+      },
+    ],
+    accept: ["01100", "0,1,1,0,0", "0, 1, 1, 0, 0"],
+    placeholder: "e.g. 10110",
+    solution:
+      "Draw the FSM (one state per location, two arrows per table row) and search from SCSE:\n- Starting with 1 goes to Innovation Center, then (1) Library, then (1) Auditorium; from Auditorium the only exits are Auditorium (0) and Library (1), so the Student Gym can never be reached. Dead end.\n- Starting with 0: SCSE → Student Gym (0) → Auditorium (1) → Library (1) → Innovation Center (0) → SCSE (0).\nMOVE = **0, 1, 1, 0, 0**.",
+    source: "PYP 2016-17 S2 Q4(a)(ii)",
   },
   // 31
   {
@@ -764,7 +866,7 @@ export const fsmQuestions: Draft[] = [
     options: ["100", "110", "101", "011", "000"],
     answer: 0,
     solution: "The legend order is en then dn, so the label 11 means en = 1, dn = 1: count **down**. 101 (5) → **100** (4). 110 would be counting up; holding (101) needs en = 0.",
-    source: "Style: Lecture 11 (up/down counter diagram)",
+    source: "Style: Lecture 11 p.9",
   },
   // 32
   {
@@ -807,6 +909,6 @@ export const fsmQuestions: Draft[] = [
       { point: "Trace states 11, 10, 10, 10, 00, 00 and outputs 0, 0, 0, 0, 1, 0", marks: 3 },
     ],
     solution: "See the model answer. The output gate reads x, so this is Mealy and outputs go on the arrows.",
-    source: "Style: PYP 2021-22 S1 Q1(9) / CE1005 analysis questions",
+    source: "Style: PYP 2021-22 S1 Q1(9) / PYP 2018-19 S2 Q4(b)",
   },
 ];

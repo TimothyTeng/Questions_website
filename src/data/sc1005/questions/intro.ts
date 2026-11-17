@@ -1,6 +1,6 @@
 import type { Draft } from "@/lib/sc1005/types";
 
-// Ch 1 · Introduction to digital systems. 30 questions (18 MCQ, 9 short, 3 open).
+// Ch 1 · Introduction to digital systems. 30 questions (19 MCQ, 8 short, 3 open).
 
 export const introQuestions: Draft[] = [
   // ---------------------------------------------------------------- analog vs digital
@@ -18,76 +18,40 @@ export const introQuestions: Draft[] = [
     ],
     answer: 2,
     solution:
-      "A digital quantity takes values from a discrete set. Passengers can only be counted in whole numbers, so the count jumps 3 → 4 → 5 with nothing in between.\nTemperature, capacitor voltage, speed and air pressure all pass through every intermediate value as they change: they are **analog**, even if a digital instrument later displays them as numbers.",
-    source: "Original (Tocci Ch 1 style)",
+      "A digital quantity changes in discrete steps. Passengers can only be counted in whole numbers, so the count jumps 3 → 4 → 5 with nothing in between.\nTemperature, capacitor voltage, speed and air pressure all pass through every intermediate value as they change: they vary continuously, so they are **analog**, even if a digital instrument later displays them as numbers.",
+    source: "Style: Week 1 summary F0-4",
   },
   {
     kind: "mcq",
     subtopic: "Analog vs digital",
     difficulty: "easy",
-    prompt: "Which statement is **NOT** an advantage of digital techniques over analog techniques?",
+    prompt:
+      "In the lecture's phone illustration (F0-5, F0-6), speech is sent between the phone and the tower as a **digital** signal. Why does the listener at the far end still hear clean sound, while a purely analog signal would not give clean sound?",
     options: [
-      "Information can be stored easily and copied without degradation.",
-      "Accuracy and precision can be increased simply by using more bits.",
-      "Digital circuits are less affected by noise because only voltage ranges matter.",
-      "Most physical quantities are digital, so no conversion is needed at the inputs and outputs.",
-      "Operation can be programmed, and much more circuitry fits on an IC.",
+      "Noise picked up on the way does not change which logic level each bit is in, so the bits are recovered and turned back into clean sound",
+      "A digital signal does not pick up any noise on the way",
+      "A digital signal varies continuously, so it follows the voice exactly",
+      "The tower converts the signal into a purely analog signal before sending it on",
+      "The noise is removed because the analog sound is sent at a higher voltage",
     ],
-    answer: 3,
+    answer: 0,
     solution:
-      "Options A, B, C and E are the standard advantages of digital systems.\nD is false: most real-world quantities (temperature, pressure, sound, position) are **analog**. That is the main *limitation* of digital techniques: an ADC is needed at the input and a DAC at the output, which adds time, cost and conversion error.",
-    source: "Original (Tocci 1-2 style)",
+      "On F0-6 the digital signal arriving at the phone is visibly noisy, yet the sound passed to the listener is clean (thumbs up). The purely analog signal at the bottom of the slide carries its noise all the way (thumbs down).\nThe digital receiver only has to decide whether each bit is a 0 or a 1, i.e. which voltage range it falls in; noise that does not push the voltage out of its range does not change the bit.\n- B is false: the slide shows the digital signal picking up noise.\n- C describes an analog signal, not a digital one.",
+    source: "Style: Week 1 summary F0-5, F0-6",
   },
-  // ---------------------------------------------------------------- sampling & quantisation
+  // ---------------------------------------------------------------- bits & ranges
   {
     kind: "mcq",
-    subtopic: "Quantisation and resolution",
+    subtopic: "Number of bits needed",
     difficulty: "medium",
     prompt:
-      "A 0 V to 10 V analog signal is digitised by an 8-bit ADC whose output levels are evenly spaced from 0 V to 10 V **inclusive** (code 0 = 0 V, the largest code = 10 V). What is the step size (resolution)?",
-    options: ["39.1 mV", "39.2 mV", "40.0 mV", "78.7 mV", "1.25 V"],
-    answer: 1,
-    solution:
-      "8 bits give $2^8 = 256$ levels, codes 0 to 255.\nWith the levels at 0 V and 10 V inclusive there are $255$ steps between them: step $= 10/255 = 0.0392$ V $= 39.2$ mV.\n- 39.1 mV is $10/256$: it counts levels instead of steps.\n- 78.7 mV is $10/127$ (7 bits).\n- 1.25 V is $10/8$ (treating 8 bits as 8 levels).",
-    source: "Original",
-  },
-  {
-    kind: "short",
-    subtopic: "Quantisation and resolution",
-    difficulty: "medium",
-    prompt:
-      "A 0 V to 3.3 V sensor voltage is to be digitised with levels evenly spaced from 0 V to 3.3 V inclusive. What is the **minimum number of bits** so that the step size is no larger than 5 mV?",
-    accept: ["10"],
-    match: "number",
-    solution:
-      "Number of steps needed: $3.3/0.005 = 660$, so we need $2^N - 1 \\ge 660$, i.e. $2^N \\ge 661$.\n$2^9 = 512$ is too small (step $3.3/511 = 6.46$ mV); $2^{10} = 1024$ works (step $3.3/1023 = 3.23$ mV).\n**N = 10 bits.**",
-    source: "Original",
-  },
-  {
-    kind: "mcq",
-    subtopic: "Quantisation and resolution",
-    difficulty: "medium",
-    prompt:
-      "A digital weighing scale must be able to distinguish **at least 1000** different weight readings. What is the minimum number of bits its ADC must output?",
+      "A digital weighing scale stores each reading as an unsigned binary code. It must be able to distinguish **at least 1000** different weight readings. What is the minimum number of bits per reading?",
     options: ["9", "10", "11", "12", "There are multiple correct answers"],
     answer: 1,
     solution:
       "$N$ bits give $2^N$ distinct codes. $2^9 = 512 < 1000$ and $2^{10} = 1024 \\ge 1000$, so the minimum is **10 bits**.\n12 bits would be the BCD answer (3 decimal digits × 4 bits) and 11 bits would also work, but neither is the *minimum*. $\\log_2 1000 = 9.97$ must be rounded **up**.",
-    source: "Original",
+    source: "Style: Tut 1 Q2",
   },
-  {
-    kind: "mcq",
-    subtopic: "Sampling and data rate",
-    difficulty: "medium",
-    prompt:
-      "A data logger samples a single analog channel 2000 times per second with a 12-bit ADC and stores the samples packed together with no wasted bits. How much memory does **one minute** of data occupy?",
-    options: ["15 000 bytes", "24 000 bytes", "120 000 bytes", "180 000 bytes", "1 440 000 bytes"],
-    answer: 3,
-    solution:
-      "Bit rate $= 2000 \\times 12 = 24\\,000$ bit/s.\nOne minute: $24\\,000 \\times 60 = 1\\,440\\,000$ bits $= 1\\,440\\,000/8 = $ **180 000 bytes**.\n- 1 440 000 is the answer in *bits*.\n- 120 000 bytes assumes 8 bits per sample.\n- 24 000 bytes is the bit rate per second mislabelled as bytes per minute.",
-    source: "Original",
-  },
-  // ---------------------------------------------------------------- bits & ranges
   {
     kind: "short",
     subtopic: "Largest value in N bits",
@@ -96,7 +60,7 @@ export const introQuestions: Draft[] = [
     accept: ["1048575"],
     match: "number",
     solution: "With $N$ bits the largest unsigned value is $2^N - 1$.\n$2^{20} - 1 = 1\\,048\\,576 - 1 = $ **1 048 575**.",
-    source: "Style: Tutorial 1 Q1(a)",
+    source: "Style: Tut 1 Q1(a)",
   },
   {
     kind: "short",
@@ -106,8 +70,8 @@ export const introQuestions: Draft[] = [
     accept: ["99999"],
     match: "number",
     solution:
-      "BCD uses 4 bits per decimal digit, so 20 bits hold $20/4 = 5$ digits.\nThe largest 5-digit decimal number is **99 999** (1001 1001 1001 1001 1001).\nCompare: binary reaches 1 048 575 with the same 20 bits, because BCD never uses the codes 1010–1111 in any nibble.",
-    source: "Style: Tutorial 1 Q1(b)",
+      "BCD uses 4 bits per decimal digit, so 20 bits hold $20/4 = 5$ digits.\nThe largest 5-digit decimal number is **99 999** (1001 1001 1001 1001 1001).\nCompare: binary reaches 1 048 575 with the same 20 bits, because BCD only uses the codes 0000–1001 in each group of 4.",
+    source: "Style: Tut 1 Q1(b)",
   },
   {
     kind: "mcq",
@@ -118,7 +82,7 @@ export const introQuestions: Draft[] = [
     answer: 2,
     solution:
       "We need the smallest $N$ with $2^N - 1 \\ge 5\\,000\\,000$.\n$2^{22} = 4\\,194\\,304$ is too small; $2^{23} = 8\\,388\\,608$ is enough. **23 bits.**\nCheck: $\\log_2 5\\,000\\,001 = 3.32 \\times 6.699 \\approx 22.25$, rounded up to 23.\n- 22 rounds down instead of up.\n- 28 is the BCD size (7 digits × 4 bits).\n- 7 is the number of decimal digits.",
-    source: "Style: Tutorial 1 Q2",
+    source: "Style: Tut 1 Q2",
   },
   {
     kind: "short",
@@ -132,6 +96,17 @@ export const introQuestions: Draft[] = [
     source: "Style: PYP 2016-17 S1 Q1(b)(ii)",
   },
   {
+    kind: "short",
+    subtopic: "Number of bits needed",
+    difficulty: "medium",
+    prompt: "Determine the **minimum number of bits** required to represent an unsigned **10-digit** decimal value in **straight binary**.",
+    accept: ["34"],
+    match: "number",
+    solution:
+      "The largest 10-digit value is $10^{10} - 1 = 9\\,999\\,999\\,999$, so we need the smallest $N$ with $2^N \\ge 10^{10}$.\n$2^{33} = 8\\,589\\,934\\,592$ is too small; $2^{34} = 17\\,179\\,869\\,184$ is enough. **34 bits.**\n(Estimate first: $10 \\times 3.32 = 33.2$, rounded up to 34.) The same paper asks for BCD ($10 \\times 4 = 40$ bits) and standard ASCII ($10 \\times 7 = 70$ bits).",
+    source: "PYP 2020-21 S2 Q1(b)",
+  },
+  {
     kind: "mcq",
     subtopic: "Binary vs BCD",
     difficulty: "medium",
@@ -141,31 +116,7 @@ export const introQuestions: Draft[] = [
     answer: 2,
     solution:
       "BCD: 6 decimal digits × 4 bits = 24 bits.\nBinary: $2^{19} = 524\\,288 < 999\\,999 \\le 2^{20} - 1 = 1\\,048\\,575$, so 20 bits.\nDifference $= 24 - 20 = $ **4 bits**. (24 is the BCD total, not the difference.)",
-    source: "Original",
-  },
-  // ---------------------------------------------------------------- binary counting
-  {
-    kind: "short",
-    subtopic: "Binary counting",
-    difficulty: "medium",
-    prompt: "A 5-bit binary counter starts at 00000 and counts up by one on every clock pulse, wrapping from 11111 back to 00000. What does it show after **45** clock pulses? Give all 5 bits.",
-    accept: ["01101"],
-    match: "text",
-    placeholder: "5 bits, e.g. 10010",
-    solution:
-      "A 5-bit counter is a mod-$2^5 = 32$ counter, so after 45 pulses it shows $45 \\bmod 32 = 13$.\n$13 = 8 + 4 + 1 = $ **01101**.\n(It passed 11111 → 00000 once, at the 32nd pulse.)",
-    source: "Original",
-  },
-  {
-    kind: "mcq",
-    subtopic: "Binary counting",
-    difficulty: "hard",
-    prompt: "A binary counter counts from 0 up to 31 (31 counts in total). How many times does bit $B_2$ (weight 4) **change value** during this counting?",
-    options: ["4", "7", "8", "15", "16"],
-    answer: 1,
-    solution:
-      "In binary counting, bit $B_k$ toggles every $2^k$ counts, i.e. whenever the count reaches a multiple of 4 for $B_2$.\nBetween 0 and 31 the multiples of 4 that are reached are 4, 8, 12, 16, 20, 24, 28: **7 changes** ($B_2$ goes 0→1 at 4, 1→0 at 8, …, 0→1 at 28 and stays 1 up to 31).\n- 8 would count the change at 32, which is not reached.\n- 15 is the number of toggles of $B_1$ (every 2 counts).",
-    source: "Original",
+    source: "Style: PYP 2020-21 S2 Q1(b)",
   },
   // ---------------------------------------------------------------- logic levels
   {
@@ -173,47 +124,66 @@ export const introQuestions: Draft[] = [
     subtopic: "Logic levels",
     difficulty: "easy",
     prompt:
-      "A digital input uses these ranges: 0 V to 0.8 V is logic 0 and 2.0 V to 5.0 V is logic 1. A faulty driver applies **1.4 V** to the input. How will the input respond?",
+      "A TTL input uses these ranges: 0 V to 0.8 V is logic 0 and 2.0 V to 5.0 V is logic 1. A faulty driver applies **1.4 V** to the input. How is this voltage interpreted?",
     options: [
-      "It reads logic 0, because 1.4 V is closer to 0 V than to 5 V",
-      "It reads logic 1, because 1.4 V is above 0.8 V",
-      "Its response is unpredictable: 1.4 V is in the invalid (indeterminate) range",
-      "Its output goes to the high-impedance state",
-      "It keeps the last valid value it received",
+      "Logic 0, because 1.4 V is closer to 0 V than to 5 V",
+      "Logic 1, because 1.4 V is above 0.8 V",
+      "Indeterminate: 1.4 V lies between 0.8 V and 2.0 V, so it is neither a valid 0 nor a valid 1",
+      "High impedance (Hi-Z)",
+      "Logic 0, because any voltage below 2.0 V is logic 0",
     ],
     answer: 2,
     solution:
-      "Only voltages inside a band have a guaranteed meaning. 1.4 V lies between 0.8 V and 2.0 V, the **indeterminate** region, so the circuit may treat it as 0, as 1, or behave erratically.\nThere is no 'closest level' rule, and an ordinary logic input has neither a high-impedance output state nor memory.",
-    source: "Original (Tocci 1-4 style)",
+      "Only voltages inside one of the two ranges are valid logic levels. 1.4 V lies between 0.8 V and 2.0 V, the **indeterminate** range on slide 3-3, so it is neither a valid 0 nor a valid 1.\nThere is no 'closest level' rule, and high impedance is an output state of tristate devices (Ch 6), not a way of reading an input voltage.",
+    source: "Style: L1 slide 3-3",
+  },
+  {
+    kind: "mcq",
+    subtopic: "Logic levels",
+    difficulty: "medium",
+    prompt:
+      "Using the logic-level voltage ranges on slide 3-3 (TTL and CMOS 74AC, both 0–5 V), how is a **3.0 V** input interpreted by a TTL input and by a CMOS (74AC) input?",
+    options: [
+      "TTL: logic 1; CMOS: indeterminate",
+      "TTL: logic 1; CMOS: logic 1",
+      "TTL: indeterminate; CMOS: logic 1",
+      "TTL: indeterminate; CMOS: indeterminate",
+      "TTL: logic 0; CMOS: logic 0",
+    ],
+    answer: 0,
+    solution:
+      "TTL: logic 1 is 2.0 V to 5.0 V, so 3.0 V is a valid **logic 1**.\nCMOS (74AC): logic 0 is 0 to 1.5 V, logic 1 is 3.5 V to 5.0 V, so 3.0 V is in the **indeterminate** range.\nThis is why slide 6-10 calls the two families' voltage ranges incompatible.",
+    source: "Style: L1 slide 3-3; slide 6-10",
+  },
+  {
+    kind: "short",
+    subtopic: "Logic levels",
+    difficulty: "easy",
+    prompt:
+      "Using the TTL ranges (0–0.8 V = logic 0, 2.0–5.0 V = logic 1), how many of these voltages are a **valid logic 1**?\n0.5 V, 1.2 V, 1.9 V, 2.4 V, 3.3 V, 4.9 V",
+    accept: ["3"],
+    match: "number",
+    solution:
+      "- 0.5 V: logic 0.\n- 1.2 V and 1.9 V: between 0.8 V and 2.0 V, indeterminate.\n- 2.4 V, 3.3 V, 4.9 V: in 2.0–5.0 V, logic 1.\nSo **3** voltages are a valid logic 1. (1.9 V is close to 2.0 V but still indeterminate.)",
+    source: "Style: L1 slide 3-3",
   },
   // ---------------------------------------------------------------- waveforms
   {
     kind: "mcq",
     subtopic: "Period and frequency",
-    difficulty: "medium",
-    prompt: "A 25 MHz clock drives a 10-bit binary counter that starts at 0. Starting from 0, how long does it take until the counter **first returns to 0**?",
-    options: ["0.4 µs", "25.6 µs", "40 µs", "40.96 µs", "409.6 µs"],
-    answer: 3,
-    solution:
-      "Clock period $T = 1/25\\text{ MHz} = 40$ ns.\nA 10-bit counter has $2^{10} = 1024$ states, so it returns to 0 after **1024** clock periods: $1024 \\times 40\\text{ ns} = 40\\,960$ ns $= $ **40.96 µs**.\n- 40 µs uses 1000 periods (decimal thinking).\n- 25.6 µs uses $1024 \\times 25$ ns (period taken as 25 ns).",
-    source: "Original",
-  },
-  {
-    kind: "short",
-    subtopic: "Duty cycle",
     difficulty: "easy",
-    prompt: "A periodic pulse waveform is HIGH for 15 ns in every 60 ns cycle (pulse width measured at the 50% points). What is its duty cycle, in percent?",
-    accept: ["25"],
-    match: "number",
-    placeholder: "percent",
-    solution: "Duty cycle $= t_W/T \\times 100\\% = 15/60 \\times 100\\% = $ **25%**. (Frequency $= 1/60\\text{ ns} = 16.7$ MHz.)",
-    source: "Original",
+    prompt: "A clock completes **5 cycles in 40 ns**. What is its frequency?",
+    options: ["25 MHz", "8 MHz", "125 MHz", "200 MHz", "1.25 GHz"],
+    answer: 2,
+    solution:
+      "The period is the time for one complete cycle: $T = 40/5 = 8$ ns.\nThe frequency is the inverse of the period: $f = 1/(8\\times10^{-9}\\text{ s}) = 1.25\\times10^{8}$ Hz $= $ **125 MHz**.\n- 25 MHz is $1/40$ ns (the whole 5 cycles taken as one period).\n- 200 MHz is $1/5$ ns.",
+    source: "Style: Sequential Circuits slide 22",
   },
   {
     kind: "mcq",
     subtopic: "Reading a timing diagram",
     difficulty: "medium",
-    prompt: "The waveform P below repeats indefinitely. Each grid division is **50 ns**. What are its duty cycle and frequency?",
+    prompt: "The waveform P below repeats indefinitely. Each grid division is **50 ns**. What are its period and frequency?",
     figures: [
       {
         kind: "wave",
@@ -222,11 +192,11 @@ export const introQuestions: Draft[] = [
         caption: "1 division = 50 ns",
       },
     ],
-    options: ["33.3%, 3.33 MHz", "33.3%, 6.67 MHz", "50%, 3.33 MHz", "66.7%, 3.33 MHz", "33.3%, 10 MHz"],
+    options: ["300 ns, 3.33 MHz", "150 ns, 6.67 MHz", "100 ns, 10 MHz", "600 ns, 1.67 MHz", "300 ns, 333 MHz"],
     answer: 0,
     solution:
-      "Measure from one rising edge to the next: P rises at division 1 and again at division 7, so $T = 6 \\times 50 = 300$ ns.\nP is HIGH for 2 divisions (100 ns): duty cycle $= 100/300 = 33.3\\%$.\n$f = 1/300\\text{ ns} = 3.33$ MHz.\n- 6.67 MHz uses $T = 150$ ns (half the period).\n- 66.7% is the LOW fraction.\n- 10 MHz is $1/(2 \\times 50\\text{ ns})$, the HIGH time taken as the period.",
-    source: "Original",
+      "One complete cycle runs from one rising edge to the next: P rises at division 1 and again at division 7, so $T = 6 \\times 50 = 300$ ns.\n$f = 1/T = 1/300\\text{ ns} = 3.33$ MHz.\n- 150 ns / 6.67 MHz takes half the cycle.\n- 100 ns / 10 MHz takes only the HIGH part (2 divisions) as the period.\n- 333 MHz is a unit slip ($1/300$ ns is $3.33\\times10^6$ Hz).",
+    source: "Style: Sequential Circuits slide 22",
   },
   {
     kind: "mcq",
@@ -243,8 +213,8 @@ export const introQuestions: Draft[] = [
     options: ["6 ns", "10 ns", "12 ns", "16 ns", "20 ns"],
     answer: 2,
     solution:
-      "Rise time is measured from **10% to 90%** of the full swing: 10% of 5 V = 0.5 V (at 14 ns) and 90% = 4.5 V (at 26 ns).\n$t_r = 26 - 14 = $ **12 ns**.\n- 20 ns is the 0%→100% time.\n- 6 ns is 10%→50% (or 50%→90%).\n- 16 ns is 0%→90%.",
-    source: "Original",
+      "Rise time is measured from **10% to 90%** of the swing (slide 6-50): 10% of 5 V = 0.5 V (at 14 ns) and 90% = 4.5 V (at 26 ns).\n$t_r = 26 - 14 = $ **12 ns**.\n- 20 ns is the 0%→100% time.\n- 6 ns is 10%→50% (or 50%→90%).\n- 16 ns is 0%→90%.",
+    source: "Style: L11 slide 6-50",
   },
   {
     kind: "mcq",
@@ -273,8 +243,8 @@ export const introQuestions: Draft[] = [
     ],
     answer: 1,
     solution:
-      "Propagation delays are named after the **output** transition and measured between 50% points.\n- Output goes HIGH→LOW at 112 ns, 12 ns after the input rose at 100 ns: $t_{PHL} = 12$ ns.\n- Output goes LOW→HIGH at 207 ns, 7 ns after the input fell at 200 ns: $t_{PLH} = 7$ ns.\nOption A names the delays after the *input* edge (the classic trap for an inverter). 9.5 ns is only the average $t_{pd}$. Rise/fall times are not needed because the 50% points are given.",
-    source: "Original",
+      "Propagation delays are named after the **output** transition (slide 6-49) and measured between the 50% points of input and output (slide 6-50).\n- Output goes HIGH→LOW at 112 ns, 12 ns after the input rose at 100 ns: $t_{PHL} = 12$ ns.\n- Output goes LOW→HIGH at 207 ns, 7 ns after the input fell at 200 ns: $t_{PLH} = 7$ ns.\nOption A names the delays after the *input* edge (the classic trap for an inverter). 9.5 ns is only the average of the two. Rise/fall times are not needed because the 50% points are given.",
+    source: "Style: L11 slides 6-49, 6-50",
   },
   // ---------------------------------------------------------------- serial vs parallel
   {
@@ -286,7 +256,19 @@ export const introQuestions: Draft[] = [
     match: "number",
     placeholder: "µs",
     solution: "$T = 1/8\\text{ MHz} = 125$ ns. Serial transfer takes one period per bit: $32 \\times 125\\text{ ns} = 4000$ ns $= $ **4 µs**. (A 32-bit parallel transfer would take 125 ns.)",
-    source: "Original (Tocci 1-6 style)",
+    source: "Style: Week 1 summary F0-7; Seq Circuits in Verilog slides 35-37",
+  },
+  {
+    kind: "short",
+    subtopic: "Serial transfer time",
+    difficulty: "medium",
+    prompt:
+      "A sender uses a parallel-to-serial converter to send **12 bytes** over one data line, one bit per clock period, with a **2 MHz** clock. How long does the transfer take, in **microseconds**?",
+    accept: ["48"],
+    match: "number",
+    placeholder: "µs",
+    solution: "Total bits $= 12 \\times 8 = 96$. Clock period $T = 1/2\\text{ MHz} = 0.5$ µs.\nSerial time $= 96 \\times 0.5$ µs $= $ **48 µs**. (Using 12 periods would forget that each byte is 8 bits.)",
+    source: "Style: Seq Circuits in Verilog slides 35-37",
   },
   {
     kind: "mcq",
@@ -297,7 +279,7 @@ export const introQuestions: Draft[] = [
     answer: 2,
     solution:
       "$T = 1/4\\text{ MHz} = 0.25$ µs. One byte per period: $1024 \\times 0.25$ µs $= $ **256 µs**.\nSending the same block serially (one bit per period) would take $8192 \\times 0.25$ µs $= 2.048$ ms, which is distractor E.",
-    source: "Original",
+    source: "Style: Week 1 summary F0-7",
   },
   {
     kind: "mcq",
@@ -313,8 +295,8 @@ export const introQuestions: Draft[] = [
     ],
     answer: 1,
     solution:
-      "Parallel: one line per bit, all bits move together in **one** period. Serial: a single line, one bit per period, so $N$ periods per word.\nAt the same clock, parallel is $N$ times faster; serial's advantage is the much smaller number of wires (cost, connector size, no skew between lines), which is why long-distance and high-speed links are serial.",
-    source: "Original (Tocci 1-6 style)",
+      "Parallel: one line per bit, all bits move together in **one** period. Serial: a single line, one bit per period, so $N$ periods per word.\nAt the same clock, parallel is $N$ times faster; serial's advantage is that it needs only one data line, so it costs less. The lecture sums this up as **speed versus cost** (F0-7).",
+    source: "Style: Week 1 summary F0-7",
   },
   {
     kind: "short",
@@ -326,91 +308,124 @@ export const introQuestions: Draft[] = [
     match: "number",
     placeholder: "MHz",
     solution: "16 bits in 2 µs means each bit may take at most $2/16 = 0.125$ µs $= 125$ ns. The clock period must be $\\le 125$ ns, so $f \\ge 1/125\\text{ ns} = $ **8 MHz**.",
-    source: "Original",
+    source: "Style: Week 1 summary F0-7; Sequential Circuits slide 22",
   },
   {
     kind: "mcq",
     subtopic: "Serial vs parallel interfaces",
     difficulty: "easy",
-    prompt: "Which statement about common data interfaces is correct?",
+    prompt: "Which statement about the data interfaces shown in the lecture is correct?",
     options: [
       "USB is a parallel interface: each byte travels over 8 data wires at once.",
       "The traditional printer port is serial, which is why it needed only a few pins.",
-      "The traditional printer port is parallel, while RS-232, Ethernet, FireWire and USB are serial: they trade bits per clock period for fewer, cheaper wires.",
-      "A serial link is always slower than a parallel one, so USB must be slower than the printer port.",
-      "RS-232 and the printer port are both parallel; only USB and FireWire are serial.",
+      "The traditional printer port is parallel, while RS232, Ethernet, Firewire and USB are serial.",
+      "Ethernet is a parallel interface because its cable contains several wires.",
+      "RS232 and the printer port are both parallel; only USB and Firewire are serial.",
     ],
     answer: 2,
     solution:
-      "The lecture's examples: the traditional (Centronics/LPT) **printer port** sends 8 data bits side by side on separate lines, so it is **parallel**. **RS-232, Ethernet, FireWire and USB** send one bit after another on a single data path, so they are **serial**.\nThe trade-off is **speed versus cost**: at the same clock, parallel moves $N$ bits per period, but needs $N$ lines, bulky cables and suffers skew between lines. Serial needs few wires, so it is cheap and can be clocked much faster over long cables, which is why USB easily outruns the old printer port. So D is wrong (\"always slower\" only holds at the **same** clock), and A, B, E misclassify the interfaces.",
+      "The lecture's examples: the traditional **printer port** has 8 data-out lines side by side, so it is a **parallel** interface (F0-8). **RS232, Ethernet, Firewire and USB** are the slide's **serial** interface examples (F0-9).\nThe trade-off between the two is **speed versus cost** (F0-7). Options A, B, D and E misclassify the interfaces.",
     source: "Style: Week 1 summary F0-7 to F0-9",
   },
   // ---------------------------------------------------------------- ICs, PLDs, software
   {
     kind: "mcq",
-    subtopic: "IC complexity",
+    subtopic: "Scale of integration",
     difficulty: "easy",
-    prompt: "An integrated circuit contains the equivalent of about **50 000 logic gates**. Which complexity class is it?",
+    prompt: "An integrated circuit contains the equivalent of about **50 000 logic gates**. Which scale of integration is it?",
     options: ["SSI", "MSI", "LSI", "VLSI", "ULSI"],
     answer: 3,
     solution:
-      "Classes by equivalent gates: SSI < 12, MSI 12–99, LSI 100–9999, **VLSI 10 000–99 999**, ULSI 100 000–999 999, GSI ≥ 1 000 000.\n50 000 is in the VLSI range.",
-    source: "Original (Tocci IC complexity table)",
+      "Scale of integration by number of gates (slide 6-7): SSI < 12, MSI 12–99, LSI 100–9999, **VLSI 10 000–99 999**, ULSI 100 000–999 999, GSI ≥ 1 000 000.\n50 000 is in the VLSI range.",
+    source: "Digital circuits slide 6-7",
+  },
+  {
+    kind: "mcq",
+    subtopic: "Scale of integration",
+    difficulty: "easy",
+    prompt: "The digital-circuits slides give a **microprocessor (CPU)** as an example of which scale of integration?",
+    options: ["SSI", "MSI", "LSI", "VLSI", "GSI"],
+    answer: 4,
+    solution:
+      "Slide 6-9: \"Example of GSI device: a microprocessor, MPU, CPU\". **GSI** (giga-scale integration) means at least 1 000 000 gates (slide 6-7).\nBy contrast, the simple gate chips used on the breadboard in Labs 1 and 2 are SSI and MSI components.",
+    source: "Digital circuits slides 6-7, 6-9",
   },
   {
     kind: "mcq",
     subtopic: "Programmable logic devices",
-    difficulty: "medium",
-    prompt:
-      "Which type of device consists of a large array of look-up-table based logic blocks with programmable routing, and in its common form loses its configuration when power is removed, so the configuration must be reloaded at power-up?",
-    options: ["PAL (SPLD)", "CPLD", "FPGA", "ASIC", "MSI logic chip"],
+    difficulty: "easy",
+    prompt: "Which of the following correctly expands a programmable logic device (PLD) abbreviation from the notes?",
+    options: [
+      "PAL: Programmable Array Language",
+      "CPLD: Combined Programmable Logic Device",
+      "FPGA: Field Programmable Gate Array",
+      "PLA: Parallel Logic Adder",
+      "PLD: Parallel Logic Device",
+    ],
     answer: 2,
     solution:
-      "That is an **FPGA**: LUT-based logic blocks plus programmable interconnect, usually configured from SRAM cells (volatile), so a configuration bitstream is loaded at power-up.\n- PALs and CPLDs are built from AND-OR (sum-of-products) arrays and are normally non-volatile.\n- An ASIC's function is fixed at manufacture; an MSI chip is a fixed-function part (e.g. a decoder).",
-    source: "Original",
+      "Slide 7-6: PLD = Programmable Logic Device; examples are the PLA (Programmable Logic Array), PAL (Programmable Array Logic), CPLD (Complex PLD) and **FPGA (Field Programmable Gate Array)**.\nThe FPGA is the device programmed in Lab 3.",
+    source: "PLD slide 7-6",
   },
   {
     kind: "mcq",
     subtopic: "Design software",
     difficulty: "medium",
-    prompt: "In the design flow for a programmable logic device, which step converts a Verilog description of the circuit into a network of gates and flip-flops (a netlist)?",
-    options: ["Design entry", "Synthesis", "Functional simulation", "Downloading (programming) the device", "Writing a testbench"],
+    prompt: "In the FPGA design flow, which step converts a Verilog description of the circuit into hardware primitives (gates and flip-flops)?",
+    options: ["Writing the design file", "Synthesis", "Behavioural simulation with a test bench", "Programming the FPGA with the bitstream", "Writing the test bench"],
     answer: 1,
     solution:
-      "**Synthesis** (compilation) turns the HDL description into hardware: a netlist of gates, flip-flops or device resources.\nDesign entry is writing the HDL/schematic; simulation (driven by a testbench) checks behaviour but builds no hardware; downloading/programming loads the finished configuration into the chip.",
-    source: "Original",
+      "HDLs are **synthesised** (and optimised) to hardware primitives, whereas software is compiled to instructions (Introduction to Verilog, slide 5). In Lab 3 the circuit is synthesised to generate the bitstream that programs the FPGA.\nWriting the design file only describes the circuit; simulation with a test bench checks its behaviour on the PC but builds no hardware; programming loads the finished bitstream into the chip.",
+    source: "Intro to Verilog slide 5; Lab 3 manual 4.7",
+  },
+  {
+    kind: "mcq",
+    subtopic: "Design software",
+    difficulty: "medium",
+    prompt: "Which statement about the Lab 3 FPGA design flow is correct?",
+    options: [
+      "The design is simulated with a test bench on the PC; an FPGA board is not needed for simulation.",
+      "The bitstream file is written first and is then synthesised into a Verilog design.",
+      "The test bench file is used to program the FPGA.",
+      "The XDC file contains the input test data used in simulation.",
+      "Simulation can only be run after the FPGA has been programmed.",
+    ],
+    answer: 0,
+    solution:
+      "Lab 3 manual: the test bench contains input test data, and the decoder is simulated on the PC (an actual FPGA board is not required). After the function is verified, the inputs/outputs are mapped to switches and the display in the **XDC** constraints file, the circuit is synthesised to generate a **bitstream**, and the bitstream programs the FPGA.\nSo B reverses the order, C and D swap the roles of the files, and E is false.",
+    source: "Lab 3 manual 4.6-4.7",
   },
   // ---------------------------------------------------------------- structured
   {
     kind: "open",
-    subtopic: "Digitising and transmitting data",
+    subtopic: "Bits needed and data transfer",
     difficulty: "hard",
     prompt:
-      "A greenhouse controller reads **16** temperature sensors. Each temperature lies between 0.0 °C and 100.0 °C and must be recorded to the nearest **0.1 °C**, as an unsigned integer number of tenths of a degree (so 23.4 °C is stored as 234).\n(a) Determine the minimum number of bits per reading. (3 marks)\n(b) Each sensor is read 10 times per second and all readings are sent to a PC over **one serial line**, one bit per clock period, with no extra bits. Determine the minimum bit rate. (3 marks)\n(c) Would a serial clock of 2 kHz be sufficient? State one advantage and one disadvantage of using a parallel bus instead. (4 marks)",
+      "A greenhouse controller reads **16** temperature sensors. Each temperature lies between 0.0 °C and 100.0 °C and is recorded to the nearest **0.1 °C** as an unsigned integer number of tenths of a degree (so 23.4 °C is stored as 234).\n(a) Determine the minimum number of bits per reading. (3 marks)\n(b) One reading from each of the 16 sensors is sent to a PC over **one serial line**, one bit per clock period, with a **100 kHz** clock and no extra bits. How long does this take? (3 marks)\n(c) How long would the same transfer take over a **parallel** bus with one data line per bit of a reading (one reading per clock period, same clock)? State the trade-off between the two methods given in the lecture. (4 marks)",
     solution:
-      "Key steps: count the distinct values first (0 to 1000 tenths is 1001 values, not 1000), then take the smallest $N$ with $2^N \\ge 1001$ → 10 bits. Bit rate = sensors × readings per second × bits per reading = 1600 bit/s. Compare that with the clock: one bit per period means a 2 kHz clock carries 2000 bit/s.",
+      "Key steps: count the distinct values first (0 to 1000 tenths is 1001 values), then take the smallest $N$ with $2^N \\ge 1001$ → 10 bits. Serial time = total bits × clock period; parallel time = number of readings × clock period. The lecture's trade-off is speed versus cost.",
     modelAnswer:
-      "(a) The readings are $0, 1, 2, \\dots, 1000$ tenths: **1001** distinct values. We need $2^N \\ge 1001$: $2^9 = 512$ is too small, $2^{10} = 1024$ is enough, so **10 bits** per reading.\n(b) Readings per second $= 16 \\times 10 = 160$. Bit rate $= 160 \\times 10 = $ **1600 bit/s**.\n(c) A 2 kHz clock sends 2000 bit/s ≥ 1600 bit/s, so it is **sufficient** (80% of the link is used).\nParallel bus (e.g. 10 data lines, one reading per period): advantage, 10 times the throughput at the same clock, or the same throughput at a 160 Hz clock. Disadvantage: 10 data wires instead of 1, more cost, bigger connectors, and skew between lines over the long cable to the PC.",
+      "(a) The readings are $0, 1, 2, \\dots, 1000$ tenths: **1001** distinct values. We need $2^N \\ge 1001$: $2^9 = 512$ is too small, $2^{10} = 1024$ is enough, so **10 bits** per reading.\n(b) Total bits $= 16 \\times 10 = 160$. Clock period $T = 1/100\\text{ kHz} = 10$ µs. Serial time $= 160 \\times 10$ µs $= $ **1.6 ms**.\n(c) Parallel (10 data lines): one reading per period, so $16 \\times 10$ µs $= $ **160 µs**, ten times faster.\nTrade-off (F0-7): **speed versus cost**. Parallel is faster but needs 10 data lines; serial needs only one data line, so it is cheaper but slower.",
     rubric: [
       { point: "(a) Counts 1001 distinct values (not 1000)", marks: 1 },
       { point: "(a) Uses $2^N \\ge 1001$ with $2^9$/$2^{10}$ check, answer 10 bits", marks: 2 },
-      { point: "(b) 160 readings per second", marks: 1 },
-      { point: "(b) 1600 bit/s", marks: 2 },
-      { point: "(c) 2000 ≥ 1600 so 2 kHz is sufficient", marks: 2 },
-      { point: "(c) One valid advantage (speed) and one valid disadvantage (wire count/cost/skew) of parallel", marks: 2 },
+      { point: "(b) 160 bits and $T = 10$ µs", marks: 2 },
+      { point: "(b) 1.6 ms", marks: 1 },
+      { point: "(c) 160 µs for the parallel transfer", marks: 2 },
+      { point: "(c) Speed versus cost: parallel faster but more lines; serial one line, cheaper but slower", marks: 2 },
     ],
-    source: "Style: PYP 2017-18 S2 Q1(b)",
+    source: "Style: PYP 2017-18 S2 Q1(b); Week 1 summary F0-7",
   },
   {
     kind: "open",
-    subtopic: "Digital waveforms",
+    subtopic: "Timing waveforms",
     difficulty: "medium",
     prompt:
-      "A clock signal has a frequency of **2.5 MHz** and a **25%** duty cycle. It switches between 0 V and 5 V.\n(a) Calculate its period, its HIGH time and its LOW time. (3 marks)\n(b) Sketch two complete cycles, labelling $T$ and $t_W$. (2 marks)\n(c) The rising edge takes 12 ns to go from 0.5 V to 4.5 V. State the rise time. If the edge is a straight ramp, how long does it take to go from 0 V all the way to 5 V? (3 marks)",
+      "A clock signal has a frequency of **2.5 MHz** and switches between 0 V and 5 V. It is HIGH for **100 ns** in each cycle.\n(a) Calculate its period and its LOW time. (2 marks)\n(b) Its rising edge passes 0.5 V at $t = 20$ ns and 4.5 V at $t = 32$ ns. State the rise time. If the edge is a straight ramp, how long does it take to go from 0 V all the way to 5 V? (3 marks)\n(c) The clock drives an inverter with $t_{PHL} = 6$ ns and $t_{PLH} = 9$ ns. The clock's rising edge crosses the 50% level at $t = 26$ ns. When does the inverter output cross its 50% level, and is it rising or falling? (3 marks)",
     solution:
-      "Key steps: $T = 1/f = 400$ ns; $t_W = $ duty × $T = 100$ ns; LOW $= 300$ ns. Rise time uses the 10% and 90% points (0.5 V and 4.5 V of a 5 V swing), so $t_r = 12$ ns; a linear edge covers the remaining 20% at the same slope, giving $12/0.8 = 15$ ns for the full edge.",
+      "Key steps: $T = 1/f = 400$ ns, so LOW $= 300$ ns. Rise time uses the 10% and 90% points (0.5 V and 4.5 V of a 5 V swing), so $t_r = 12$ ns; a straight edge covers the remaining 20% at the same slope, giving $12/0.8 = 15$ ns. An inverter's output falls when its input rises, so the delay is $t_{PHL}$.",
     modelAnswer:
-      "(a) $T = 1/2.5\\text{ MHz} = $ **400 ns**. HIGH time $t_W = 0.25 \\times 400 = $ **100 ns**, LOW time $= $ **300 ns**.\n(b) See the figure: HIGH for 1 division of 100 ns, LOW for 3, repeating every 4 divisions; $T$ is marked between successive rising edges, $t_W$ across the HIGH part (at the 50% level).\n(c) 0.5 V and 4.5 V are the 10% and 90% points of a 5 V swing, so $t_r = $ **12 ns**. A straight ramp covers 80% of the swing in 12 ns, so the full 0→5 V edge takes $12/0.8 = $ **15 ns**.",
+      "(a) $T = 1/2.5\\text{ MHz} = $ **400 ns**. LOW time $= 400 - 100 = $ **300 ns** (see the figure).\n(b) 0.5 V and 4.5 V are the 10% and 90% points of a 5 V swing, so $t_r = 32 - 20 = $ **12 ns**. A straight ramp covers 80% of the swing in 12 ns, so the full 0→5 V edge takes $12/0.8 = $ **15 ns**.\n(c) When the inverter's input rises, its output changes from HIGH to LOW, so the delay is $t_{PHL} = 6$ ns (named after the output transition, measured 50% to 50%). The output **falls**, crossing 50% at $26 + 6 = $ **32 ns**.",
     modelFigures: [
       {
         kind: "wave",
@@ -422,30 +437,31 @@ export const introQuestions: Draft[] = [
     ],
     rubric: [
       { point: "(a) $T = 400$ ns", marks: 1 },
-      { point: "(a) HIGH 100 ns and LOW 300 ns", marks: 2 },
-      { point: "(b) Two cycles with correct 1:3 HIGH:LOW ratio, $T$ and $t_W$ labelled", marks: 2 },
-      { point: "(c) Recognises 0.5 V/4.5 V as 10%/90%: $t_r = 12$ ns", marks: 1 },
-      { point: "(c) Full edge $= 12/0.8 = 15$ ns", marks: 2 },
+      { point: "(a) LOW time 300 ns", marks: 1 },
+      { point: "(b) Recognises 0.5 V/4.5 V as 10%/90%: $t_r = 12$ ns", marks: 1 },
+      { point: "(b) Full edge $= 12/0.8 = 15$ ns", marks: 2 },
+      { point: "(c) Uses $t_{PHL}$ (output goes HIGH→LOW)", marks: 1 },
+      { point: "(c) Output falls, crossing 50% at 32 ns", marks: 2 },
     ],
-    source: "Original",
+    source: "Style: Sequential Circuits slide 22; L11 slides 6-49, 6-50",
   },
   {
     kind: "open",
     subtopic: "Binary vs BCD",
     difficulty: "hard",
     prompt:
-      "A designer must store a 4-digit decimal display value (0000 to 9999) in a register and send it to a display driver.\n(a) How many bits are needed in straight binary and in BCD? Show your working. (3 marks)\n(b) What is the largest decimal value a 16-bit register can hold in binary and in BCD? (2 marks)\n(c) The value is sent serially at 1 MHz, one bit per clock period. How long does one value take in each code? (2 marks)\n(d) Give one reason why BCD may still be preferred here. (1 mark)",
+      "A designer must store a 4-digit decimal display value (0000 to 9999) in a register and send it to a display.\n(a) How many bits are needed in straight binary and in BCD? Show your working. (3 marks)\n(b) What is the largest decimal value a 16-bit register can hold in binary and in BCD? (2 marks)\n(c) The value is sent serially at 1 MHz, one bit per clock period. How long does one value take in each code? (2 marks)\n(d) Give one reason why BCD may still be preferred here. (1 mark)",
     solution:
-      "Key steps: binary needs the smallest $N$ with $2^N - 1 \\ge 9999$ (14 bits, since $2^{13} = 8192$ is too small); BCD needs 4 bits per digit (16 bits). 16 bits hold 65 535 in binary but only 9999 in BCD. Serial time = bits × period. BCD wins when each digit must be shown separately.",
+      "Key steps: binary needs the smallest $N$ with $2^N - 1 \\ge 9999$ (14 bits, since $2^{13} = 8192$ is too small); BCD needs 4 bits per digit (16 bits). 16 bits hold 65 535 in binary but only 9999 in BCD. Serial time = bits × period. BCD keeps each decimal digit in its own 4-bit group.",
     modelAnswer:
-      "(a) Binary: smallest $N$ with $2^N - 1 \\ge 9999$. $2^{13} = 8192$ is too small, $2^{14} = 16\\,384$ is enough: **14 bits**. BCD: 4 digits × 4 bits = **16 bits**.\n(b) Binary: $2^{16} - 1 = $ **65 535**. BCD: 4 digits, so **9999**.\n(c) $T = 1$ µs. Binary: $14 \\times 1 = $ **14 µs**; BCD: $16 \\times 1 = $ **16 µs**.\n(d) Each 4-bit group drives one display digit directly (e.g. through a BCD-to-7-segment decoder), so no binary-to-decimal conversion circuit is needed; the 2 extra bits are cheaper than the converter.",
+      "(a) Binary: smallest $N$ with $2^N - 1 \\ge 9999$. $2^{13} = 8192$ is too small, $2^{14} = 16\\,384$ is enough: **14 bits**. BCD: 4 digits × 4 bits = **16 bits**.\n(b) Binary: $2^{16} - 1 = $ **65 535**. BCD: 4 digits, so **9999**.\n(c) $T = 1$ µs. Binary: $14 \\times 1 = $ **14 µs**; BCD: $16 \\times 1 = $ **16 µs**.\n(d) In BCD each 4-bit group is one decimal digit, so each digit of the display can be taken directly from its own group; with straight binary the number would first have to be converted into separate decimal digits.",
     rubric: [
       { point: "(a) Binary 14 bits with power-of-2 check", marks: 2 },
       { point: "(a) BCD 16 bits", marks: 1 },
       { point: "(b) 65 535 and 9999", marks: 2 },
       { point: "(c) 14 µs and 16 µs", marks: 2 },
-      { point: "(d) Valid reason (direct digit display / no conversion)", marks: 1 },
+      { point: "(d) Valid reason (each digit directly available / no conversion)", marks: 1 },
     ],
-    source: "Style: Tutorial 1 Q1",
+    source: "Style: Tut 1 Q1; PYP 2020-21 S2 Q1(b)",
   },
 ];
