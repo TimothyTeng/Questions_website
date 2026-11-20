@@ -52,7 +52,7 @@ const data: TopicData = {
         },
         {
           term: "Actor-observer bias (intrapersonal & interpersonal)",
-          text: "The tendency for people to attribute other people's behaviour to internal, dispositional factors, while attributing their own behaviour to external, situational factors.",
+          text: "The tendency for people to attribute other people's behaviour to internal, dispositional factors, while attributing their own behaviour to external, situational factors.\nHow it relates to the fundamental attribution error: the \"others\" half IS the FAE (others' behaviour → dispositional). Actor-observer bias adds the \"self\" half (my own behaviour → situational). So you only call it actor-observer bias when the scenario contrasts how the person explains someone else's behaviour with how they explain their own; if only someone else's behaviour is judged, it is the FAE.",
           eg: "\"I was late because of the train breakdown; you were late because you're disorganised.\"",
         },
         {
@@ -65,7 +65,7 @@ const data: TopicData = {
         ["Bias", "Whose behaviour", "Attribution made"],
         ["Fundamental attribution error", "Others (someone else)", "Overestimates dispositional (internal), underestimates situational (external)"],
         ["Self-serving bias", "Self", "Success = dispositional (internal); failure = situational (external)"],
-        ["Actor-observer bias", "Self AND others compared", "Others = dispositional (internal); own = situational (external)"],
+        ["Actor-observer bias", "Self AND others compared", "Others = dispositional (internal), i.e. the FAE; PLUS own = situational (external)"],
         ["Attributional charity", "Others", "Deliberately interpret positively, as situational (external)"],
       ],
     },
@@ -363,7 +363,7 @@ const data: TopicData = {
       id: "social-c01",
       scenario: "Halim's colleague arrives 20 minutes late to a meeting. Without asking anything, Halim thinks, \"Typical - he's just an irresponsible, lazy person.\" In fact, the colleague's train had broken down. Which attribution bias is Halim showing?",
       answer: "Fundamental attribution error",
-      why: "Overestimating dispositional (internal) factors and underestimating situational (external) ones when explaining someone else's behaviour. Only another person's behaviour is judged here - no comparison with Halim's own lateness, so it is not actor-observer bias.",
+      why: "Overestimating dispositional (internal) factors and underestimating situational (external) ones when explaining someone else's behaviour. Actor-observer bias contains this same \"others → dispositional\" judgement, but it also needs the person to excuse their OWN behaviour situationally. Here Halim only judges his colleague and never explains his own behaviour, so the answer is the FAE. (If he had also blamed his own lateness on the train, it would be actor-observer bias - see the next Halim card.)",
     },
     {
       id: "social-c02",
