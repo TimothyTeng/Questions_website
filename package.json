@@ -10,7 +10,8 @@
     "check": "tsx --tsconfig tsconfig.json scripts/check-bank.ts",
     "check:sc1001": "tsx --tsconfig tsconfig.json scripts/check-sc1001.ts",
     "check:sc1005": "tsx --tsconfig tsconfig.json scripts/check-sc1005.ts",
-    "check:hp1000": "tsx --tsconfig tsconfig.json scripts/check-hp1000.ts"
+    "check:hp1000": "tsx --tsconfig tsconfig.json scripts/check-hp1000.ts",
+    "check:he1002": "tsx --tsconfig tsconfig.json scripts/check-he1002.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

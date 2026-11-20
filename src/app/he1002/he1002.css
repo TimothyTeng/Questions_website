@@ -1,0 +1,391 @@
+/* HE1002 section: notes, flashcards, topic quizzes, formula bank and exam questions. */
+
+.he .notes-section {
+  margin-bottom: 18px;
+}
+.he .notes-section h2 {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.he .notes-section .sec-num {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.he .point {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.he .point:first-of-type {
+  border-top: 0;
+}
+.he .point .term {
+  font-weight: 700;
+  color: var(--text);
+  border-radius: 6px;
+  transition: filter 0.15s, background 0.15s;
+}
+.he .point .eg {
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-2);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.92rem;
+}
+.he .point .eg::before {
+  content: "e.g. ";
+  font-weight: 600;
+  color: var(--accent);
+}
+/* "Hide terms" self-test: blur every bolded term until it is clicked. */
+.he .hide-terms .term:not(.shown) {
+  filter: blur(6px);
+  background: var(--accent-soft);
+  cursor: pointer;
+  user-select: none;
+}
+.he .hide-terms td.term-cell:not(.shown) {
+  filter: blur(5px);
+  cursor: pointer;
+}
+
+.he table.notes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  margin: 10px 0 4px;
+}
+.he .table-wrap {
+  overflow-x: auto;
+}
+.he table.notes-table th,
+.he table.notes-table td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.he table.notes-table th {
+  background: var(--surface-2);
+}
+
+.he .toc {
+  position: sticky;
+  top: 72px;
+  align-self: start;
+}
+.he .toc a {
+  display: block;
+  padding: 3px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.he .toc a:hover {
+  color: var(--accent);
+}
+.he .lesson-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+}
+@media (max-width: 860px) {
+  .he .lesson-grid {
+    grid-template-columns: 1fr;
+  }
+  .he .toc {
+    display: none;
+  }
+}
+
+/* ---- flashcards ---- */
+.he .flash {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.he .flash .scenario {
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+.he .flash .reveal {
+  border-top: 1px dashed var(--border);
+  padding-top: 12px;
+}
+.he .flash .answer {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.he input.answer-input {
+  width: 100%;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.he input.answer-input.ok {
+  border-color: var(--good);
+  background: var(--good-soft);
+}
+.he input.answer-input.bad {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+.he .kbd {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 0.78rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 5px;
+  color: var(--muted);
+}
+
+/* ---- fill-in-the-blank ---- */
+.he .fill-prompt {
+  line-height: 2.1;
+}
+.he .fill-prompt input {
+  font: inherit;
+  width: 13em;
+  max-width: 100%;
+  padding: 2px 8px;
+  margin: 0 3px;
+  border: 0;
+  border-bottom: 2px solid var(--accent);
+  border-radius: 6px 6px 0 0;
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.he .fill-prompt input:disabled {
+  opacity: 1;
+}
+.he .fill-prompt input.ok {
+  border-bottom-color: var(--good);
+  background: var(--good-soft);
+}
+.he .fill-prompt input.bad {
+  border-bottom-color: var(--bad);
+  background: var(--bad-soft);
+  text-decoration: line-through;
+}
+.he .model-point {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 6px 0;
+}
+.he .model-point input {
+  margin-top: 5px;
+}
+.he textarea.answer-input {
+  width: 100%;
+  min-height: 140px;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+}
+.he .btn.sm {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+.he .batch-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---- formulas, worked examples, diagrams ---- */
+.he .formulas {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+.he .formula {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--warn);
+  background: var(--warn-soft);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.he .formula .f-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--warn);
+}
+.he .formula .f-expr {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 0.98rem;
+  white-space: pre-wrap;
+}
+.he .formula .f-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.he .hide-formulas .f-expr:not(.shown) {
+  filter: blur(6px);
+  cursor: pointer;
+  user-select: none;
+}
+.he .worked {
+  margin-top: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.he .worked summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.he .worked .sol {
+  white-space: pre-line;
+  margin-top: 8px;
+  font-size: 0.93rem;
+}
+.he .graphs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 12px 0 4px;
+}
+.he figure.graph {
+  margin: 0;
+  flex: 1 1 300px;
+  max-width: 380px;
+}
+.he .graph-svg svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.he figure.graph figcaption {
+  margin-top: 2px;
+}
+
+/* ---- exam questions ---- */
+.he .exam-stem {
+  white-space: pre-line;
+}
+.he .parts {
+  margin: 8px 0 0;
+  display: grid;
+  gap: 4px;
+}
+.he .model-answer {
+  white-space: pre-line;
+  font-size: 0.95rem;
+}
+.he .rubric {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin: 6px 0;
+}
+.he .rubric td {
+  border-top: 1px solid var(--border);
+  padding: 6px 6px;
+  vertical-align: top;
+}
+.he .rubric td.m {
+  white-space: nowrap;
+  text-align: right;
+  font-weight: 600;
+  width: 1%;
+}
+.he .rubric tr.full td.m {
+  color: var(--good);
+}
+.he .rubric tr.part td.m {
+  color: var(--warn);
+}
+.he .rubric tr.zero td.m {
+  color: var(--bad);
+}
+.he .status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+.he .status.queued {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.he .status.marking {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.he .status.done {
+  background: var(--good-soft);
+  color: var(--good);
+}
+.he .status.error {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+.he .feedback {
+  border-left: 3px solid var(--accent);
+  padding: 6px 10px;
+  background: var(--accent-soft);
+  border-radius: 0 8px 8px 0;
+  margin: 8px 0;
+  font-size: 0.93rem;
+}
+.he .queue-bar {
+  position: sticky;
+  top: 64px;
+  z-index: 5;
+}
+.he .thumb {
+  max-height: 120px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.he select.ai-model {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+}
+.he .qnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.he .qnav a {
+  min-width: 34px;
+  text-align: center;
+  padding: 3px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--text);
+}
+.he .qnav a.done {
+  background: var(--good-soft);
+  border-color: var(--good);
+}
+.he .qnav a.wait {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.he .qnav a.err {
+  background: var(--bad-soft);
+  border-color: var(--bad);
+}
+.he .flash .back {
+  white-space: pre-line;
+}
+.he .flash .answer.mono {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 1.1rem;
+}

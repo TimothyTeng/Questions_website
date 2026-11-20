@@ -29,6 +29,13 @@ const COURSES = [
     blurb: "All 11 lectures as revision notes, scenario flashcards for naming theories and terms, and fill-in-the-blank, MCQ and short-answer questions marked in batches of 5, with a Word download.",
     color: "var(--t-cx)",
   },
+  {
+    href: "/he1002",
+    code: "HE1002",
+    title: "Macroeconomics I",
+    blurb: "All 12 lectures as notes with diagrams, term and scenario flashcards, a formula bank, fill-in-the-blank topic quizzes, and exam-format questions with rubrics and Gemini marking, downloadable as Word.",
+    color: "var(--t-alg)",
+  },
 ];
 
 export default function Home() {

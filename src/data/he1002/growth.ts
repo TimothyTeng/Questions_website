@@ -1,0 +1,762 @@
+import type { Graph, TopicData } from "@/lib/he1002/types";
+
+// ------------------------------------------------------------------ shared diagrams
+
+const PF: [number, number][] = [[0.3, 0.6], [1, 3], [2, 4.8], [4, 6.6], [6, 7.7], [8, 8.4], [9.6, 8.8]];
+
+/** Lecture 4 "The production function": diminishing returns to capital. */
+const prodFn: Graph = {
+  x: "Capital per worker (K/L)",
+  y: "Output per worker (Y/L)",
+  lines: [{ label: "Production function", pts: PF }],
+  points: [
+    { at: [1, 3], label: "A", xTick: "K₁", yTick: "Y₁" },
+    { at: [2, 4.8], label: "B", xTick: "K₂", yTick: "Y₂" },
+    { at: [8, 8.4], label: "C", xTick: "K₃" },
+    { at: [9, 8.65], label: "D", xTick: "K₄" },
+  ],
+  caption: "The same one-unit rise in K/L raises Y/L a lot when workers have little capital (A → B) but only a little when they already have a lot (C → D): diminishing returns.",
+};
+
+/** Population growth dilutes the capital stock: K/L falls, so Y/L falls. */
+const dilution: Graph = {
+  x: "Capital per worker (K/L)",
+  y: "Output per worker (Y/L)",
+  lines: [{ label: "Production function", pts: PF }],
+  points: [
+    { at: [6, 7.7], label: "E₁", xTick: "K/L₁", yTick: "Y/L₁" },
+    { at: [4, 6.6], label: "E₂", xTick: "K/L₂", yTick: "Y/L₂" },
+  ],
+  arrows: [{ from: [5.6, 8.1], to: [4.3, 7.3] }],
+  caption: "Rapid population growth spreads the same capital over more workers: K/L falls from K/L₁ to K/L₂, so productivity falls from Y/L₁ to Y/L₂.",
+};
+
+const data: TopicData = {
+  id: "growth",
+
+  // ================================================================== CONTENT
+  sections: [
+    {
+      title: "Variations in the standard of living",
+      points: [
+        { term: "Among countries", text: "Average income in a rich country (e.g. US, Japan, Germany) is about ten times the average income in a poor country (e.g. Pakistan, Nigeria, Cambodia). The gap shows up in nutrition, housing, healthcare, life expectancy and so on." },
+        { term: "Within a country, over time", text: "US real GDP per person has grown about 2% per year for the past 100 years — a doubling of real GDP per person every 35 years." },
+        { term: "Rankings change", text: "Because growth rates differ, the ranking of countries by income changes substantially over time." },
+        { term: "Poor countries are not doomed", text: "Poor countries are not necessarily doomed to poverty forever.", eg: "Japan's incomes were low in 1860 and are quite high now." },
+        { term: "Rich countries can be overtaken", text: "Rich countries can't take their status for granted: they may be overtaken by poorer but faster-growing countries." },
+      ],
+    },
+    {
+      title: "Productivity is key to prosperity",
+      intro: "A country's standard of living depends on its ability to produce goods and services.",
+      points: [
+        { term: "Productivity (Y/L)", text: "The quantity of goods and services produced from each unit of labour." },
+        { term: "Key determinant of living standards", text: "When a nation's workers are very productive, real GDP is large and incomes are high." },
+        { term: "Imports must be paid for with production", text: "Problem Set 4 Q1: a country pays for its imports with things it produces, so its ability to import a lot depends on its ability to produce a lot." },
+      ],
+      formulas: [
+        { name: "Output and productivity", expr: "Y = (Y ÷ L) × L", note: "Y = real GDP (output), L = quantity of labour." },
+        { name: "Productivity", expr: "Productivity = Y ÷ L (output per worker)" },
+      ],
+      worked: [
+        {
+          problem: "Real GDP is $600 billion and there are 20 million workers. Find productivity.",
+          solution: "Productivity = Y ÷ L = $600 billion ÷ 20 million = $30,000 per worker",
+        },
+        {
+          problem: "Productivity is $45,000 per worker and there are 4 million workers. Find real GDP.",
+          solution: "Y = (Y ÷ L) × L = $45,000 × 4 million = $180 billion",
+        },
+      ],
+    },
+    {
+      title: "How productivity is determined",
+      intro: "Productivity depends on physical capital per worker, human capital per worker, natural resources per worker and technological knowledge.",
+      points: [
+        { term: "Physical capital (K)", text: "The stock of equipment and structures used to produce goods and services." },
+        { term: "Physical capital per worker (K/L)", text: "Productivity is higher when the average worker has more capital (machines, equipment, etc.). An increase in K/L causes an increase in Y/L." },
+        { term: "Human capital (H)", text: "The knowledge and skills workers acquire through education, training and experience." },
+        { term: "Human capital per worker (H/L)", text: "Productivity is higher when the average worker has more human capital (education, skills). An increase in H/L causes an increase in Y/L." },
+        { term: "Natural resources (N)", text: "Inputs into the production of goods and services that are provided by nature (land, rivers, mineral deposits)." },
+        { term: "Natural resources per worker (N/L)", text: "Other things equal, more N allows a country to produce more Y. An increase in N/L causes an increase in Y/L." },
+        { term: "Technological knowledge (A)", text: "The understanding of the best ways to produce goods and services: any advance in knowledge that boosts productivity and lets society get more output from its resources.", eg: "Agriculture: better fertilisers, genetically improved seeds. Manufacturing: industrial robots, just-in-time production. Transportation: GPS, jet engines." },
+      ],
+      table: [
+        ["Determinant", "Symbol (per worker)", "Definition", "Example"],
+        ["Physical capital", "K (K/L)", "Stock of equipment and structures used in production", "Machines, equipment"],
+        ["Human capital", "H (H/L)", "Knowledge and skills from education, training, experience", "A worker's degree or training"],
+        ["Natural resources", "N (N/L)", "Inputs provided by nature", "Land, rivers, mineral deposits"],
+        ["Technological knowledge", "A", "Understanding of the best ways to produce", "Industrial robots, GPS"],
+      ],
+    },
+    {
+      title: "Growth policy 1: saving and investment",
+      intro: "Public policy can raise productivity and living standards. The first lever is encouraging saving and investment.",
+      points: [
+        { term: "Saving and investment", text: "Higher investment → larger capital stock K → greater capacity to produce goods and services → higher future productivity." },
+        { term: "Trade-off", text: "Society must sacrifice current consumption to increase future consumption: reduce consumption to increase saving, and the extra saving funds the production of investment goods." },
+        { term: "Who gains and who loses (Problem Set 4 Q2)", text: "Current consumers (especially lower-income households) are hurt; future consumers and workers benefit from a larger capital stock and higher productivity. Workers and owners in consumption-good industries lose income; those in investment-good industries gain." },
+        { term: "Opportunity cost of physical capital (Problem Set 4 Q4)", text: "The current consumption and alternative investments forgone. A country can over-invest when the returns from additional capital are lower than the cost, because of diminishing returns." },
+      ],
+    },
+    {
+      title: "Diminishing returns and the production function",
+      points: [
+        { term: "Diminishing returns", text: "Accumulation of capital is subject to diminishing returns: as K rises, the extra output from an additional unit of K falls." },
+        { term: "Production function diagram", text: "Output per worker (Y/L) plotted against capital per worker (K/L); the curve gets flatter as K/L rises." },
+        { term: "Little capital vs a lot", text: "If workers have little K, giving them more increases their productivity a lot. If workers already have a lot of K, giving them more increases productivity fairly little." },
+        { term: "Growth effect is temporary", text: "Higher saving and investment lead to higher GDP growth for a while, but growth eventually slows down due to diminishing returns to capital." },
+        { term: "Level, not growth, in the long run", text: "In the long run, higher saving and investment rates lead to a higher level of productivity and income, but not to higher growth in these variables." },
+      ],
+      diagrams: [prodFn],
+      formulas: [{ name: "Extra output from one more unit of capital", expr: "Extra output = (Y/L after) − (Y/L before), for a one-unit rise in K/L", note: "Diminishing returns: this number gets smaller as K/L rises." }],
+      worked: [
+        {
+          problem: "Y/L is 10, 16, 20 and 22 when K/L is 1, 2, 3 and 4. Show diminishing returns.",
+          solution: "K/L 1 → 2: extra output = 16 − 10 = 6\nK/L 2 → 3: extra output = 20 − 16 = 4\nK/L 3 → 4: extra output = 22 − 20 = 2\nEach extra unit of capital per worker adds less output: diminishing returns.",
+        },
+      ],
+    },
+    {
+      title: "The catch-up effect",
+      points: [
+        { text: "Diminishing returns to capital implies that, other things being equal, it is easier for a country to grow quickly if it starts out relatively poor." },
+        { term: "Catch-up effect", text: "Countries that start off poor tend to grow more rapidly than countries that start off rich, allowing them to 'catch up' in terms of income and living standards." },
+        { term: "US vs South Korea, 1960–1990", text: "Both devoted a similar share of GDP to investment, but growth was over 6% in South Korea and only 2% in the US, because in 1960 K/L was far smaller in Korea than in the US." },
+      ],
+    },
+    {
+      title: "Growth policy 2: investment from abroad",
+      intro: "Another way for a country to expand its capital stock is through investment by foreigners.",
+      points: [
+        { term: "Foreign direct investment", text: "Capital investment that is owned and operated by a foreign entity.", eg: "A foreign car maker builds and runs its own factory in the country." },
+        { term: "Foreign portfolio investment", text: "Capital investment financed with foreign money but operated by domestic residents.", eg: "Foreign investors buy shares in a local firm that locals continue to run." },
+        { term: "Cost", text: "Some of the benefits flow back to the foreign capital owners in the form of profit." },
+        { term: "Benefits", text: "It increases the economy's stock of capital → higher productivity and higher wages; it brings state-of-the-art technologies developed in other countries; it is especially good for poor countries that cannot generate enough saving to fund investment projects themselves." },
+        { term: "Better to invest yourself? (Problem Set 4 Q5)", text: "Receiving foreign investment enlarges the capital stock and raises growth; but if domestic residents made the investment themselves, they would receive all the returns instead of some going abroad." },
+      ],
+      table: [
+        ["", "Foreign direct investment", "Foreign portfolio investment"],
+        ["Financed by", "Foreigners", "Foreign money"],
+        ["Owned and operated by", "A foreign entity", "Domestic residents (operation)"],
+      ],
+    },
+    {
+      title: "Growth policy 3: education, health and nutrition",
+      points: [
+        { term: "Education", text: "Investment in human capital; critical for a country's long-run economic success." },
+        { term: "Return to schooling", text: "In the US, each year of schooling raised a person's wage by an average of 10 percent." },
+        { term: "Positive externalities", text: "Education benefits others too, e.g. an educated person might generate new ideas that improve productivity." },
+        { term: "Public policy on education", text: "Providing good schools and making education opportunities widely available through large subsidies." },
+        { term: "Opportunity cost of education", text: "Wages forgone. (Problem Set 4 Q4: the income, time and resources devoted to education and training. A country can over-invest in human capital when skills exceed labour-market needs.)" },
+        { term: "Health and nutrition", text: "Also investment in human capital: better nutrition → improved health → more productive workers. In countries with significant malnourishment, raising workers' caloric intake raises productivity." },
+        { term: "Robert Fogel", text: "Nobel laureate who found that 30% of Great Britain's growth from 1790–1980 was due to improved nutrition." },
+        { term: "Income and health (Problem Set 4 Q8)", text: "Higher income can cause better health (access to clean water, medical care, better nutrition), and better health can cause higher income (healthier workers are more productive, take fewer sick days); the two likely reinforce each other." },
+        { term: "Educating young women (Problem Set 4 Q6)", text: "Raises labour productivity and labour-force participation, and reduces fertility and population growth, letting families and governments invest more in each child's education and health." },
+      ],
+      formulas: [{ name: "Opportunity cost of education", expr: "Opportunity cost = wages forgone = annual wage forgone × years of study" }],
+      worked: [
+        {
+          problem: "A student studies full-time for 4 years instead of working at $24,000 a year. What is the opportunity cost in wages forgone?",
+          solution: "Opportunity cost = $24,000 × 4 = $96,000",
+        },
+      ],
+    },
+    {
+      title: "Growth policy 4: property rights and political stability",
+      points: [
+        { term: "Property rights", text: "The ability of people to exercise authority over the resources they own." },
+        { term: "Why they matter", text: "People are more willing to work, save and invest when they know their property and profits cannot be taken away unfairly." },
+        { term: "Courts", text: "Enforce property rights, discourage theft and fraud, and ensure that buyers and sellers honour their contracts." },
+        { term: "Political stability", text: "Political instability (e.g. frequent revolutions, coups) creates uncertainty over whether property rights will be protected in the future." },
+        { term: "Evidence and Adam Smith (Problem Set 4 Q7, Q9)", text: "Countries with high property-rights scores have high GDP per person; poorly defined or enforced property rights lower domestic saving and investment from abroad. Smith's 'peace, easy taxes and a tolerable administration of justice': peace reduces uncertainty and destruction; easy taxes let people keep more of what they earn, strengthening incentives to work, save and invest; justice protects property rights and enforces contracts." },
+      ],
+    },
+    {
+      title: "Growth policy 5: free trade",
+      intro: "Trade allows countries to specialise in what they do best and exchange goods and services with others, so everyone can consume more than they could produce on their own.",
+      points: [
+        { term: "Inward-oriented policies", text: "Avoiding interaction with other countries.", eg: "Tariffs; limits on investment from abroad." },
+        { term: "Outward-oriented policies", text: "Promote integration with the world economy.", eg: "Eliminating restrictions on trade or foreign investment." },
+      ],
+      table: [
+        ["", "Inward-oriented", "Outward-oriented"],
+        ["Aim", "Avoid interaction with other countries", "Integrate with the world economy"],
+        ["Examples", "Tariffs, limits on investment from abroad", "Removing restrictions on trade or foreign investment"],
+      ],
+    },
+    {
+      title: "Growth policy 6: research and development",
+      points: [
+        { term: "Technological progress", text: "The main reason why living standards rise over the long run." },
+        { term: "Knowledge is a public good", text: "Ideas can be shared freely, increasing the productivity of many." },
+        { term: "Policies to promote technological progress", text: "Grants for basic research at universities; tax incentives or direct support for private-sector R&D; patent laws." },
+      ],
+    },
+    {
+      title: "Growth policy 7: population growth",
+      intro: "A large population means more workers (a larger total output of goods and services) but also more consumers. Population growth may affect living standards in 3 ways.",
+      points: [
+        { term: "1. Stretching natural resources", text: "About 200 years ago Malthus argued population growth would strain society's ability to provide for itself, so mankind was doomed to live in poverty forever. Since then world population has increased sixfold and living standards have risen: Malthus failed to account for technological progress and productivity growth." },
+        { term: "2. Diluting the capital stock", text: "High population growth (higher L) spreads the capital stock more thinly (lower K/L), giving lower productivity and living standards. Some less developed countries believe reducing population growth would help raise living standards.", eg: "China's One Child policy (1980–2015) and Singapore's Two is Enough policy (1972–1987); policy reversal was not successful." },
+        { term: "3. Promoting technological progress", text: "More people = more scientists, inventors and engineers = more frequent discoveries." },
+        { term: "Michael Kremer", text: "Found that world growth rates increased as world population increased, and more populated regions grew faster than less populated ones: larger populations increase the potential for technological advance." },
+      ],
+      diagrams: [dilution],
+      worked: [
+        {
+          problem: "The capital stock is $900 billion. The number of workers rises from 30 million to 36 million with no new capital. What happens to capital per worker?",
+          solution: "Before: K/L = $900 billion ÷ 30 million = $30,000\nAfter: K/L = $900 billion ÷ 36 million = $25,000\nK/L falls by $5,000 → lower productivity (diluting the capital stock).",
+        },
+      ],
+    },
+  ],
+
+  // ================================================================== FLASHCARDS
+  flashcards: [
+    { id: "growth-c1", type: "concept", front: "The quantity of goods and services produced from each unit of labour (Y/L).", back: "Productivity", why: "It is the key determinant of living standards." },
+    { id: "growth-c2", type: "concept", front: "The stock of equipment and structures used to produce goods and services (K).", back: "Physical capital", why: "More of it per worker (K/L) raises Y/L." },
+    { id: "growth-c3", type: "concept", front: "The knowledge and skills workers acquire through education, training and experience (H).", back: "Human capital", why: "More of it per worker (H/L) raises Y/L." },
+    { id: "growth-c4", type: "concept", front: "Inputs into production provided by nature, such as land, rivers and mineral deposits (N).", back: "Natural resources", why: "Other things equal, more N allows a country to produce more Y." },
+    { id: "growth-c5", type: "concept", front: "The understanding of the best ways to produce goods and services (A).", back: "Technological knowledge", why: "E.g. genetically improved seeds, industrial robots, GPS." },
+    { id: "growth-c6", type: "concept", front: "The stock of equipment and structures divided by the number of workers; when it rises, output per worker rises.", back: "Capital per worker", why: "Written K/L; one of the four determinants of productivity." },
+    { id: "growth-c7", type: "concept", front: "As the capital stock rises, the extra output from an additional unit of capital falls.", back: "Diminishing returns", why: "So higher saving raises growth only for a while." },
+    { id: "growth-c8", type: "concept", front: "Curve plotting output per worker against capital per worker, which gets flatter as capital per worker rises.", back: "Production function", why: "Its flattening shape shows diminishing returns to capital." },
+    { id: "growth-c9", type: "concept", front: "Countries that start off poor tend to grow more rapidly than countries that start off rich.", back: "Catch-up effect", why: "South Korea grew over 6% vs 2% in the US (1960–1990) with a similar investment share." },
+    { id: "growth-c10", type: "concept", front: "Capital investment that is owned and operated by a foreign entity.", back: "Foreign direct investment / FDI", why: "Some benefits flow back to the foreign owners as profit." },
+    { id: "growth-c11", type: "concept", front: "Capital investment financed with foreign money but operated by domestic residents.", back: "Foreign portfolio investment", why: "Like FDI, it expands the country's capital stock." },
+    { id: "growth-c12", type: "concept", front: "Benefit of education to others, e.g. an educated person generating new ideas that raise productivity.", back: "Positive externalities", why: "A reason for public subsidies to education." },
+    { id: "growth-c13", type: "concept", front: "The cost of education in the form of wages forgone.", back: "Opportunity cost", why: "Studying full-time means giving up the wages you could have earned." },
+    { id: "growth-c14", type: "concept", front: "Nobel laureate who estimated that 30% of Great Britain's growth from 1790–1980 was due to improved nutrition.", back: "Robert Fogel / Fogel", why: "Evidence that health and nutrition are investment in human capital." },
+    { id: "growth-c15", type: "concept", front: "The ability of people to exercise authority over the resources they own.", back: "Property rights", why: "People work, save and invest more when property cannot be taken away unfairly." },
+    { id: "growth-c16", type: "concept", front: "Institutions that enforce property rights, discourage theft and fraud, and ensure contracts are honoured.", back: "Courts", why: "They support the property rights that growth depends on." },
+    { id: "growth-c17", type: "concept", front: "Frequent revolutions and coups that create uncertainty over whether property rights will be protected.", back: "Political instability", why: "It discourages saving and investment." },
+    { id: "growth-c18", type: "concept", front: "Policies that avoid interaction with other countries, such as tariffs and limits on investment from abroad.", back: "Inward-oriented policies", why: "The opposite of outward-oriented policies." },
+    { id: "growth-c19", type: "concept", front: "Policies that promote integration with the world economy, such as removing restrictions on trade or foreign investment.", back: "Outward-oriented policies", why: "Trade lets countries specialise and consume more." },
+    { id: "growth-c20", type: "concept", front: "The main reason why living standards rise over the long run.", back: "Technological progress", why: "Promoted by research grants, R&D tax incentives and patent laws." },
+    { id: "growth-c21", type: "concept", front: "Type of good that knowledge is, because ideas can be shared freely and raise the productivity of many.", back: "Public good", why: "This is why government supports research and development." },
+    { id: "growth-c22", type: "concept", front: "Policy listed alongside university research grants and R&D tax incentives as a way to promote technological progress.", back: "Patent laws", why: "One of three R&D policies on the slides." },
+    { id: "growth-c23", type: "concept", front: "Thinker who argued about 200 years ago that population growth would doom mankind to live in poverty forever.", back: "Malthus", why: "He failed to account for technological progress and productivity growth." },
+    { id: "growth-c24", type: "concept", front: "Population-growth effect where population growth strains society's ability to provide for itself.", back: "Stretching natural resources", why: "Malthus's argument; the first of the three effects." },
+    { id: "growth-c25", type: "concept", front: "Population-growth effect where a higher L spreads the capital stock more thinly, lowering K/L and productivity.", back: "Diluting the capital stock", why: "Why some countries tried to reduce population growth (e.g. China's One Child policy)." },
+    { id: "growth-c26", type: "concept", front: "Population-growth effect where more people means more scientists, inventors and engineers, and so more frequent discoveries.", back: "Promoting technological progress", why: "Supported by Michael Kremer's evidence." },
+    { id: "growth-c27", type: "concept", front: "Economist who found world growth rates rose as world population rose, and more populated regions grew faster.", back: "Michael Kremer / Kremer", why: "Larger populations increase the potential for technological advance." },
+    { id: "growth-c28", type: "concept", front: "Physical capital per worker, human capital per worker, natural resources per worker and technological knowledge, as a group.", back: "Determinants of productivity", why: "Productivity depends on these four." },
+    {
+      id: "growth-c29", type: "scenario",
+      front: "Country A produces real GDP of $800 billion with 40 million workers. What is its productivity?",
+      back: "$20,000 per worker",
+      why: "Productivity = Y ÷ L = $800 billion ÷ 40 million = $20,000 of output per worker.",
+    },
+    {
+      id: "growth-c30", type: "scenario",
+      front: "Each worker in a poor country and each worker in a rich country is given one extra machine. Whose productivity rises more?",
+      back: "The poor country's",
+      why: "Diminishing returns: workers with little capital gain a lot from more, while workers who already have a lot of capital gain fairly little. This is the basis of the catch-up effect.",
+    },
+    {
+      id: "growth-c31", type: "scenario",
+      front: "A government permanently raises the national saving and investment rate. What happens to growth in the short run and the long run?",
+      back: "Growth rises for a while, then slows; long-run level of income higher, growth rate not",
+      why: "More investment raises K, so productivity grows faster at first. Because of diminishing returns to capital, growth eventually slows. In the long run the economy has a higher level of productivity and income but not higher growth.",
+    },
+    {
+      id: "growth-c32", type: "scenario",
+      front: "A Japanese car maker builds and runs its own factory in Vietnam. What kind of investment is this, and what is its main cost to Vietnam?",
+      back: "Foreign direct investment; some profit flows back abroad",
+      why: "The capital is owned and operated by a foreign entity, so it is FDI. It raises Vietnam's capital stock, productivity and wages, but some benefits flow back to the foreign owners as profit.",
+    },
+    {
+      id: "growth-c33", type: "scenario",
+      front: "American investors buy shares in a Korean company that Korean managers continue to run. What kind of investment is this?",
+      back: "Foreign portfolio investment",
+      why: "It is financed with foreign money but operated by domestic residents.",
+    },
+    {
+      id: "growth-c34", type: "scenario",
+      front: "A country puts tariffs on imports and limits investment from abroad. What kind of policy is this?",
+      back: "Inward-oriented policy",
+      why: "It avoids interaction with other countries. Outward-oriented policies instead remove trade and investment restrictions so the country can specialise and trade.",
+    },
+    {
+      id: "growth-c35", type: "scenario",
+      front: "A country's workforce grows rapidly while its capital stock stays the same. What happens to productivity, and why?",
+      back: "Productivity falls (capital is diluted)",
+      why: "With more workers (higher L) and the same K, K/L falls. Lower capital per worker means lower output per worker and lower living standards.",
+    },
+    {
+      id: "growth-c36", type: "scenario",
+      front: "A student spends 3 years at university instead of working at $30,000 a year. What is the opportunity cost in wages forgone?",
+      back: "$90,000",
+      why: "The opportunity cost of education is wages forgone: $30,000 × 3 = $90,000.",
+    },
+    {
+      id: "growth-c37", type: "scenario",
+      front: "A country suffers frequent coups. Why might its growth be slow?",
+      back: "Uncertainty over property rights discourages work, saving and investment",
+      why: "Political instability creates uncertainty over whether property rights will be protected. People are less willing to work, save and invest when their property and profits might be taken away.",
+    },
+    {
+      id: "growth-c38", type: "scenario",
+      front: "A government offers tax incentives for private-sector R&D. Why might this raise living standards?",
+      back: "It promotes technological progress",
+      why: "Technological progress is the main reason living standards rise in the long run. Knowledge is a public good (ideas can be shared freely), so policies such as R&D tax incentives, research grants and patent laws promote it.",
+    },
+    {
+      id: "growth-c39", type: "scenario",
+      front: "Country P is poorer than country R today but grows much faster. What could happen to their income ranking over time?",
+      back: "P may overtake R",
+      why: "Because of differences in growth rates, rankings change substantially over time: poor countries are not doomed to poverty and rich ones can be overtaken (e.g. Japan was poor in 1860).",
+    },
+    {
+      id: "growth-c40", type: "scenario",
+      front: "A country imports large amounts of goods. Can its high standard of living depend on imports rather than its own production?",
+      back: "No — imports are paid for with its own production",
+      why: "Problem Set 4 Q1: a nation pays for imports with goods and services it produces, so its ability to import a lot depends on its ability to produce a lot.",
+    },
+    {
+      id: "growth-c41", type: "scenario",
+      front: "Society decides to consume less and invest more. Which groups gain and which lose?",
+      back: "Future consumers/workers and investment-good industries gain; current consumers and consumption-good industries lose",
+      why: "Problem Set 4 Q2: the intertemporal trade-off sacrifices current consumption for a larger future capital stock and higher future incomes; the sectoral trade-off shifts income from consumption-good to investment-good industries.",
+    },
+    {
+      id: "growth-c42", type: "scenario",
+      front: "In a country with widespread malnourishment, a programme raises workers' daily calorie intake. What happens to productivity?",
+      back: "It rises",
+      why: "Health and nutrition are investment in human capital: better nutrition → improved health → more productive workers (Fogel: 30% of Britain's 1790–1980 growth came from better nutrition).",
+    },
+  ],
+
+  // ================================================================== QUIZ
+  quiz: [
+    { id: "growth-q1", kind: "fill", sub: "Living standards", prompt: "Average income in a rich country is about ____ times the average income in a poor country.", answers: [["10", "ten"]], explain: "E.g. the US, Japan or Germany vs Pakistan, Nigeria or Cambodia." },
+    { id: "growth-q2", kind: "fill", sub: "Living standards", prompt: "US real GDP per person has grown about ____% per year over the past 100 years.", answers: [["2", "2%"]], explain: "About 2% a year, which doubles real GDP per person every 35 years." },
+    { id: "growth-q3", kind: "fill", sub: "Living standards", prompt: "At about 2% growth per year, real GDP per person doubles about every ____ years.", answers: [["35"]], explain: "The slides: doubling of real GDP per person every 35 years." },
+    { id: "growth-q4", kind: "fill", sub: "Living standards", prompt: "Because of differences in growth rates, the ____ of countries by income changes substantially over time.", answers: [["ranking", "rankings", "rank", "order"]], explain: "Poor countries can rise (Japan since 1860) and rich ones can be overtaken." },
+    { id: "growth-q5", kind: "fill", sub: "Productivity", prompt: "A country's standard of living depends on its ability to ____ goods and services.", answers: [["produce"]], explain: "That is why productivity is key to prosperity." },
+    { id: "growth-q6", kind: "fill", sub: "Productivity", prompt: "____ is the quantity of goods and services produced from each unit of labour.", answers: [["Productivity", "labour productivity", "labor productivity"]], explain: "Productivity = Y/L." },
+    { id: "growth-q7", kind: "fill", sub: "Productivity", prompt: "Y = (Y/L) × ____", answers: [["L", "labour", "labor", "quantity of labour", "number of workers"]], explain: "Output = productivity × quantity of labour." },
+    { id: "growth-q8", kind: "fill", sub: "Productivity", prompt: "Real GDP is $360 billion and there are 12 million workers. Productivity is $____ per worker.", answers: [["30,000", "30000"]], explain: "Y/L = $360 billion ÷ 12 million = $30,000." },
+    { id: "growth-q9", kind: "fill", sub: "Productivity", prompt: "Productivity is $50,000 per worker and there are 3 million workers. Real GDP is $____ billion.", answers: [["150"]], explain: "Y = (Y/L) × L = $50,000 × 3 million = $150 billion." },
+    { id: "growth-q10", kind: "fill", sub: "Productivity", prompt: "Output per worker rises from $40,000 to $43,000. The growth rate of productivity is ____% (1 d.p.).", answers: [["7.5%", "7.5"]], explain: "(43,000 − 40,000) ÷ 40,000 × 100 = 7.5%." },
+    { id: "growth-q11", kind: "fill", sub: "Determinants", prompt: "____ capital is the stock of equipment and structures used to produce goods and services.", answers: [["Physical"]], explain: "Physical capital, K." },
+    { id: "growth-q12", kind: "fill", sub: "Determinants", prompt: "An increase in K/L causes an ____ in Y/L.", answers: [["increase", "rise"]], explain: "More capital per worker → higher productivity." },
+    { id: "growth-q13", kind: "fill", sub: "Determinants", prompt: "____ capital is the knowledge and skills workers acquire through education, training and experience.", answers: [["Human"]], explain: "Human capital, H." },
+    { id: "growth-q14", kind: "fill", sub: "Determinants", prompt: "Inputs into production provided by nature, such as land, rivers and mineral deposits, are called ____.", answers: [["natural resources", "natural resource"]], explain: "Natural resources, N." },
+    { id: "growth-q15", kind: "fill", sub: "Determinants", prompt: "____ knowledge is the understanding of the best ways to produce goods and services.", answers: [["Technological"]], explain: "Technological knowledge, A." },
+    { id: "growth-q16", kind: "fill", sub: "Determinants", prompt: "Industrial robots and just-in-time production systems are examples of technological knowledge in ____.", answers: [["manufacturing"]], explain: "The slides' examples: agriculture (fertilisers, seeds), manufacturing (robots, just-in-time), transportation (GPS, jet engines)." },
+    { id: "growth-q17", kind: "fill", sub: "Determinants", prompt: "Productivity depends on physical capital per worker, human capital per worker, natural resources per worker and ____.", answers: [["technological knowledge", "technology"]], explain: "These are the four determinants of productivity." },
+    { id: "growth-q18", kind: "fill", sub: "Saving and investment", prompt: "Higher investment → larger capital stock → greater capacity to produce → higher future ____.", answers: [["productivity"]], explain: "This chain is why policies encourage saving and investment." },
+    { id: "growth-q19", kind: "fill", sub: "Saving and investment", prompt: "The trade-off of more investment: society sacrifices ____ consumption to increase future consumption.", answers: [["current", "present", "today's"]], explain: "Reduce consumption to raise saving, which funds investment goods." },
+    { id: "growth-q20", kind: "fill", sub: "Diminishing returns", prompt: "Accumulation of capital is subject to ____ returns.", answers: [["diminishing"]], explain: "As K rises, extra output from each extra unit of K falls." },
+    { id: "growth-q21", kind: "fill", sub: "Diminishing returns", prompt: "As K rises, the extra output from an additional unit of K ____ (rises/falls).", answers: [["falls", "decreases", "fall", "declines"]], explain: "That is the meaning of diminishing returns." },
+    { id: "growth-q22", kind: "fill", sub: "Diminishing returns", prompt: "In the long run, higher saving and investment rates lead to a higher ____ of productivity and income, but not to higher growth in these variables.", answers: [["level"]], explain: "Growth rises only for a while before diminishing returns slow it." },
+    { id: "growth-q23", kind: "fill", sub: "Diminishing returns", prompt: "Y/L is 20 when K/L = 2, 26 when K/L = 3 and 30 when K/L = 4. The extra output from raising K/L from 3 to 4 is ____.", answers: [["4"]], explain: "30 − 26 = 4, less than the 6 gained going from 2 to 3: diminishing returns." },
+    { id: "growth-q24", kind: "fill", sub: "Diminishing returns", prompt: "If workers have ____ capital, giving them more increases their productivity a lot.", answers: [["little", "very little", "less"]], explain: "The production function is steep at low K/L and flat at high K/L." },
+    { id: "growth-q25", kind: "fill", sub: "Catch-up effect", prompt: "The ____ effect: countries that start off poor tend to grow more rapidly than countries that start off rich.", answers: [["catch-up", "catch up"]], explain: "It follows from diminishing returns to capital." },
+    { id: "growth-q26", kind: "fill", sub: "Catch-up effect", prompt: "From 1960 to 1990, with a similar investment share, growth was over ____% in South Korea and only 2% in the US.", answers: [["6", "6%"]], explain: "Korea started with far smaller K/L, so extra capital raised its productivity more." },
+    { id: "growth-q27", kind: "fill", sub: "Investment from abroad", prompt: "Capital investment owned and operated by a foreign entity is foreign ____ investment.", answers: [["direct"]], explain: "Foreign direct investment." },
+    { id: "growth-q28", kind: "fill", sub: "Investment from abroad", prompt: "Capital investment financed with foreign money but operated by domestic residents is foreign ____ investment.", answers: [["portfolio"]], explain: "Foreign portfolio investment." },
+    { id: "growth-q29", kind: "fill", sub: "Investment from abroad", prompt: "A cost of investment from abroad is that some benefits flow back to the foreign capital owners in the form of ____.", answers: [["profit", "profits"]], explain: "The capital stock still rises, raising productivity and wages." },
+    { id: "growth-q30", kind: "fill", sub: "Investment from abroad", prompt: "Investment from abroad is especially good for poor countries that cannot generate enough ____ to fund investment projects themselves.", answers: [["saving", "savings"]], explain: "It also brings state-of-the-art technologies from other countries." },
+    { id: "growth-q31", kind: "fill", sub: "Education", prompt: "Education is investment in ____ capital.", answers: [["human"]], explain: "It is critical for long-run economic success." },
+    { id: "growth-q32", kind: "fill", sub: "Education", prompt: "In the US, each year of schooling raised a person's wage by an average of ____%.", answers: [["10", "10%"]], explain: "The slides' figure for the return to a year of schooling." },
+    { id: "growth-q33", kind: "fill", sub: "Education", prompt: "An educated person might generate new ideas that improve others' productivity. This is a positive ____.", answers: [["externality", "externalities"]], explain: "A reason for government subsidies to education." },
+    { id: "growth-q34", kind: "fill", sub: "Education", prompt: "The opportunity cost of education is the ____ forgone.", answers: [["wages", "wage", "income", "earnings"]], explain: "Time spent studying is time not earning." },
+    { id: "growth-q35", kind: "fill", sub: "Education", prompt: "A student studies full-time for 3 years instead of working at $28,000 a year. The opportunity cost in wages forgone is $____.", answers: [["84,000", "84000"]], explain: "$28,000 × 3 = $84,000." },
+    { id: "growth-q36", kind: "fill", sub: "Education", prompt: "A worker earns $2,500 a month. If one more year of schooling raises the wage by the slides' average of 10%, the new wage is $____ a month.", answers: [["2,750", "2750"]], explain: "$2,500 × 1.10 = $2,750." },
+    { id: "growth-q37", kind: "fill", sub: "Health and nutrition", prompt: "Nobel laureate Robert Fogel found that ____% of Great Britain's growth from 1790–1980 was due to improved nutrition.", answers: [["30", "30%"]], explain: "Better nutrition → better health → more productive workers." },
+    { id: "growth-q38", kind: "fill", sub: "Property rights", prompt: "____ rights are the ability of people to exercise authority over the resources they own.", answers: [["Property"]], explain: "People work, save and invest more when property is secure." },
+    { id: "growth-q39", kind: "fill", sub: "Property rights", prompt: "____ enforce property rights, discourage theft and fraud, and ensure buyers and sellers honour their contracts.", answers: [["Courts", "The courts", "court"]], explain: "Courts support the property-rights system." },
+    { id: "growth-q40", kind: "fill", sub: "Property rights", prompt: "Political ____, such as frequent revolutions and coups, creates uncertainty over whether property rights will be protected.", answers: [["instability"]], explain: "So promoting political stability supports growth." },
+    { id: "growth-q41", kind: "fill", sub: "Free trade", prompt: "Tariffs and limits on investment from abroad are ____-oriented policies.", answers: [["inward"]], explain: "Inward-oriented policies avoid interaction with other countries." },
+    { id: "growth-q42", kind: "fill", sub: "Free trade", prompt: "Eliminating restrictions on trade or foreign investment is an ____-oriented policy.", answers: [["outward"]], explain: "Outward-oriented policies integrate with the world economy." },
+    { id: "growth-q43", kind: "fill", sub: "Research and development", prompt: "Technological progress is the main reason why ____ rise over the long run.", answers: [["living standards", "standards of living", "standard of living"]], explain: "Hence policies to promote R&D." },
+    { id: "growth-q44", kind: "fill", sub: "Research and development", prompt: "Knowledge is a ____ good: ideas can be shared freely, increasing the productivity of many.", answers: [["public"]], explain: "A reason for government support of research." },
+    { id: "growth-q45", kind: "fill", sub: "Research and development", prompt: "Policies to promote technological progress include research grants to universities, tax incentives for private R&D, and ____ laws.", answers: [["patent", "patents"]], explain: "The three R&D policies on the slides." },
+    { id: "growth-q46", kind: "fill", sub: "Population growth", prompt: "About 200 years ago, ____ argued that population growth would doom mankind to live in poverty forever.", answers: [["Malthus", "Thomas Malthus"]], explain: "The 'stretching natural resources' argument." },
+    { id: "growth-q47", kind: "fill", sub: "Population growth", prompt: "Malthus failed to account for technological progress and ____ growth.", answers: [["productivity"]], explain: "World population rose sixfold yet living standards increased." },
+    { id: "growth-q48", kind: "fill", sub: "Population growth", prompt: "High population growth spreads the capital stock more thinly, lowering capital per worker. This is called ____ the capital stock.", answers: [["diluting", "dilution of"]], explain: "Lower K/L → lower productivity and living standards." },
+    { id: "growth-q49", kind: "fill", sub: "Population growth", prompt: "The capital stock is $600 billion. If the number of workers rises from 20 million to 25 million, capital per worker falls from $30,000 to $____.", answers: [["24,000", "24000"]], explain: "$600 billion ÷ 25 million = $24,000." },
+    { id: "growth-q50", kind: "fill", sub: "Population growth", prompt: "Michael Kremer found that more ____ regions grew faster than less populated ones.", answers: [["populated", "heavily populated", "populous"]], explain: "Larger populations increase the potential for technological advance." },
+    {
+      id: "growth-q51", kind: "mcq", sub: "Determinants",
+      prompt: "Which of these is an example of human capital?",
+      options: ["A new factory building", "Skills a worker gains from an apprenticeship", "A river used for transport", "GPS technology"],
+      answer: 1,
+      explain: "Human capital is the knowledge and skills workers acquire through education, training and experience. The factory is physical capital, the river a natural resource, GPS technological knowledge.",
+    },
+    {
+      id: "growth-q52", kind: "mcq", sub: "Determinants",
+      prompt: "Which is NOT one of the four determinants of productivity in the slides?",
+      options: ["Physical capital per worker", "Natural resources per worker", "Technological knowledge", "The price level"],
+      answer: 3,
+      explain: "Productivity depends on K/L, H/L, N/L and A.",
+    },
+    {
+      id: "growth-q53", kind: "mcq", sub: "Diminishing returns",
+      prompt: "Because of diminishing returns to capital, a permanent rise in the saving rate leads to:",
+      options: ["Permanently higher growth", "Higher growth for a while, then a higher level of income but not higher growth", "No change in income at all", "Lower productivity"],
+      answer: 1,
+      explain: "Growth rises temporarily and then slows; in the long run the level of productivity and income is higher, not the growth rate.",
+    },
+    {
+      id: "growth-q54", kind: "mcq", sub: "Catch-up effect",
+      prompt: "Two countries devote the same share of GDP to investment. Which will tend to grow faster?",
+      options: ["The one with more capital per worker", "The one with less capital per worker", "Both grow at the same rate", "The one with the higher price level"],
+      answer: 1,
+      explain: "Catch-up effect: with diminishing returns, extra capital raises productivity more where K/L is small (e.g. South Korea vs the US, 1960–1990).",
+    },
+    {
+      id: "growth-q55", kind: "mcq", sub: "Investment from abroad",
+      prompt: "A foreign company builds and operates a factory in your country. This is:",
+      options: ["Foreign portfolio investment", "Foreign direct investment", "An inward-oriented policy", "Human capital investment"],
+      answer: 1,
+      explain: "Capital owned and operated by a foreign entity is foreign direct investment.",
+    },
+    {
+      id: "growth-q56", kind: "mcq", sub: "Free trade",
+      prompt: "Which is an outward-oriented policy?",
+      options: ["Imposing tariffs", "Limiting investment from abroad", "Eliminating restrictions on trade", "Banning foreign firms"],
+      answer: 2,
+      explain: "Outward-oriented policies promote integration with the world economy.",
+    },
+    {
+      id: "growth-q57", kind: "mcq", sub: "Population growth",
+      prompt: "Which is NOT one of the three ways population growth may affect living standards in the slides?",
+      options: ["Stretching natural resources", "Diluting the capital stock", "Promoting technological progress", "Raising the price of capital goods"],
+      answer: 3,
+      explain: "The three effects are stretching natural resources, diluting the capital stock, and promoting technological progress.",
+    },
+    {
+      id: "growth-q58", kind: "mcq", sub: "Population growth",
+      prompt: "Why did Malthus's prediction of permanent poverty prove wrong?",
+      options: ["Population stopped growing", "He failed to account for technological progress and productivity growth", "Natural resources are unlimited", "Governments banned population growth"],
+      answer: 1,
+      explain: "World population rose sixfold while living standards rose, thanks to technological progress and productivity growth.",
+    },
+    {
+      id: "growth-q59", kind: "mcq", sub: "Property rights",
+      prompt: "Why do well-protected property rights promote growth?",
+      options: ["They raise tariffs", "People are more willing to work, save and invest when property and profits cannot be taken away unfairly", "They reduce the number of workers", "They increase diminishing returns"],
+      answer: 1,
+      explain: "Secure property rights encourage work, saving and investment.",
+    },
+    {
+      id: "growth-q60", kind: "mcq", sub: "Saving and investment",
+      prompt: "According to Problem Set 4, the opportunity cost of investing in physical capital is:",
+      options: ["The wages forgone while studying", "The current consumption and alternative investments forgone", "The profit paid to foreign owners", "Nothing, because capital raises productivity"],
+      answer: 1,
+      explain: "Investing in capital means giving up current consumption and other investments.",
+    },
+  ],
+
+  // ================================================================== EXAM
+  exam: [
+    // ---------------- calc
+    {
+      id: "growth-e1", section: "calc", sub: "Productivity", source: "Lecture 4",
+      prompt: "An economy produces real GDP of $600 billion using 20 million workers. Calculate its productivity.",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: productivity = Y ÷ L (output per worker)", marks: 1 },
+        { point: "Correct working: $600 billion ÷ 20 million", marks: 1 },
+        { point: "Correct answer $30,000 per worker", marks: 1 },
+      ],
+      model: "Productivity = Y ÷ L\n= $600,000,000,000 ÷ 20,000,000\n= $30,000 of output per worker",
+      answer: "$30,000 per worker",
+    },
+    {
+      id: "growth-e2", section: "calc", sub: "Productivity", source: "Lecture 4",
+      prompt: "Productivity in an economy is $45,000 per worker and 4 million people work. Calculate real GDP.",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: Y = (Y/L) × L", marks: 1 },
+        { point: "Correct working: $45,000 × 4,000,000", marks: 1 },
+        { point: "Correct answer $180 billion", marks: 1 },
+      ],
+      model: "Y = (Y ÷ L) × L\n= $45,000 × 4,000,000\n= $180,000,000,000 = $180 billion",
+      answer: "$180 billion",
+    },
+    {
+      id: "growth-e3", section: "calc", sub: "Diminishing returns", source: "Lecture 4",
+      prompt: "In an economy, output per worker (Y/L) is 10, 16, 20 and 22 units when capital per worker (K/L) is 1, 2, 3 and 4 units. Calculate the extra output per worker from each additional unit of capital per worker, and state what this shows.",
+      marks: 3,
+      rubric: [
+        { point: "States the method: extra output = Y/L after − Y/L before, for each one-unit rise in K/L", marks: 1 },
+        { point: "Correct working: 16 − 10, 20 − 16, 22 − 20", marks: 1 },
+        { point: "Correct answers 6, 4, 2 and identifies diminishing returns to capital", marks: 1 },
+      ],
+      model: "Extra output = (Y/L after) − (Y/L before)\nK/L 1 → 2: 16 − 10 = 6\nK/L 2 → 3: 20 − 16 = 4\nK/L 3 → 4: 22 − 20 = 2\nEach additional unit of capital adds less output: diminishing returns to capital.",
+      answer: "6, 4, 2 (diminishing returns)",
+    },
+    {
+      id: "growth-e4", section: "calc", sub: "Catch-up effect", source: "Lecture 4",
+      prompt: "Using the same production function (Y/L = 10, 16, 20, 22 at K/L = 1, 2, 3, 4), a poor country raises K/L from 1 to 2 and a rich country raises K/L from 3 to 4. Calculate the percentage increase in productivity in each country (1 d.p.).",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: % change = (new − old) ÷ old × 100", marks: 1 },
+        { point: "Correct working: (16 − 10) ÷ 10 × 100 and (22 − 20) ÷ 20 × 100", marks: 1 },
+        { point: "Correct answers: poor 60.0%, rich 10.0% (catch-up effect)", marks: 1 },
+      ],
+      model: "% change in Y/L = (new − old) ÷ old × 100\nPoor country: (16 − 10) ÷ 10 × 100 = 60.0%\nRich country: (22 − 20) ÷ 20 × 100 = 10.0%\nThe same increase in capital per worker raises productivity far more in the poor country: the catch-up effect.",
+      answer: "Poor 60.0%; rich 10.0%",
+    },
+    {
+      id: "growth-e5", section: "calc", sub: "Population growth", source: "Lecture 4",
+      prompt: "An economy has a capital stock of $900 billion. Its workforce grows from 30 million to 36 million with no change in the capital stock. Calculate capital per worker before and after.",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: capital per worker = K ÷ L", marks: 1 },
+        { point: "Correct working: $900 billion ÷ 30 million and $900 billion ÷ 36 million", marks: 1 },
+        { point: "Correct answers $30,000 and $25,000 (falls by $5,000: capital is diluted)", marks: 1 },
+      ],
+      model: "Capital per worker = K ÷ L\nBefore: $900 billion ÷ 30 million = $30,000\nAfter: $900 billion ÷ 36 million = $25,000\nK/L falls by $5,000: population growth dilutes the capital stock, lowering productivity.",
+      answer: "$30,000 → $25,000",
+    },
+    {
+      id: "growth-e6", section: "calc", sub: "Education", source: "Lecture 4",
+      prompt: "A student studies full-time for 4 years instead of working at a job paying $24,000 a year. Calculate the opportunity cost of the education in wages forgone.",
+      marks: 3,
+      rubric: [
+        { point: "States the formula/idea: opportunity cost of education = wages forgone = annual wage × years", marks: 1 },
+        { point: "Correct working: $24,000 × 4", marks: 1 },
+        { point: "Correct answer $96,000", marks: 1 },
+      ],
+      model: "Opportunity cost of education = wages forgone\n= $24,000 × 4 years\n= $96,000",
+      answer: "$96,000",
+    },
+    {
+      id: "growth-e7", section: "calc", sub: "Education", source: "Lecture 4",
+      prompt: "A worker earns $3,000 a month. Using the slides' estimate that each year of schooling raises a person's wage by an average of 10%, calculate the worker's monthly wage after one more year of schooling.",
+      marks: 3,
+      rubric: [
+        { point: "States the method: new wage = old wage × (1 + 10%)", marks: 1 },
+        { point: "Correct working: $3,000 × 1.10 (or $3,000 + $300)", marks: 1 },
+        { point: "Correct answer $3,300 a month", marks: 1 },
+      ],
+      model: "New wage = old wage × (1 + 0.10)\n= $3,000 × 1.10\n= $3,300 a month",
+      answer: "$3,300",
+    },
+    {
+      id: "growth-e8", section: "calc", sub: "Productivity", source: "Lecture 4",
+      prompt: "Output per worker in an economy rises from $40,000 to $42,000 over a year. Calculate the growth rate of productivity (1 d.p.).",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: growth rate = (new − old) ÷ old × 100", marks: 1 },
+        { point: "Correct working: (42,000 − 40,000) ÷ 40,000 × 100", marks: 1 },
+        { point: "Correct answer 5.0%", marks: 1 },
+      ],
+      model: "Growth rate = (new − old) ÷ old × 100\n= (42,000 − 40,000) ÷ 40,000 × 100\n= 2,000 ÷ 40,000 × 100 = 5.0%",
+      answer: "5.0%",
+    },
+
+    // ---------------- short
+    {
+      id: "growth-e9", section: "short", sub: "Determinants", source: "Lecture 4",
+      prompt: "Explain THREE determinants of a country's productivity.",
+      marks: 3,
+      rubric: [
+        { point: "One determinant defined and linked to Y/L, e.g. physical capital per worker (equipment and structures; more K/L → higher Y/L)", marks: 1 },
+        { point: "A second, e.g. human capital per worker (knowledge and skills from education, training, experience; more H/L → higher Y/L)", marks: 1 },
+        { point: "A third, e.g. natural resources per worker (inputs provided by nature) or technological knowledge (understanding of the best ways to produce)", marks: 1 },
+      ],
+      model: "First, physical capital per worker: physical capital is the stock of equipment and structures used in production, and productivity is higher when the average worker has more of it. Second, human capital per worker: the knowledge and skills workers gain through education, training and experience, so more H/L raises Y/L. Third, technological knowledge: the understanding of the best ways to produce goods and services, such as industrial robots, which lets society get more output from its resources. (Natural resources per worker — land, rivers, mineral deposits — is also accepted.)",
+    },
+    {
+      id: "growth-e10", section: "short", sub: "Productivity", source: "Problem Set 4 Q1",
+      prompt: "Most countries import large amounts of goods and services, yet a nation can enjoy a high standard of living only if it can produce a large quantity of goods and services itself. Reconcile these two facts.",
+      marks: 3,
+      rubric: [
+        { point: "Imports must ultimately be paid for with the country's own production", marks: 1 },
+        { point: "So a nation's ability to import a lot depends on its ability to produce a lot", marks: 1 },
+        { point: "An unproductive economy cannot sustain high imports because it lacks enough valuable output to trade (and cannot borrow indefinitely)", marks: 1 },
+      ],
+      model: "The two facts are consistent because imports must ultimately be paid for with a country's own production. When a country imports cars or oil, it pays with things it produces, such as aircraft, software or financial services. So a nation's ability to import a lot depends on its ability to produce a lot. A country with a weak, unproductive economy cannot sustain high imports, because it does not have enough valuable output to trade for them and cannot borrow indefinitely.",
+    },
+    {
+      id: "growth-e11", section: "short", sub: "Saving and investment", source: "Problem Set 4 Q2",
+      prompt: "Suppose society decides to reduce consumption and increase investment. Explain how this affects economic growth and which groups gain and lose.",
+      marks: 3,
+      rubric: [
+        { point: "Investment adds to physical capital; higher K/L raises productivity and growth in the medium-to-long run", marks: 1 },
+        { point: "Intertemporal trade-off: current consumers (especially lower-income households) lose; future consumers and workers gain from higher productivity and incomes", marks: 1 },
+        { point: "Sectoral trade-off: consumption-good industries lose income; investment-good industries gain", marks: 1 },
+      ],
+      model: "Investment spending adds to physical capital, so capital per worker rises and productivity increases, giving faster growth in the medium-to-long run. This involves an intertemporal trade-off: current consumers, especially lower-income households, are hurt by consuming less, while future consumers and workers benefit from a larger capital stock, higher productivity and higher incomes. There is also a sectoral trade-off: workers and owners in consumption-good industries earn less, while those in investment-good industries earn more.",
+    },
+    {
+      id: "growth-e12", section: "short", sub: "Opportunity cost", source: "Problem Set 4 Q4",
+      prompt: "What is the opportunity cost of investing in physical capital and in human capital? Can a country over-invest in physical capital? Explain.",
+      marks: 3,
+      rubric: [
+        { point: "Physical capital: the opportunity cost is current consumption and alternative investments forgone", marks: 1 },
+        { point: "Human capital: the opportunity cost is the income (wages forgone), time and resources devoted to education and training", marks: 1 },
+        { point: "Yes, over-investment is possible: due to diminishing returns, the returns from extra capital eventually fall below its cost; invest only while benefits exceed opportunity cost", marks: 1 },
+      ],
+      model: "The opportunity cost of investing in physical capital is the current consumption and alternative investments forgone. The opportunity cost of investing in human capital is the income, time and resources devoted to education and training, such as wages forgone while studying. A country can over-invest in physical capital: because of diminishing returns, the benefit of additional capital eventually declines, and over-investment occurs when the returns from extra capital are lower than its cost. Investment should continue only as long as its expected benefits exceed its opportunity cost.",
+    },
+    {
+      id: "growth-e13", section: "short", sub: "Investment from abroad", source: "Problem Set 4 Q5",
+      prompt: "A country receives large amounts of foreign direct and portfolio investment. In what way is it better off receiving this investment, and in what way would it be even better for its own residents to have made the investment?",
+      marks: 3,
+      rubric: [
+        { point: "Better off: foreign investment enlarges the country's capital stock", marks: 1 },
+        { point: "This raises productivity, wages and economic growth (and may bring state-of-the-art technology)", marks: 1 },
+        { point: "Even better if residents invested themselves: they would receive all the returns, rather than some flowing back to foreign owners as profit", marks: 1 },
+      ],
+      model: "Receiving foreign investment is better than not receiving it because it enlarges the country's capital stock. With more capital, productivity and wages are higher and the economy grows faster; it may also bring state-of-the-art technologies developed abroad. However, some of the benefits flow back to the foreign capital owners in the form of profit. If domestic residents had made the investment themselves, they would have received all of the returns.",
+    },
+    {
+      id: "growth-e14", section: "short", sub: "Property rights", source: "Problem Set 4 Q9",
+      prompt: "Adam Smith said that little else is needed for prosperity but 'peace, easy taxes, and a tolerable administration of justice'. Explain how each condition promotes economic growth.",
+      marks: 3,
+      rubric: [
+        { point: "Peace reduces uncertainty and prevents destruction of people and property, so businesses invest and workers focus on productive activities", marks: 1 },
+        { point: "Easy taxes let people keep more of what they earn, strengthening incentives to work, save and invest, and businesses to expand", marks: 1 },
+        { point: "A tolerable administration of justice protects property rights and enforces contracts, encouraging domestic saving and investment from abroad", marks: 1 },
+      ],
+      model: "Peace reduces uncertainty and prevents the destruction of people and property, so businesses are more willing to invest and workers can focus on productive activities instead of fighting or fleeing. Easy taxes let citizens and businesses keep a greater share of what they earn, giving stronger incentives to work, save and invest and to expand production. A tolerable administration of justice means a fair and effective legal system that protects property rights and enforces contracts, which encourages domestic saving and investment from abroad.",
+    },
+    {
+      id: "growth-e15", section: "short", sub: "Population growth", source: "Lecture 4",
+      prompt: "Explain THREE ways in which population growth may affect a country's standard of living.",
+      marks: 3,
+      rubric: [
+        { point: "Stretching natural resources: Malthus argued population growth would strain society's ability to provide for itself (but he ignored technological progress and productivity growth)", marks: 1 },
+        { point: "Diluting the capital stock: higher L spreads capital more thinly, lowering K/L and productivity", marks: 1 },
+        { point: "Promoting technological progress: more people means more scientists, inventors and engineers and more frequent discoveries (Kremer)", marks: 1 },
+      ],
+      model: "First, stretching natural resources: Malthus argued that population growth would strain society's ability to provide for itself, although living standards have risen because he failed to account for technological progress and productivity growth. Second, diluting the capital stock: rapid growth in L spreads the capital stock more thinly, so K/L falls and productivity and living standards fall. Third, promoting technological progress: more people means more scientists, inventors and engineers, so discoveries are more frequent; Kremer found that more populated regions grew faster.",
+    },
+    {
+      id: "growth-e16", section: "short", sub: "Health", source: "Problem Set 4 Q8",
+      prompt: "International data show a positive correlation between income per person and the health of the population. Explain how higher income could cause better health, and how better health could cause higher income.",
+      marks: 3,
+      rubric: [
+        { point: "Income → health: higher-income people have better access to clean water, medical care and improved nutrition", marks: 1 },
+        { point: "Health → income: healthier workers are more productive and take fewer sick days (health and nutrition are investment in human capital)", marks: 1 },
+        { point: "Notes the two likely reinforce each other / policy implication (growth policies vs health policies, or both)", marks: 1 },
+      ],
+      model: "Higher income can cause better health because people with higher incomes have better access to clean water, medical care and improved nutrition. Better health can cause higher income because healthier individuals are more productive: they work more effectively and take fewer sick days, which is why health and nutrition count as investment in human capital. The two likely reinforce each other, so policies that both promote growth and improve public health are likely to give the greatest long-term benefits.",
+    },
+
+    // ---------------- tf
+    {
+      id: "growth-e17", section: "tf", sub: "Diminishing returns", source: "Lecture 4", tf: false,
+      prompt: "A permanent increase in the saving rate permanently raises a country's rate of economic growth.",
+      marks: 3,
+      rubric: [
+        { point: "States False", marks: 1 },
+        { point: "Higher saving and investment raise K and growth only for a while; growth slows because of diminishing returns to capital", marks: 1 },
+        { point: "In the long run they raise the level of productivity and income, not the growth rate", marks: 1 },
+      ],
+      model: "False. Higher saving funds more investment, which raises the capital stock and productivity, so growth is higher for a while. But capital is subject to diminishing returns: as K rises, the extra output from each additional unit of K falls, so growth eventually slows down. In the long run, higher saving and investment lead to a higher level of productivity and income but not to higher growth in these variables.",
+    },
+    {
+      id: "growth-e18", section: "tf", sub: "Catch-up effect", source: "Lecture 4", tf: true,
+      prompt: "Other things equal, it is easier for a country to grow quickly if it starts out relatively poor.",
+      marks: 3,
+      rubric: [
+        { point: "States True", marks: 1 },
+        { point: "Diminishing returns: when workers have little capital, giving them more raises productivity a lot", marks: 1 },
+        { point: "Catch-up effect, e.g. South Korea grew over 6% vs 2% for the US (1960–1990) with a similar investment share because its K/L was far smaller", marks: 1 },
+      ],
+      model: "True. Because of diminishing returns to capital, an extra unit of capital raises productivity a lot when workers have little capital but only a little when they already have a lot. So countries that start off poor tend to grow faster than rich ones: the catch-up effect. For example, from 1960 to 1990 South Korea and the US invested a similar share of GDP, but Korea grew over 6% a year versus 2% for the US, because Korea's K/L was far smaller.",
+    },
+    {
+      id: "growth-e19", section: "tf", sub: "Living standards", source: "Lecture 4", tf: false,
+      prompt: "Poor countries are doomed to remain poor, and rich countries will always stay rich.",
+      marks: 3,
+      rubric: [
+        { point: "States False", marks: 1 },
+        { point: "Growth rates differ, so the ranking of countries by income changes substantially over time", marks: 1 },
+        { point: "Example/explanation: Japan was poor in 1860 and is rich now; rich countries may be overtaken by poorer but faster-growing ones", marks: 1 },
+      ],
+      model: "False. Because growth rates differ across countries, the ranking of countries by income changes substantially over time. Poor countries are not necessarily doomed to poverty forever: Japan's incomes were low in 1860 and are quite high now. And rich countries cannot take their status for granted, because they may be overtaken by poorer but faster-growing countries.",
+    },
+    {
+      id: "growth-e20", section: "tf", sub: "Investment from abroad", source: "Lecture 4", tf: false,
+      prompt: "Foreign direct investment brings no benefit to the host country because the profits go to foreigners.",
+      marks: 3,
+      rubric: [
+        { point: "States False", marks: 1 },
+        { point: "Acknowledges the cost: some benefits flow back to the foreign owners as profit", marks: 1 },
+        { point: "But it increases the capital stock, raising productivity and wages, and brings state-of-the-art technology; especially good for poor countries with too little saving", marks: 1 },
+      ],
+      model: "False. It is true that some of the benefits of foreign direct investment flow back to the foreign capital owners in the form of profit. However, the investment still increases the host economy's stock of capital, which raises productivity and wages. It can also bring state-of-the-art technologies developed in other countries, and it is especially good for poor countries that cannot generate enough saving to fund investment projects themselves.",
+    },
+    {
+      id: "growth-e21", section: "tf", sub: "Population growth", source: "Lecture 4", tf: false,
+      prompt: "Population growth can only lower a country's standard of living.",
+      marks: 3,
+      rubric: [
+        { point: "States False", marks: 1 },
+        { point: "It can lower living standards by stretching natural resources or diluting the capital stock (lower K/L)", marks: 1 },
+        { point: "But it can also promote technological progress: more scientists, inventors and engineers; Kremer found more populated regions grew faster", marks: 1 },
+      ],
+      model: "False. Population growth can reduce living standards by diluting the capital stock — more workers spread capital more thinly, lowering K/L and productivity — and Malthus argued it would stretch natural resources. However, a larger population also means more scientists, inventors and engineers, so discoveries are more frequent. Michael Kremer found that world growth rose as population rose and that more populated regions grew faster.",
+    },
+    {
+      id: "growth-e22", section: "tf", sub: "Population growth", source: "Lecture 4", tf: false,
+      prompt: "Malthus's prediction that population growth would keep mankind in poverty forever has been borne out.",
+      marks: 3,
+      rubric: [
+        { point: "States False", marks: 1 },
+        { point: "World population has increased about sixfold since Malthus, yet living standards have risen", marks: 1 },
+        { point: "Malthus failed to account for technological progress and productivity growth", marks: 1 },
+      ],
+      model: "False. About 200 years ago Malthus argued that population growth would strain society's ability to provide for itself, dooming mankind to poverty. Since then the world population has increased sixfold, yet living standards have increased. Malthus failed to account for technological progress and productivity growth, which let output grow faster than population.",
+    },
+    {
+      id: "growth-e23", section: "tf", sub: "Free trade", source: "Lecture 4", tf: false,
+      prompt: "Imposing tariffs and limiting investment from abroad are outward-oriented policies that promote growth.",
+      marks: 3,
+      rubric: [
+        { point: "States False: these are inward-oriented policies", marks: 1 },
+        { point: "Inward-oriented policies avoid interaction with other countries; outward-oriented policies promote integration (e.g. removing trade/investment restrictions)", marks: 1 },
+        { point: "Trade lets countries specialise in what they do best and exchange, so everyone can consume more than they could produce alone", marks: 1 },
+      ],
+      model: "False. Tariffs and limits on investment from abroad are inward-oriented policies, because they avoid interaction with other countries. Outward-oriented policies do the opposite: they promote integration with the world economy, for example by eliminating restrictions on trade or foreign investment. Trade lets countries specialise in what they do best and exchange goods and services, so everyone can consume more than they could produce on their own.",
+    },
+    {
+      id: "growth-e24", section: "tf", sub: "Education", source: "Lecture 4", tf: false,
+      prompt: "Education benefits only the person who receives it, so there is no reason for the government to subsidise it.",
+      marks: 3,
+      rubric: [
+        { point: "States False", marks: 1 },
+        { point: "Education has positive externalities: an educated person might generate new ideas that improve others' productivity", marks: 1 },
+        { point: "Education is investment in human capital, critical for long-run success, so public policy provides good schools and widely available opportunities through large subsidies", marks: 1 },
+      ],
+      model: "False. Education is investment in human capital and is critical for a country's long-run economic success. It also has positive externalities: an educated person might generate new ideas that improve the productivity of others. That is why public policy provides good schools and makes education opportunities widely available through large subsidies.",
+    },
+
+    // ---------------- diagram
+    {
+      id: "growth-e25", section: "diagram", sub: "Production function", source: "Lecture 4",
+      prompt: "Consider an economy's production function relating output per worker to capital per worker.",
+      parts: [
+        { label: "(a)", prompt: "Draw a clearly labelled production function. Use it to show and explain why the same increase in capital per worker raises productivity more in a poor country than in a rich country.", marks: 5 },
+        { label: "(b)", prompt: "Suppose the country's population grows rapidly while its capital stock is unchanged. Use the production function to show and explain the effect on productivity and living standards.", marks: 5 },
+      ],
+      marks: 10,
+      rubric: [
+        { point: "(a) Axes labelled: output per worker (Y/L) vertical, capital per worker (K/L) horizontal", marks: 1 },
+        { point: "(a) Production function drawn upward-sloping and getting flatter (concave)", marks: 1 },
+        { point: "(a) Shows an equal rise in K/L at low K/L (K₁ → K₂) giving a large rise in Y/L", marks: 1 },
+        { point: "(a) Shows the same rise at high K/L (K₃ → K₄) giving a small rise in Y/L", marks: 1 },
+        { point: "(a) Explains diminishing returns to capital and names the catch-up effect", marks: 1 },
+        { point: "(b) Identifies that higher L with unchanged K lowers K/L (diluting the capital stock)", marks: 1 },
+        { point: "(b) Shows a movement down along the production function from K/L₁ to K/L₂", marks: 1 },
+        { point: "(b) Shows Y/L falls from Y/L₁ to Y/L₂", marks: 1 },
+        { point: "(b) Concludes lower productivity means lower living standards (productivity is the key determinant)", marks: 1 },
+        { point: "(b) Notes the curve itself does not shift — only K/L changes", marks: 1 },
+      ],
+      model: "(a) Draw output per worker (Y/L) on the vertical axis and capital per worker (K/L) on the horizontal axis. The production function slopes upward but becomes flatter as K/L rises, because capital is subject to diminishing returns: as K rises, the extra output from an additional unit of K falls. In a poor country with little capital, raising K/L from K₁ to K₂ moves the economy from A to B and raises Y/L a lot. In a rich country that already has a lot of capital, the same increase from K₃ to K₄ (C to D) raises Y/L only a little. So, other things equal, it is easier for a poor country to grow quickly: the catch-up effect.\n\n(b) With rapid population growth, L rises while K is unchanged, so the capital stock is spread more thinly and K/L falls from K/L₁ to K/L₂. The economy moves down along the same production function from E₁ to E₂, so output per worker falls from Y/L₁ to Y/L₂. Because productivity is the key determinant of living standards, incomes and living standards fall. This is the 'diluting the capital stock' effect of population growth.",
+      diagram: [prodFn, dilution],
+    },
+  ],
+};
+
+export default data;

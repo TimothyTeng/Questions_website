@@ -12,7 +12,7 @@ export const DEFAULT_MODEL = "gemini-flash-latest";
  * Tried in order after the chosen model when it is overloaded, rate-limited or missing. Free-tier
  * quotas are per model, so another model often answers when one is busy. Unknown names are skipped.
  */
-const FALLBACK_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite"];
+const FALLBACK_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-3.8-flash", "gemini-3.5-flash-lite"];
 /** Give up on fallbacks after this long, to stay inside serverless time limits. */
 const TOTAL_BUDGET_MS = 25_000;
 
@@ -35,8 +35,15 @@ function apiKey(): string {
   return key;
 }
 
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}/${path}`, { ...init, headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey() }, cache: "no-store" });
+async function call<T>(path: string, init?: RequestInit, timeoutMs = 20_000): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}/${path}`, { ...init, headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey() }, cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
+  } catch (e) {
+    // A request that hangs (an overloaded model sometimes does) counts as busy: move on to another model.
+    if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) throw new AiError("Gemini is busy right now — try again in a minute.", 503, "skip");
+    throw e;
+  }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg: string = body?.error?.message ?? `Gemini request failed (${res.status})`;
@@ -65,19 +72,28 @@ interface GenResponse {
   promptFeedback?: { blockReason?: string };
 }
 
+/** An inline image sent alongside the prompt (e.g. a photo of a hand-drawn diagram). */
+export interface InlineImage {
+  mimeType: string;
+  /** Base64, no data: prefix. */
+  data: string;
+}
+
 /** Calls the chosen model, retrying a busy model once and then falling back to other free models. */
-async function generate(model: string, prompt: string, json: boolean): Promise<string> {
+export async function generate(model: string, prompt: string, json: boolean, images: InlineImage[] = []): Promise<string> {
   const start = Date.now();
   let last: unknown;
   for (const m of [...new Set([model, ...FALLBACK_MODELS])]) {
     for (let attempt = 0; attempt < 2; attempt++) {
       if (Date.now() - start > TOTAL_BUDGET_MS) throw last;
       try {
-        return await generateOnce(m, prompt, json);
+        // Leave each model at most 12 s, and never run past the overall budget.
+        return await generateOnce(m, prompt, json, images, Math.max(3000, Math.min(12_000, TOTAL_BUDGET_MS - (Date.now() - start))));
       } catch (e) {
         last = e;
         if (!(e instanceof AiError) || !e.retry) throw e;
-        if (e.retry === "skip") break;
+        // An overloaded model can take ~10 s to say so; only retry it if that was quick, else move on.
+        if (e.retry === "skip" || Date.now() - start > 4000) break;
         await sleep(1000);
       }
     }
@@ -85,21 +101,21 @@ async function generate(model: string, prompt: string, json: boolean): Promise<s
   throw last;
 }
 
-async function generateOnce(model: string, prompt: string, json: boolean): Promise<string> {
+async function generateOnce(model: string, prompt: string, json: boolean, images: InlineImage[], timeoutMs: number): Promise<string> {
   const r = await call<GenResponse>(`models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
     body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      contents: [{ role: "user", parts: [{ text: prompt }, ...images.map((i) => ({ inline_data: { mime_type: i.mimeType, data: i.data } }))] }],
       // Thinking models count their reasoning towards this limit, so leave plenty of room.
       generationConfig: { temperature: 0.3, maxOutputTokens: 4096, ...(json ? { responseMimeType: "application/json" } : {}) },
     }),
-  });
+  }, timeoutMs);
   const text = r.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
   if (!text.trim()) throw new AiError(r.promptFeedback?.blockReason ? `Gemini blocked the request (${r.promptFeedback.blockReason}).` : "Gemini returned an empty reply — try again.", 502);
   return text.trim();
 }
 
-function parseJson<T>(text: string): T {
+export function parseJson<T>(text: string): T {
   const m = text.match(/\{[\s\S]*\}/);
   if (!m) throw new AiError("The AI reply was not JSON — try again.", 502);
   return JSON.parse(m[0]) as T;
@@ -119,7 +135,7 @@ function problem(slug: unknown): CodingProblem {
   if (!p) throw new AiError("Unknown problem.", 400);
   return p;
 }
-const modelOf = (v: unknown) => (typeof v === "string" && /^gemini[\w.-]*$/.test(v) ? v : DEFAULT_MODEL);
+export const modelOf = (v: unknown) => (typeof v === "string" && /^gemini[\w.-]*$/.test(v) ? v : DEFAULT_MODEL);
 
 // ---------------------------------------------------------------- prompts
 

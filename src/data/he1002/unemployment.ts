@@ -1,0 +1,942 @@
+import type { Graph, TopicData } from "@/lib/he1002/types";
+
+// ------------------------------------------------------------------ shared diagrams
+
+/** A wage kept above equilibrium (slide 18): quantity supplied exceeds quantity demanded. */
+const wageAboveEq: Graph = {
+  x: "Quantity of labour (L)",
+  y: "Wage (W)",
+  lines: [
+    { label: "S", pts: [[1, 1.5], [9, 8.5]] },
+    { label: "D", pts: [[1, 8.5], [9, 1.5]] },
+    { label: "Actual wage W₁", pts: [[0.5, 7], [9.5, 7]], tone: 1 },
+  ],
+  points: [
+    { on: ["D", "S"], label: "E", xTick: "Lₑ", yTick: "Wₑ" },
+    { on: ["Actual wage W₁", "D"], label: "A", xTick: "Lᵈ" },
+    { on: ["Actual wage W₁", "S"], label: "B", xTick: "Lˢ", yTick: "W₁" },
+  ],
+  caption: "With the wage stuck at W₁ above the equilibrium Wₑ, quantity supplied (Lˢ) exceeds quantity demanded (Lᵈ); the gap Lˢ − Lᵈ is structural unemployment.",
+};
+
+/** Problem Set 3 Q6: an increase in the minimum wage. */
+const minWageRise: Graph = {
+  x: "Quantity of labour (L)",
+  y: "Wage (W)",
+  lines: [
+    { label: "S", pts: [[1, 1.5], [9, 8.5]] },
+    { label: "D", pts: [[1, 8.5], [9, 1.5]] },
+    { label: "Min wage₁", pts: [[0.5, 6.2], [9.5, 6.2]], tone: 3 },
+    { label: "Min wage₂", pts: [[0.5, 7.6], [9.5, 7.6]], tone: 1 },
+  ],
+  points: [
+    { on: ["D", "S"], label: "E", yTick: "Wₑ" },
+    { on: ["Min wage₁", "D"], label: "A₁", xTick: "Lᵈ₁" },
+    { on: ["Min wage₁", "S"], label: "B₁", xTick: "Lˢ₁", yTick: "W₁" },
+    { on: ["Min wage₂", "D"], label: "A₂", xTick: "Lᵈ₂" },
+    { on: ["Min wage₂", "S"], label: "B₂", xTick: "Lˢ₂", yTick: "W₂" },
+  ],
+  arrows: [{ from: [9.2, 6.35], to: [9.2, 7.45] }],
+  caption: "Raising the binding minimum wage from W₁ to W₂ raises quantity supplied (Lˢ₁ → Lˢ₂) and cuts quantity demanded (Lᵈ₁ → Lᵈ₂), so unemployment (Lˢ − Lᵈ) grows.",
+};
+
+/** Problem Set 3 Q7(a): a union in the manufacturing labour market. */
+const unionMfg: Graph = {
+  title: "Manufacturing (unionised)",
+  x: "Quantity of labour (L)",
+  y: "Wage (W)",
+  lines: [
+    { label: "S", pts: [[1, 1.5], [9, 8.5]] },
+    { label: "D", pts: [[1, 8.5], [9, 1.5]] },
+    { label: "Union wage", pts: [[0.5, 7], [9.5, 7]], tone: 1 },
+  ],
+  points: [
+    { on: ["D", "S"], label: "E", xTick: "Lₙᵤ", yTick: "Wₙᵤ" },
+    { on: ["Union wage", "D"], label: "A", xTick: "Lᵈᵤ" },
+    { on: ["Union wage", "S"], label: "B", xTick: "Lˢᵤ", yTick: "Wᵤ" },
+  ],
+  caption: "The union raises the wage from Wₙᵤ to Wᵤ: employment falls from Lₙᵤ to Lᵈᵤ and Lˢᵤ − Lᵈᵤ workers are unemployed.",
+};
+
+/** Problem Set 3 Q7(b): outsiders move to the non-union service market. */
+const unionSvc: Graph = {
+  title: "Services (non-unionised)",
+  x: "Quantity of labour (L)",
+  y: "Wage (W)",
+  lines: [
+    { label: "D", pts: [[1, 8.5], [9, 1.5]] },
+    { label: "S₁", pts: [[1, 1.5], [7, 8.5]], tone: 3 },
+    { label: "S₂", pts: [[3, 1.5], [9, 8.5]] },
+  ],
+  points: [
+    { on: ["D", "S₁"], label: "E₁", xTick: "L₁", yTick: "W₁" },
+    { on: ["D", "S₂"], label: "E₂", xTick: "L₂", yTick: "W₂" },
+  ],
+  arrows: [{ from: [5.9, 7], to: [7.5, 7] }],
+  caption: "Workers who lose manufacturing jobs seek service jobs: supply shifts right from S₁ to S₂, the service wage falls (W₁ → W₂) and service employment rises (L₁ → L₂).",
+};
+
+/** Problem Set 3 Q9(c): an employer mandate worth $4 that workers value at its full cost. */
+const mandate: Graph = {
+  x: "Quantity of labour (L)",
+  y: "Wage (W)",
+  lines: [
+    { label: "D₁", pts: [[1, 9], [9, 2]], tone: 3 },
+    { label: "S₁", pts: [[1, 3.5], [9, 9.5]], tone: 3 },
+    { label: "D₂", pts: [[1, 7], [9, 0]] },
+    { label: "S₂", pts: [[1, 1.5], [9, 7.5]] },
+  ],
+  points: [
+    { on: ["D₁", "S₁"], label: "E₁", xTick: "L₁", yTick: "W₁" },
+    { on: ["D₂", "S₂"], label: "E₂", yTick: "W₁ − $4" },
+  ],
+  arrows: [
+    { from: [8, 2.7], to: [8, 1.1] },
+    { from: [2, 4.1], to: [2, 2.4] },
+  ],
+  caption: "Both curves shift down by exactly $4, so the wage falls by $4 and employment stays at L₁.",
+};
+
+const data: TopicData = {
+  id: "unemployment",
+
+  // ================================================================== CONTENT
+  sections: [
+    {
+      title: "Measuring unemployment",
+      intro: "The slides use US data: the population aged 16+ is split into three groups.",
+      points: [
+        { term: "Bureau of Labor Statistics (BLS)", text: "Produces the unemployment statistics; part of the US Department of Labor." },
+        { term: "Current Population Survey", text: "The monthly survey of 60,000 households on which the BLS statistics are based." },
+        { term: "Adult population", text: "People aged 16 years or older (the working-age population). Labour statistics are based on this group." },
+        { term: "Employed", text: "Paid employees, the self-employed, and unpaid workers in a family business, full-time and part-time.", eg: "A student who works 10 hours a week at a café is employed." },
+        { term: "Unemployed", text: "People who are not working, are available for work, and have looked for work during the previous 4 weeks.", eg: "A graduate who sent job applications last week and can start now." },
+        { term: "Not in the labour force", text: "Everyone else in the adult population: neither employed nor unemployed.", eg: "A retiree, a full-time student not looking for work, a stay-at-home parent." },
+        { term: "Labour force", text: "Employed + unemployed: the total number of workers." },
+      ],
+      formulas: [
+        { name: "Labour force", expr: "Labour force = Employed + Unemployed" },
+        { name: "Adult population", expr: "Adult population = Employed + Unemployed + Not in the labour force", note: "Used in Problem Set 3 Q1." },
+      ],
+      table: [
+        ["Group", "Who is in it", "Counted in the labour force?"],
+        ["Employed", "Paid employees, self-employed, unpaid family-business workers (full- or part-time)", "Yes"],
+        ["Unemployed", "Not working, available, looked for work in the previous 4 weeks", "Yes"],
+        ["Not in the labour force", "Everyone else aged 16+ (e.g. retirees, discouraged workers)", "No"],
+      ],
+    },
+    {
+      title: "Unemployment rate and labour-force participation rate",
+      points: [
+        { term: "Unemployment rate (u-rate)", text: "The percentage of the labour force that is unemployed." },
+        { term: "Labour-force participation rate (LFPR)", text: "The percentage of the adult population that is in the labour force." },
+        { term: "Employment-population ratio", text: "The percentage of the adult population that is employed (Problem Set 3 Q4). It shows how effectively the economy uses its human resources." },
+      ],
+      formulas: [
+        { name: "Unemployment rate", expr: "U-rate = Unemployed ÷ Labour force × 100%" },
+        { name: "Labour-force participation rate", expr: "LFPR = Labour force ÷ Adult population × 100%" },
+        { name: "Employment-population ratio", expr: "Employment-population ratio = Employed ÷ Adult population × 100%" },
+      ],
+      worked: [
+        {
+          problem: "Problem Set 3 Q1: 133,320,000 adults employed, 23,038,000 unemployed and 103,538,000 not in the labour force. Find the adult population, labour force, LFPR and u-rate.",
+          solution:
+            "Adult population = 133,320,000 + 23,038,000 + 103,538,000 = 259,896,000\nLabour force = 133,320,000 + 23,038,000 = 156,358,000\nLFPR = 156,358,000 ÷ 259,896,000 × 100 = 60.2%\nU-rate = 23,038,000 ÷ 156,358,000 × 100 = 14.7%",
+        },
+        {
+          problem: "Exam example: adult population 8 million, 4.6 million employed, 0.4 million unemployed. Find the LFPR (1 d.p.).",
+          solution: "Labour force = 4.6 + 0.4 = 5.0 million\nLFPR = 5.0 ÷ 8 × 100 = 62.5%",
+        },
+      ],
+    },
+    {
+      title: "How events change the u-rate and LFPR",
+      intro: "Method (Problem Set 3 Q2): decide which group the person leaves and joins, then see what happens to the numerator and denominator of each rate.",
+      points: [
+        { term: "Check the denominators", text: "The u-rate's denominator is the labour force; the LFPR's denominator is the adult population. A change in either can move the rate even if the numerator is unchanged." },
+        { term: "Labour force grows with population", text: "Because the labour force constantly increases as the population grows, a rise in the number employed can exceed the fall in the number unemployed (Problem Set 3 Q3).", eg: "Employment up 17.3 million, unemployed down 6.3 million → labour force up 11.0 million." },
+      ],
+      formulas: [{ name: "Change in labour force", expr: "Δ Labour force = Δ Employed + Δ Unemployed" }],
+      table: [
+        ["Event (Problem Set 3 Q2)", "U-rate", "LFPR"],
+        ["Jon finds a job after a long search (U → E)", "Falls", "No effect"],
+        ["Tyrion, a full-time student, graduates and is immediately employed (NILF → E)", "Falls (labour force rises)", "Rises"],
+        ["Arya gives up looking and retires (U → NILF)", "Falls", "Falls"],
+        ["Daenerys quits her job to stay at home (E → NILF)", "Rises (labour force falls)", "Falls"],
+        ["Sansa becomes an adult, no interest in working (joins adult population only)", "No effect", "Falls"],
+        ["Jaime becomes an adult and starts looking (joins adult population and U)", "Rises", "Rises"],
+        ["Cersei dies in retirement (leaves adult population only)", "No effect", "Rises"],
+        ["Jorah dies while working (leaves E and adult population)", "Rises", "Falls"],
+      ],
+      worked: [
+        {
+          problem: "Problem Set 3 Q3: employment rose by 17.3 million but the number unemployed fell by only 6.3 million. How are these consistent?",
+          solution: "Labour force = Employed + Unemployed\nΔ Labour force = +17.3 − 6.3 = +11.0 million\nThe labour force grew (population growth), so employment can rise by more than unemployment falls.",
+        },
+      ],
+    },
+    {
+      title: "Natural and cyclical unemployment",
+      points: [
+        { term: "Natural rate of unemployment", text: "The normal rate of unemployment around which the unemployment rate fluctuates. It is made up of frictional + structural unemployment." },
+        { term: "Cyclical unemployment", text: "The fluctuations in unemployment around its natural rate; closely associated with short-run fluctuations in economic activity.", eg: "In a recession the u-rate rises above the natural rate." },
+        { text: "The US unemployment rate (1960–2022 chart in the slides) moves up and down around the natural rate of unemployment." },
+      ],
+      formulas: [
+        { name: "Natural rate of unemployment", expr: "Natural rate = Frictional unemployment + Structural unemployment" },
+        { name: "Cyclical unemployment", expr: "Cyclical unemployment = Actual u-rate − Natural rate", note: "The deviation of unemployment from its natural rate." },
+      ],
+    },
+    {
+      title: "Limitations of the unemployment rate",
+      points: [
+        { term: "Discouraged workers", text: "People who would like to work but have given up looking for jobs. They are classified as 'not in the labour force', not 'unemployed'." },
+        { term: "Limitation 1", text: "The u-rate excludes discouraged workers, so it falls when people give up looking — the labour market looks better than it is." },
+        { term: "Limitation 2", text: "It does not distinguish between full-time and part-time work, or people working part time because full-time jobs are not available." },
+        { term: "Limitation 3", text: "Some people misreport their work status." },
+        { text: "So the u-rate is not a perfect indicator of joblessness or the health of the labour market, but it is still a very useful barometer of the labour market and the economy." },
+        { term: "Employment-population ratio as a gauge", text: "Problem Set 3 Q4: it is less affected by people moving in and out of the labour force (it does not drop when discouraged workers stop looking), but it can fall for benign reasons such as an ageing population." },
+      ],
+      table: [
+        ["Active-learning case", "What happens", "Does the u-rate give an accurate picture?"],
+        ["Alice loses her job and starts looking", "Unemployed rises, labour force same → u-rate rises", "Yes: the labour market is worsening"],
+        ["Ben, out of work since last year, becomes discouraged and stops looking", "He leaves 'unemployed' for 'not in the labour force' → u-rate falls", "No: it looks better but is not"],
+        ["Calvin loses his $80,000 job and takes a part-time job", "Still 'employed' → u-rate unchanged", "No: things are worse but the u-rate fails to show it"],
+      ],
+    },
+    {
+      title: "Duration of unemployment",
+      points: [
+        { text: "How serious unemployment is depends on whether it is typically a short-term or long-term condition." },
+        { term: "Unemployment spell", text: "A continuous period of time during which an individual is unemployed." },
+        { term: "Most spells are short", text: "Typically 1/3 of the unemployed have been unemployed under 5 weeks and 2/3 under 14 weeks; only 19.3% have been unemployed over 6 months." },
+      ],
+      table: [
+        ["Worker (Problem Set 3 Q5)", "Likely duration", "Why"],
+        ["Construction worker laid off because of bad weather", "Short-term", "Back to work as soon as the weather clears"],
+        ["Manufacturing worker who loses a job at a plant in an isolated area", "Long-term", "Few other jobs nearby; may need to move"],
+        ["Stagecoach worker laid off because of competition from railroads", "Long-term", "Whole industry shrinking; needs retraining for another industry"],
+        ["Short-order cook who loses a job when a new restaurant opens across the street", "Short-term", "Likely to find another job quickly, perhaps at the new restaurant"],
+        ["Expert welder with little formal education replaced by automatic welding machinery", "Long-term", "Lacks skills for the new equipment; needs training or a new industry"],
+      ],
+    },
+    {
+      title: "Why are there always some people unemployed?",
+      points: [
+        { term: "Frictional unemployment", text: "Results because it takes time for workers to search for the jobs that best suit their tastes and skills. Short-term for most workers." },
+        { term: "Structural unemployment", text: "Results because the number of jobs available in some labour markets is insufficient to provide a job for everyone who wants one. Due to wages stuck above the equilibrium level; usually longer-term." },
+      ],
+      table: [
+        ["", "Frictional", "Structural"],
+        ["Cause", "Time taken to search for the job that best suits tastes and skills", "Not enough jobs to go around: wage stuck above equilibrium"],
+        ["Typical duration", "Short-term", "Usually longer-term"],
+        ["Explained by", "Job search", "Minimum-wage laws, unions, efficiency wages"],
+      ],
+    },
+    {
+      title: "Job search and frictional unemployment",
+      points: [
+        { term: "Job search", text: "The process by which workers find appropriate jobs given their tastes and skills." },
+        { text: "Some frictional unemployment is inevitable because the economy is always changing." },
+        { term: "Sectoral shifts", text: "Changes in the composition of demand among industries or regions.", eg: "Demand moves from one region's industry to another's, so workers must search for new jobs." },
+        { term: "Changing patterns of international trade", text: "Another source of change that makes some frictional unemployment inevitable." },
+        { term: "Public policy and job search", text: "Government programs that facilitate job search help to reduce frictional unemployment." },
+        { term: "Government-run employment agencies", text: "Provide information about job vacancies." },
+        { term: "Public training programs", text: "Aim to ease workers' transition from declining to growing industries, and help disadvantaged groups escape poverty." },
+      ],
+    },
+    {
+      title: "Unemployment insurance",
+      points: [
+        { term: "Unemployment insurance (UI)", text: "A government program that partially protects workers' incomes when they become unemployed." },
+        { term: "Benefits of UI", text: "Reduces income uncertainty; with more time to search, the unemployed can look for jobs that better suit their tastes and skills." },
+        { term: "UI increases unemployment", text: "UI benefits end when a worker takes a job, so workers have less incentive to search or take jobs while eligible to receive benefits." },
+      ],
+    },
+    {
+      title: "Structural unemployment: wages above equilibrium",
+      intro: "Structural unemployment occurs when there are not enough jobs to go around — when the wage is kept above equilibrium.",
+      points: [
+        { term: "Wage above equilibrium", text: "At a wage above Wₑ, the quantity of labour supplied exceeds the quantity demanded; the surplus of labour is unemployment." },
+        { term: "Three reasons the wage stays above equilibrium", text: "1. Minimum-wage laws  2. Unions  3. Efficiency wages." },
+        { term: "Skills mismatch (Problem Set 3 Q8)", text: "If a country starts importing autos and exporting aircraft, demand for auto workers falls and demand for aircraft workers rises. If wages fail to adjust, the auto wage stays above equilibrium (surplus of labour = unemployment) and the aircraft wage stays below equilibrium (labour shortage). In the long run new workers move into the higher-wage industry until wages are equal." },
+      ],
+      diagrams: [wageAboveEq],
+    },
+    {
+      title: "1. Minimum-wage laws",
+      points: [
+        { term: "Binding minimum wage", text: "A minimum wage set above the equilibrium wage. It causes structural unemployment: the quantity of labour supplied exceeds the quantity demanded." },
+        { term: "Who is affected", text: "It does not affect workers whose wages are already above the legal minimum; it mostly affects those with low levels of skill and experience, such as teenagers." },
+        { term: "Raising the minimum wage (Problem Set 3 Q6)", text: "Quantity of labour supplied rises, quantity demanded falls, so unemployment increases." },
+      ],
+      diagrams: [minWageRise],
+      formulas: [{ name: "Unemployment at a wage above equilibrium", expr: "Unemployment = Quantity of labour supplied − Quantity of labour demanded" }],
+    },
+    {
+      title: "2. Unions",
+      points: [
+        { term: "Union", text: "A worker association that bargains with employers over wages, benefits and working conditions. Unions exert their market power to negotiate higher wages for workers." },
+        { term: "Effect of a union", text: "Raises the wage above equilibrium: quantity of labour supplied increases and quantity demanded falls, resulting in unemployment." },
+        { term: "Insiders", text: "Workers who remain employed — they are better off." },
+        { term: "Outsiders", text: "Workers who lose their jobs — they are worse off. Some go to non-unionised labour markets, which increases labour supply and reduces wages in those markets." },
+      ],
+      table: [
+        ["Are unions good or bad?", "Argument"],
+        ["Critics", "Unions are cartels: they raise wages above equilibrium, causing unemployment and depressing wages in non-union markets; inefficient and inequitable"],
+        ["Advocates", "Unions counter the market power of large firms, make firms more responsive to workers' concerns, keep a happy and productive workforce"],
+      ],
+      diagrams: [unionMfg, unionSvc],
+    },
+    {
+      title: "3. Efficiency wages",
+      points: [
+        { term: "Theory of efficiency wages", text: "Firms voluntarily pay above-equilibrium wages to boost worker productivity and increase firm profitability. Different versions give different reasons for paying high wages." },
+        { term: "Worker health", text: "In less developed countries poor nutrition is common; better-paid workers eat a more nutritious diet and are healthier and more productive." },
+        { term: "Worker turnover", text: "Hiring and training new workers is costly; higher wages give workers more incentive to stay, reducing turnover." },
+        { term: "Worker quality", text: "Higher wages attract better job applicants, raising the quality of the firm's workforce." },
+        { term: "Worker effort", text: "Workers have discretion over how hard to work; an above-equilibrium wage gives them an incentive to work hard rather than shirk." },
+        { term: "Worker morale", text: "High wages improve morale and content workers are more productive; workers are less productive if they think they are being treated unfairly." },
+      ],
+      table: [
+        ["Efficiency-wage theory", "Why the high wage pays off"],
+        ["Worker health", "Better diet → healthier, more productive workers"],
+        ["Worker turnover", "Workers stay → less costly hiring and training"],
+        ["Worker quality", "Better applicants → higher-quality workforce"],
+        ["Worker effort", "Incentive to work hard rather than shirk"],
+        ["Worker morale", "Content workers are more productive"],
+      ],
+    },
+    {
+      title: "Applying the labour-market model: employer mandates",
+      intro: "Problem Set 3 Q9: a law requires employers to provide a benefit (e.g. healthcare) that costs $4 per worker-hour.",
+      points: [
+        { term: "Effect on labour demand", text: "Demand shifts down by exactly $4 at each quantity of labour: firms will not pay as high a wage given the extra cost of the benefit." },
+        { term: "If workers value the benefit at its cost", text: "Supply also shifts down by exactly $4: workers will work the same amount for a wage $4 lower. The wage falls by $4, employment is unchanged, and employers and employees are just as well off." },
+        { term: "If a minimum wage blocks the fall", text: "If the wage was only $3 above the minimum wage, the wage can fall by only $3 to the minimum; at that wage quantity demanded is below quantity supplied, so there is unemployment." },
+        { term: "If workers do not value the benefit", text: "Supply does not shift: the wage falls by less than $4 and employment falls. Employers pay more in total (wage + benefit) for fewer workers; employees get a lower wage and fewer are employed — both are worse off." },
+      ],
+      diagrams: [mandate],
+    },
+  ],
+
+  // ================================================================== FLASHCARDS
+  flashcards: [
+    { id: "unemployment-c1", type: "concept", front: "Agency in the US Department of Labor that produces the unemployment statistics.", back: "Bureau of Labor Statistics / BLS", why: "Its figures are based on a monthly household survey." },
+    { id: "unemployment-c2", type: "concept", front: "The monthly survey of 60,000 households that the official US labour statistics are based on.", back: "Current Population Survey", why: "It classifies each adult as employed, unemployed or not in the labour force." },
+    { id: "unemployment-c3", type: "concept", front: "People aged 16 years or older — the base group for the labour-market statistics.", back: "Adult population / working-age population", why: "Adult population = employed + unemployed + not in the labour force." },
+    { id: "unemployment-c4", type: "concept", front: "Paid employees, the self-employed and unpaid workers in a family business, whether full-time or part-time.", back: "Employed", why: "A person working only a few hours a week still counts in this group." },
+    { id: "unemployment-c5", type: "concept", front: "People who are not working, are available for work, and have looked for work during the previous 4 weeks.", back: "Unemployed", why: "All three conditions must hold; stop looking and you leave this group." },
+    { id: "unemployment-c6", type: "concept", front: "Adults who are neither employed nor unemployed (e.g. retirees, discouraged workers).", back: "Not in the labour force", why: "They are in the adult population but excluded from the labour force." },
+    { id: "unemployment-c7", type: "concept", front: "Employed + unemployed; the total number of workers.", back: "Labour force / labor force", why: "It is the denominator of the unemployment rate." },
+    { id: "unemployment-c8", type: "concept", front: "Unemployed ÷ labour force × 100.", back: "Unemployment rate / u-rate", why: "E.g. 0.4 million unemployed out of a labour force of 5 million → 8%." },
+    { id: "unemployment-c9", type: "concept", front: "Labour force ÷ adult population × 100.", back: "Labour-force participation rate / LFPR", why: "E.g. labour force 5 million out of 8 million adults → 62.5%." },
+    { id: "unemployment-c10", type: "concept", front: "The percentage of the adult population that is employed.", back: "Employment-population ratio", why: "Problem Set 3: it does not drop when discouraged workers stop looking, but can fall as the population ages." },
+    { id: "unemployment-c11", type: "concept", front: "The normal rate of unemployment around which the unemployment rate fluctuates (frictional + structural).", back: "Natural rate of unemployment", why: "Even in normal times some people are always unemployed." },
+    { id: "unemployment-c12", type: "concept", front: "The fluctuations in unemployment around its natural rate, closely tied to short-run fluctuations in economic activity.", back: "Cyclical unemployment", why: "It rises in recessions when the u-rate climbs above its normal level." },
+    { id: "unemployment-c13", type: "concept", front: "People who would like to work but have given up looking for jobs.", back: "Discouraged workers", why: "They count as not in the labour force, so the u-rate understates joblessness." },
+    { id: "unemployment-c14", type: "concept", front: "A continuous period of time during which an individual is unemployed.", back: "Unemployment spell", why: "Most are short: about 1/3 last under 5 weeks." },
+    { id: "unemployment-c15", type: "concept", front: "Unemployment that results because it takes time for workers to search for the jobs that best suit their tastes and skills.", back: "Frictional unemployment", why: "Usually short-term; explained by job search." },
+    { id: "unemployment-c16", type: "concept", front: "Unemployment that results because the number of jobs in some labour markets is insufficient to give a job to everyone who wants one.", back: "Structural unemployment", why: "Caused by wages stuck above equilibrium; usually longer-term." },
+    { id: "unemployment-c17", type: "concept", front: "The process by which workers find appropriate jobs given their tastes and skills.", back: "Job search", why: "It explains frictional unemployment." },
+    { id: "unemployment-c18", type: "concept", front: "Changes in the composition of demand among industries or regions.", back: "Sectoral shifts", why: "They make some frictional unemployment inevitable because the economy is always changing." },
+    { id: "unemployment-c19", type: "concept", front: "Government program that partially protects workers' incomes when they become unemployed.", back: "Unemployment insurance / UI", why: "Reduces income uncertainty but increases unemployment because benefits end when a worker takes a job." },
+    { id: "unemployment-c20", type: "concept", front: "Government programs that aim to ease workers' move from declining to growing industries and help disadvantaged groups escape poverty.", back: "Public training programs", why: "Along with government-run employment agencies, they reduce frictional unemployment." },
+    { id: "unemployment-c21", type: "concept", front: "A legal wage floor that, if binding, keeps the wage above equilibrium; it mostly affects low-skilled, inexperienced workers such as teenagers.", back: "Minimum wage", why: "Quantity of labour supplied exceeds quantity demanded → structural unemployment." },
+    { id: "unemployment-c22", type: "concept", front: "A worker association that bargains with employers over wages, benefits and working conditions.", back: "Union", why: "It uses market power to raise the wage above equilibrium." },
+    { id: "unemployment-c23", type: "concept", front: "Workers who stay employed after a union raises the wage, and are better off.", back: "Insiders", why: "They earn the higher union wage." },
+    { id: "unemployment-c24", type: "concept", front: "Workers who lose their jobs after a union raises the wage, and are worse off.", back: "Outsiders", why: "Some move to non-union markets, raising labour supply and lowering wages there." },
+    { id: "unemployment-c25", type: "concept", front: "What critics call unions, because they raise wages above equilibrium and cause unemployment.", back: "Cartels", why: "Critics also say unions are inefficient and inequitable." },
+    { id: "unemployment-c26", type: "concept", front: "Theory that firms voluntarily pay above-equilibrium wages to boost worker productivity and raise profitability.", back: "Efficiency wages", why: "The third reason wages stay above equilibrium, after minimum wages and unions." },
+    { id: "unemployment-c27", type: "concept", front: "Efficiency-wage reason: in less developed countries, better-paid workers eat a more nutritious diet and are more productive.", back: "Worker health", why: "Paying more can be profitable when poor nutrition is common." },
+    { id: "unemployment-c28", type: "concept", front: "Efficiency-wage reason: higher pay gives workers more incentive to stay, cutting costly hiring and training.", back: "Worker turnover", why: "Fewer quits means lower hiring and training costs." },
+    { id: "unemployment-c29", type: "concept", front: "Efficiency-wage reason: offering higher wages attracts better job applicants.", back: "Worker quality", why: "The firm's workforce improves." },
+    { id: "unemployment-c30", type: "concept", front: "Efficiency-wage reason: an above-equilibrium wage gives workers an incentive to work hard rather than shirk.", back: "Worker effort", why: "Workers have discretion over how hard they work." },
+    { id: "unemployment-c31", type: "concept", front: "Efficiency-wage reason: high wages make workers content and more productive; workers who feel treated unfairly work less well.", back: "Worker morale", why: "Happy workers are more productive." },
+    {
+      id: "unemployment-c32", type: "scenario",
+      front: "Alice loses her job and begins looking for a new one. What happens to the u-rate, and does it give an accurate picture?",
+      back: "U-rate rises; yes, it is accurate",
+      why: "Alice moves from employed to unemployed. Unemployed rises and the labour force stays the same, so the u-rate rises. The labour market really is worsening, so the u-rate's signal is accurate.",
+    },
+    {
+      id: "unemployment-c33", type: "scenario",
+      front: "Ben, a steelworker out of work since last year, becomes discouraged and stops looking for work. What happens to the u-rate, and is the signal accurate?",
+      back: "U-rate falls; misleading",
+      why: "Ben becomes a discouraged worker, classified as not in the labour force. Unemployed and the labour force both fall by one, so the u-rate falls. This suggests the labour market is improving when it is not.",
+    },
+    {
+      id: "unemployment-c34", type: "scenario",
+      front: "Calvin loses his $80,000 job and takes a part-time job at McDonald's until he finds a better one. What happens to the u-rate?",
+      back: "Unchanged",
+      why: "Calvin is 'employed' whether he works full or part time, so unemployed and the labour force are unchanged. Things are worse for him but the u-rate fails to show it — it does not distinguish full-time from part-time work.",
+    },
+    {
+      id: "unemployment-c35", type: "scenario",
+      front: "Tyrion, a full-time college student, graduates and is immediately employed. Effect on the u-rate and LFPR?",
+      back: "U-rate falls; LFPR rises",
+      why: "He moves from not in the labour force to employed. The labour force rises with unemployed unchanged, so the u-rate falls; the labour force rises with the adult population unchanged, so the LFPR rises.",
+    },
+    {
+      id: "unemployment-c36", type: "scenario",
+      front: "Sansa turns 16 (becomes an adult) but has no interest in working. Effect on the u-rate and LFPR?",
+      back: "U-rate unchanged; LFPR falls",
+      why: "She joins the adult population but not the labour force. The u-rate's parts are unchanged; the LFPR's denominator (adult population) rises, so the LFPR falls.",
+    },
+    {
+      id: "unemployment-c37", type: "scenario",
+      front: "Cersei dies while enjoying retirement. Effect on the u-rate and LFPR?",
+      back: "U-rate unchanged; LFPR rises",
+      why: "She leaves the adult population but was never in the labour force. The labour force is unchanged and the adult population falls, so the LFPR rises; the u-rate is unaffected.",
+    },
+    {
+      id: "unemployment-c38", type: "scenario",
+      front: "Jorah dies while working long hours at the office. Effect on the u-rate and LFPR?",
+      back: "U-rate rises; LFPR falls",
+      why: "Employed, the labour force and the adult population all fall by one. Unemployed ÷ a smaller labour force → u-rate rises. Labour force and adult population both fall by one, so LFPR (below 100%) falls.",
+    },
+    {
+      id: "unemployment-c39", type: "scenario",
+      front: "A construction worker is laid off because of bad weather. Short-term or long-term unemployment?",
+      back: "Short-term",
+      why: "Problem Set 3 Q5: the worker will be back at work as soon as the weather clears.",
+    },
+    {
+      id: "unemployment-c40", type: "scenario",
+      front: "An expert welder with little formal education loses his job when the firm installs automatic welding machinery. Short-term or long-term unemployment?",
+      back: "Long-term",
+      why: "Problem Set 3 Q5: he lacks the skills for the new equipment and must undergo training or find work in a different industry.",
+    },
+    {
+      id: "unemployment-c41", type: "scenario",
+      front: "The government raises a binding minimum wage. What happens to the quantity of labour supplied, demanded and unemployment?",
+      back: "Supplied rises, demanded falls, unemployment rises",
+      why: "Problem Set 3 Q6: at the higher wage more people want to work and firms want fewer workers. Unemployment = quantity supplied − quantity demanded, so it grows.",
+    },
+    {
+      id: "unemployment-c42", type: "scenario",
+      front: "Manufacturing workers form a union; the service sector stays non-union. What happens to wages and employment in each market?",
+      back: "Manufacturing: wage up, employment down. Services: wage down, employment up",
+      why: "Problem Set 3 Q7: the union raises the manufacturing wage above equilibrium, so employment falls and some workers become unemployed. These outsiders seek service jobs, shifting service labour supply right: the service wage falls and service employment rises.",
+    },
+    {
+      id: "unemployment-c43", type: "scenario",
+      front: "A plantation in a country where poor nutrition is common pays well above the market wage, and finds its workers become more productive. Which theory explains this?",
+      back: "Efficiency wages (worker health)",
+      why: "Better-paid workers eat a more nutritious diet, so they are healthier and more productive; paying high wages can be profitable for the firm.",
+    },
+    {
+      id: "unemployment-c44", type: "scenario",
+      front: "A law makes firms provide a benefit costing $4 per hour, and workers value it at exactly $4. If the wage adjusts freely, what happens to the wage and employment?",
+      back: "Wage falls by $4; employment unchanged",
+      why: "Problem Set 3 Q9: demand shifts down by $4 (higher cost per worker) and supply shifts down by $4 (workers accept $4 less for a benefit worth $4). Equilibrium quantity is unchanged; both sides are as well off as before.",
+    },
+    {
+      id: "unemployment-c45", type: "scenario",
+      front: "A country starts importing autos and exporting aircraft, but wages in both industries fail to adjust. What happens in each labour market?",
+      back: "Unemployment in autos; labour shortage in aircraft",
+      why: "Problem Set 3 Q8: demand for auto workers falls, so the auto wage is above equilibrium and supply exceeds demand (unemployment). Demand for aircraft workers rises, so the aircraft wage is below equilibrium and firms cannot hire enough (shortage).",
+    },
+  ],
+
+  // ================================================================== QUIZ
+  quiz: [
+    { id: "unemployment-q1", kind: "fill", sub: "Measuring unemployment", prompt: "US unemployment statistics are produced by the ____ (abbreviation), part of the US Department of Labor.", answers: [["BLS", "Bureau of Labor Statistics", "Bureau of Labour Statistics"]], explain: "The Bureau of Labor Statistics (BLS) produces the unemployment statistics." },
+    { id: "unemployment-q2", kind: "fill", sub: "Measuring unemployment", prompt: "The statistics are based on a monthly survey of 60,000 households called the ____.", answers: [["Current Population Survey", "CPS"]], explain: "The Current Population Survey surveys 60,000 households every month." },
+    { id: "unemployment-q3", kind: "fill", sub: "Measuring unemployment", prompt: "The 'adult population' in these statistics means people aged ____ years or older.", answers: [["16", "sixteen"]], explain: "The adult (working-age) population is everyone aged 16 or older." },
+    { id: "unemployment-q4", kind: "fill", sub: "Measuring unemployment", prompt: "Paid employees, the self-employed and unpaid workers in a family business are all classified as ____.", answers: [["employed"]], explain: "Employed includes all three, full-time and part-time." },
+    { id: "unemployment-q5", kind: "fill", sub: "Measuring unemployment", prompt: "To be unemployed, a person must not be working, be available for work, and have looked for work during the previous ____ weeks.", answers: [["4", "four"]], explain: "The job-search test looks back over the previous 4 weeks." },
+    { id: "unemployment-q6", kind: "fill", sub: "Measuring unemployment", prompt: "Adults who are neither employed nor unemployed are classified as ____.", answers: [["not in the labour force", "not in the labor force", "out of the labour force", "out of the labor force"]], explain: "'Not in the labour force' is everyone else in the adult population." },
+    { id: "unemployment-q7", kind: "fill", sub: "Formulas", prompt: "Labour force = employed + ____.", answers: [["unemployed"]], explain: "The labour force is the total number of workers: employed plus unemployed." },
+    { id: "unemployment-q8", kind: "fill", sub: "Formulas", prompt: "Unemployment rate = unemployed ÷ ____ × 100.", answers: [["labour force", "labor force"]], explain: "The u-rate is the share of the labour force that is unemployed." },
+    { id: "unemployment-q9", kind: "fill", sub: "Formulas", prompt: "Labour-force participation rate = labour force ÷ ____ × 100.", answers: [["adult population", "working-age population", "working age population"]], explain: "The LFPR is the share of the adult population in the labour force." },
+    { id: "unemployment-q10", kind: "fill", sub: "Formulas", prompt: "Employment-population ratio = employed ÷ ____ × 100.", answers: [["adult population", "working-age population", "working age population"]], explain: "Problem Set 3 defines it as the percentage of the adult population that is employed." },
+    { id: "unemployment-q11", kind: "fill", sub: "Calculations", prompt: "An economy has an adult population of 10 million, with 6.3 million employed and 0.7 million unemployed. The labour force is ____ million.", answers: [["7.0", "7"]], explain: "Labour force = 6.3 + 0.7 = 7.0 million." },
+    { id: "unemployment-q12", kind: "fill", sub: "Calculations", prompt: "Same economy (10 million adults, 6.3 million employed, 0.7 million unemployed). The unemployment rate is ____% (1 d.p.).", answers: [["10.0%", "10.0"]], explain: "U-rate = 0.7 ÷ 7.0 × 100 = 10.0%." },
+    { id: "unemployment-q13", kind: "fill", sub: "Calculations", prompt: "Same economy (10 million adults, labour force 7.0 million). The labour-force participation rate is ____% (1 d.p.).", answers: [["70.0%", "70.0"]], explain: "LFPR = 7.0 ÷ 10 × 100 = 70.0%." },
+    { id: "unemployment-q14", kind: "fill", sub: "Calculations", prompt: "Problem Set 3: 133,320,000 employed, 23,038,000 unemployed and 103,538,000 not in the labour force. The adult population is ____.", answers: [["259,896,000", "259896000"]], explain: "Adult population = 133,320,000 + 23,038,000 + 103,538,000 = 259,896,000." },
+    { id: "unemployment-q15", kind: "fill", sub: "Calculations", prompt: "Problem Set 3: 133,320,000 employed and 23,038,000 unemployed. The unemployment rate is ____% (1 d.p.).", answers: [["14.7%", "14.7"]], explain: "Labour force = 156,358,000; u-rate = 23,038,000 ÷ 156,358,000 × 100 = 14.7%." },
+    { id: "unemployment-q16", kind: "fill", sub: "Calculations", prompt: "An adult population of 5 million has 3.1 million employed. The employment-population ratio is ____% (1 d.p.).", answers: [["62.0%", "62.0"]], explain: "Employment-population ratio = 3.1 ÷ 5 × 100 = 62.0%." },
+    { id: "unemployment-q17", kind: "fill", sub: "Natural vs cyclical", prompt: "The normal rate of unemployment around which the unemployment rate fluctuates is the ____.", answers: [["natural rate of unemployment", "natural rate"]], explain: "The natural rate is the normal rate the u-rate fluctuates around." },
+    { id: "unemployment-q18", kind: "fill", sub: "Natural vs cyclical", prompt: "The natural rate of unemployment = ____ unemployment + structural unemployment.", answers: [["frictional"]], explain: "Natural rate = frictional + structural unemployment." },
+    { id: "unemployment-q19", kind: "fill", sub: "Natural vs cyclical", prompt: "The fluctuations in unemployment around its natural rate are called ____ unemployment.", answers: [["cyclical"]], explain: "Cyclical unemployment is the deviation from the natural rate." },
+    { id: "unemployment-q20", kind: "fill", sub: "Natural vs cyclical", prompt: "Cyclical unemployment is closely associated with ____ fluctuations in economic activity.", answers: [["short-run", "short run", "short-term", "short term"]], explain: "Cyclical unemployment moves with short-run economic fluctuations." },
+    { id: "unemployment-q21", kind: "fill", sub: "Limitations of the u-rate", prompt: "People who would like to work but have given up looking for jobs are called ____ workers.", answers: [["discouraged"]], explain: "Discouraged workers are counted as not in the labour force." },
+    { id: "unemployment-q22", kind: "fill", sub: "Limitations of the u-rate", prompt: "When an unemployed person becomes a discouraged worker, the unemployment rate ____ (rises/falls).", answers: [["falls", "fall", "decreases", "drops", "goes down"]], explain: "They leave both 'unemployed' and the labour force, so the u-rate falls even though the labour market has not improved." },
+    { id: "unemployment-q23", kind: "fill", sub: "Limitations of the u-rate", prompt: "A worker who loses a full-time job and takes a part-time job leaves the unemployment rate ____, because part-time workers count as employed.", answers: [["unchanged", "the same", "constant", "unaffected"]], explain: "The u-rate does not distinguish full-time from part-time work (the Calvin example)." },
+    { id: "unemployment-q24", kind: "fill", sub: "Limitations of the u-rate", prompt: "Besides excluding discouraged workers and ignoring part-time work, the u-rate is imperfect because some people ____ their work status.", answers: [["misreport", "mis-report", "misreported"]], explain: "Misreporting of work status is the third limitation on the slides." },
+    { id: "unemployment-q25", kind: "fill", sub: "Duration", prompt: "A continuous period of time during which an individual is unemployed is an unemployment ____.", answers: [["spell"]], explain: "An unemployment spell is one continuous period of unemployment." },
+    { id: "unemployment-q26", kind: "fill", sub: "Duration", prompt: "Typically, 1/3 of the unemployed have been unemployed under 5 weeks and 2/3 under ____ weeks.", answers: [["14", "fourteen"]], explain: "Most spells are short: 1/3 under 5 weeks, 2/3 under 14 weeks." },
+    { id: "unemployment-q27", kind: "fill", sub: "Duration", prompt: "Only ____% of the unemployed have been unemployed for over 6 months.", answers: [["19.3%", "19.3"]], explain: "The slides give 19.3% as the share unemployed over 6 months." },
+    { id: "unemployment-q28", kind: "fill", sub: "Frictional vs structural", prompt: "____ unemployment results because it takes time for workers to search for the jobs that best suit their tastes and skills.", answers: [["Frictional"]], explain: "Frictional unemployment comes from job search and is short-term for most workers." },
+    { id: "unemployment-q29", kind: "fill", sub: "Frictional vs structural", prompt: "____ unemployment results because the number of jobs available in some labour markets is insufficient to provide a job for everyone who wants one.", answers: [["Structural"]], explain: "Structural unemployment: not enough jobs to go around; usually longer-term." },
+    { id: "unemployment-q30", kind: "fill", sub: "Frictional vs structural", prompt: "Structural unemployment is due to wages stuck ____ the equilibrium level.", answers: [["above", "higher than"]], explain: "A wage above equilibrium makes quantity supplied exceed quantity demanded." },
+    { id: "unemployment-q31", kind: "fill", sub: "Job search", prompt: "The process by which workers find appropriate jobs given their tastes and skills is called ____.", answers: [["job search"]], explain: "Job search explains frictional unemployment." },
+    { id: "unemployment-q32", kind: "fill", sub: "Job search", prompt: "Changes in the composition of demand among industries or regions are called ____.", answers: [["sectoral shifts", "sectoral shift"]], explain: "Sectoral shifts make some frictional unemployment inevitable." },
+    { id: "unemployment-q33", kind: "fill", sub: "Job search", prompt: "Some frictional unemployment is inevitable because of sectoral shifts and changing patterns of international ____.", answers: [["trade"]], explain: "The economy is always changing: sectoral shifts and changing trade patterns." },
+    { id: "unemployment-q34", kind: "fill", sub: "Public policy", prompt: "Government-run employment agencies reduce frictional unemployment by providing information about job ____.", answers: [["vacancies", "openings"]], explain: "Better information speeds up job search." },
+    { id: "unemployment-q35", kind: "fill", sub: "Public policy", prompt: "Public ____ programs aim to ease workers' transition from declining to growing industries.", answers: [["training"]], explain: "Public training programs also help disadvantaged groups escape poverty." },
+    { id: "unemployment-q36", kind: "fill", sub: "Unemployment insurance", prompt: "A government program that partially protects workers' incomes when they become unemployed is ____.", answers: [["unemployment insurance", "UI"]], explain: "Unemployment insurance (UI) reduces income uncertainty." },
+    { id: "unemployment-q37", kind: "fill", sub: "Unemployment insurance", prompt: "Because UI benefits end when a worker takes a job, UI ____ (increases/decreases) unemployment.", answers: [["increases", "raises", "increase"]], explain: "Workers have less incentive to search or take jobs while eligible for benefits." },
+    { id: "unemployment-q38", kind: "fill", sub: "Structural unemployment", prompt: "The three reasons wages are kept above equilibrium are minimum-wage laws, unions and ____.", answers: [["efficiency wages", "efficiency wage"]], explain: "These three cause structural unemployment." },
+    { id: "unemployment-q39", kind: "fill", sub: "Minimum wage", prompt: "A binding minimum wage causes the quantity of labour supplied to be ____ than the quantity of labour demanded.", answers: [["greater", "higher", "larger", "more"]], explain: "With the wage above equilibrium, there is a surplus of labour: unemployment." },
+    { id: "unemployment-q40", kind: "fill", sub: "Minimum wage", prompt: "Minimum wages mostly affect workers with low levels of skill and experience, such as ____.", answers: [["teenagers", "teens", "teenager"]], explain: "Workers already above the legal minimum are not affected." },
+    { id: "unemployment-q41", kind: "fill", sub: "Minimum wage", prompt: "At a minimum wage of $12 an hour, 1,500 workers want jobs but firms want to hire only 1,200. Unemployment in this market is ____ workers.", answers: [["300"]], explain: "Unemployment = quantity supplied − quantity demanded = 1,500 − 1,200 = 300." },
+    { id: "unemployment-q42", kind: "fill", sub: "Unions", prompt: "A ____ is a worker association that bargains with employers over wages, benefits and working conditions.", answers: [["union", "labour union", "labor union", "trade union"]], explain: "Unions use their market power to negotiate higher wages." },
+    { id: "unemployment-q43", kind: "fill", sub: "Unions", prompt: "Workers who remain employed at the higher union wage, and are better off, are called ____.", answers: [["insiders"]], explain: "Insiders keep their jobs and gain the higher wage." },
+    { id: "unemployment-q44", kind: "fill", sub: "Unions", prompt: "Workers who lose their jobs because of the union wage, and are worse off, are called ____.", answers: [["outsiders"]], explain: "Outsiders lose their jobs." },
+    { id: "unemployment-q45", kind: "fill", sub: "Unions", prompt: "When outsiders move into non-unionised labour markets, labour supply there increases and wages there ____.", answers: [["fall", "decrease", "drop", "go down", "falls"]], explain: "More labour supply lowers the wage in non-union markets." },
+    { id: "unemployment-q46", kind: "fill", sub: "Unions", prompt: "Critics say unions are ____: they raise wages above equilibrium, causing unemployment.", answers: [["cartels", "cartel"]], explain: "Critics also call unions inefficient and inequitable." },
+    { id: "unemployment-q47", kind: "fill", sub: "Unions", prompt: "Advocates say unions counter the market ____ of large firms.", answers: [["power"]], explain: "Advocates also say unions make firms more responsive and keep workers happy and productive." },
+    { id: "unemployment-q48", kind: "fill", sub: "Efficiency wages", prompt: "The theory of ____ says firms voluntarily pay above-equilibrium wages to boost worker productivity and profitability.", answers: [["efficiency wages", "efficiency wage"]], explain: "Unlike minimum wages and unions, the firm chooses to pay the high wage." },
+    { id: "unemployment-q49", kind: "fill", sub: "Efficiency wages", prompt: "Efficiency-wage reason: in less developed countries, better-paid workers eat better and are more productive — worker ____.", answers: [["health"]], explain: "Worker health: better nutrition → healthier, more productive workers." },
+    { id: "unemployment-q50", kind: "fill", sub: "Efficiency wages", prompt: "Efficiency-wage reason: hiring and training new workers is costly, so higher wages give workers more incentive to stay — worker ____.", answers: [["turnover"]], explain: "Worker turnover falls when pay is higher." },
+    { id: "unemployment-q51", kind: "fill", sub: "Efficiency wages", prompt: "Efficiency-wage reason: higher wages attract better job applicants — worker ____.", answers: [["quality"]], explain: "Worker quality rises." },
+    { id: "unemployment-q52", kind: "fill", sub: "Efficiency wages", prompt: "Efficiency-wage reason (worker effort): an above-equilibrium wage gives workers an incentive to work hard rather than ____.", answers: [["shirk", "shirking"]], explain: "Workers have discretion over how hard they work." },
+    { id: "unemployment-q53", kind: "fill", sub: "Efficiency wages", prompt: "Efficiency-wage reason: high wages make workers content and more productive — worker ____.", answers: [["morale"]], explain: "Workers who feel treated unfairly are less productive." },
+    { id: "unemployment-q54", kind: "fill", sub: "Employer mandate", prompt: "A mandated benefit costs firms $4 an hour and workers value it at exactly $4. Both labour demand and supply shift down by $4, so the wage falls by $____ and employment is unchanged.", answers: [["4"]], explain: "Problem Set 3 Q9: equal $4 downward shifts leave quantity unchanged and lower the wage by $4." },
+    {
+      id: "unemployment-q55", kind: "mcq", sub: "Measuring unemployment",
+      prompt: "Which person is classified as unemployed?",
+      options: ["A retiree who is not looking for work", "A graduate who applied for jobs last week and can start immediately", "A worker who gave up looking for a job two months ago", "A person working 10 hours a week who wants a full-time job"],
+      answer: 1,
+      explain: "Unemployed = not working, available, and looked for work in the previous 4 weeks. The discouraged worker and retiree are not in the labour force; the part-timer is employed.",
+    },
+    {
+      id: "unemployment-q56", kind: "mcq", sub: "Events and rates",
+      prompt: "After a long search, Jon finds a job. What happens?",
+      options: ["U-rate falls; LFPR unchanged", "U-rate falls; LFPR rises", "U-rate unchanged; LFPR rises", "U-rate rises; LFPR unchanged"],
+      answer: 0,
+      explain: "Jon moves from unemployed to employed: still in the labour force and adult population, so only the u-rate changes (falls).",
+    },
+    {
+      id: "unemployment-q57", kind: "mcq", sub: "Events and rates",
+      prompt: "Daenerys quits her job to become a stay-at-home mom. What happens?",
+      options: ["U-rate falls; LFPR falls", "U-rate unchanged; LFPR falls", "U-rate rises; LFPR falls", "U-rate rises; LFPR unchanged"],
+      answer: 2,
+      explain: "She moves from employed to not in the labour force: the labour force falls with unemployed unchanged (u-rate rises) and the LFPR falls.",
+    },
+    {
+      id: "unemployment-q58", kind: "mcq", sub: "Events and rates",
+      prompt: "Jaime turns 16 and starts looking for a job. What happens?",
+      options: ["U-rate rises; LFPR rises", "U-rate rises; LFPR falls", "U-rate unchanged; LFPR rises", "U-rate falls; LFPR rises"],
+      answer: 0,
+      explain: "He joins the adult population and the unemployed, so the labour force and unemployed rise by one: both rates rise.",
+    },
+    {
+      id: "unemployment-q59", kind: "mcq", sub: "Limitations of the u-rate",
+      prompt: "Which is NOT a limitation of the unemployment rate given in the slides?",
+      options: ["It excludes discouraged workers", "It does not distinguish full-time from part-time work", "Some people misreport their work status", "It counts unpaid family-business workers as unemployed"],
+      answer: 3,
+      explain: "Unpaid workers in a family business are counted as employed, not unemployed. The other three are the slides' limitations.",
+    },
+    {
+      id: "unemployment-q60", kind: "mcq", sub: "Frictional vs structural",
+      prompt: "A skilled accountant quits to search for a job that better suits her skills. Her unemployment is best described as:",
+      options: ["Cyclical", "Frictional", "Structural, caused by unions", "Structural, caused by efficiency wages"],
+      answer: 1,
+      explain: "Frictional unemployment: it takes time to search for the job that best suits one's tastes and skills.",
+    },
+    {
+      id: "unemployment-q61", kind: "mcq", sub: "Public policy",
+      prompt: "Which government program is aimed at reducing frictional unemployment by providing information about job vacancies?",
+      options: ["Minimum-wage laws", "Unemployment insurance", "Government-run employment agencies", "Employer mandates"],
+      answer: 2,
+      explain: "Government-run employment agencies provide information about vacancies, speeding up job search.",
+    },
+    {
+      id: "unemployment-q62", kind: "mcq", sub: "Structural unemployment",
+      prompt: "Which is NOT one of the three reasons in the slides for wages being kept above equilibrium?",
+      options: ["Minimum-wage laws", "Unions", "Efficiency wages", "Job search"],
+      answer: 3,
+      explain: "Job search explains frictional unemployment, not wages above equilibrium.",
+    },
+    {
+      id: "unemployment-q63", kind: "mcq", sub: "Unions",
+      prompt: "Manufacturing workers unionise; the service sector is non-union. In the service labour market:",
+      options: ["Supply shifts left; wage rises; employment falls", "Supply shifts right; wage falls; employment rises", "Demand shifts right; wage and employment rise", "Nothing changes"],
+      answer: 1,
+      explain: "Problem Set 3 Q7: outsiders who lose manufacturing jobs seek service jobs, increasing service labour supply.",
+    },
+    {
+      id: "unemployment-q64", kind: "mcq", sub: "Duration",
+      prompt: "A stagecoach-industry worker is laid off because of competition from railroads. Their unemployment is most likely:",
+      options: ["Short-term, because jobs in the same industry will open soon", "Long-term, because the whole industry is shrinking and retraining is needed", "Short-term, because unemployment insurance ends quickly", "Not unemployment at all"],
+      answer: 1,
+      explain: "Problem Set 3 Q5: the entire industry is shrinking, so the worker probably needs new skills for another industry.",
+    },
+    {
+      id: "unemployment-q65", kind: "mcq", sub: "Efficiency wages",
+      prompt: "A firm cannot easily monitor how hard its staff work, so it pays above the market wage to stop them slacking. Which efficiency-wage theory is this?",
+      options: ["Worker health", "Worker turnover", "Worker effort", "Worker quality"],
+      answer: 2,
+      explain: "Worker effort: an above-equilibrium wage gives workers an incentive to work hard rather than shirk.",
+    },
+  ],
+
+  // ================================================================== EXAM
+  exam: [
+    // ---------------- calc
+    {
+      id: "unemployment-e1", section: "calc", sub: "LFPR", source: "Exam example",
+      prompt: "A country has an adult population of 8 million, of whom 4.6 million are employed and 0.4 million are unemployed. Calculate the labour-force participation rate (1 d.p.).",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: LFPR = labour force ÷ adult population × 100", marks: 1 },
+        { point: "Correct working: labour force = 4.6 + 0.4 = 5.0 million; 5.0 ÷ 8 × 100", marks: 1 },
+        { point: "Correct answer 62.5%", marks: 1 },
+      ],
+      model: "LFPR = Labour force ÷ Adult population × 100\nLabour force = Employed + Unemployed = 4.6 + 0.4 = 5.0 million\nLFPR = 5.0 ÷ 8 × 100 = 62.5%",
+      answer: "62.5%",
+    },
+    {
+      id: "unemployment-e2", section: "calc", sub: "LFPR", source: "Problem Set 3 Q1",
+      prompt: "Of all adults in an economy, 133,320,000 are employed, 23,038,000 are unemployed and 103,538,000 are not in the labour force. Calculate the labour-force participation rate (1 d.p.).",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: LFPR = labour force ÷ adult population × 100 (with labour force = E + U and adult population = E + U + NILF)", marks: 1 },
+        { point: "Correct working: labour force = 156,358,000; adult population = 259,896,000; 156,358,000 ÷ 259,896,000 × 100", marks: 1 },
+        { point: "Correct answer 60.2%", marks: 1 },
+      ],
+      model: "LFPR = Labour force ÷ Adult population × 100\nLabour force = 133,320,000 + 23,038,000 = 156,358,000\nAdult population = 156,358,000 + 103,538,000 = 259,896,000\nLFPR = 156,358,000 ÷ 259,896,000 × 100 = 60.2%",
+      answer: "60.2%",
+    },
+    {
+      id: "unemployment-e3", section: "calc", sub: "Unemployment rate", source: "Problem Set 3 Q1",
+      prompt: "Of all adults in an economy, 133,320,000 are employed, 23,038,000 are unemployed and 103,538,000 are not in the labour force. Calculate the unemployment rate (1 d.p.).",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: U-rate = unemployed ÷ labour force × 100", marks: 1 },
+        { point: "Correct working: labour force = 133,320,000 + 23,038,000 = 156,358,000; 23,038,000 ÷ 156,358,000 × 100", marks: 1 },
+        { point: "Correct answer 14.7%", marks: 1 },
+      ],
+      model: "U-rate = Unemployed ÷ Labour force × 100\nLabour force = Employed + Unemployed = 133,320,000 + 23,038,000 = 156,358,000\nU-rate = 23,038,000 ÷ 156,358,000 × 100 = 14.7%\n(Those not in the labour force are excluded.)",
+      answer: "14.7%",
+    },
+    {
+      id: "unemployment-e4", section: "calc", sub: "Unemployment rate", source: "Lecture 3",
+      prompt: "An economy's labour force is 3.2 million, of whom 3.04 million are employed. Calculate the unemployment rate (1 d.p.).",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: U-rate = unemployed ÷ labour force × 100", marks: 1 },
+        { point: "Correct working: unemployed = 3.2 − 3.04 = 0.16 million; 0.16 ÷ 3.2 × 100", marks: 1 },
+        { point: "Correct answer 5.0%", marks: 1 },
+      ],
+      model: "U-rate = Unemployed ÷ Labour force × 100\nLabour force = Employed + Unemployed, so Unemployed = 3.2 − 3.04 = 0.16 million\nU-rate = 0.16 ÷ 3.2 × 100 = 5.0%",
+      answer: "5.0%",
+    },
+    {
+      id: "unemployment-e5", section: "calc", sub: "Employment-population ratio", source: "Problem Set 3 Q4",
+      prompt: "An economy has an adult population of 6.0 million, of whom 3.9 million are employed and 0.3 million are unemployed. Calculate the employment-population ratio (1 d.p.).",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: employment-population ratio = employed ÷ adult population × 100", marks: 1 },
+        { point: "Correct working: 3.9 ÷ 6.0 × 100 (unemployed not included in the numerator)", marks: 1 },
+        { point: "Correct answer 65.0%", marks: 1 },
+      ],
+      model: "Employment-population ratio = Employed ÷ Adult population × 100\n= 3.9 ÷ 6.0 × 100 = 65.0%\n(The 0.3 million unemployed are not employed, so they are not in the numerator.)",
+      answer: "65.0%",
+    },
+    {
+      id: "unemployment-e6", section: "calc", sub: "Unemployment rate", source: "Lecture 3",
+      prompt: "An economy's labour force is 2.5 million and its unemployment rate is 4%. How many people are unemployed and how many are employed?",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: U-rate = unemployed ÷ labour force × 100, rearranged to unemployed = U-rate × labour force", marks: 1 },
+        { point: "Correct working: unemployed = 0.04 × 2.5 million = 0.1 million; employed = 2.5 − 0.1", marks: 1 },
+        { point: "Correct answers: 100,000 unemployed and 2.4 million employed", marks: 1 },
+      ],
+      model: "U-rate = Unemployed ÷ Labour force × 100\nUnemployed = (4 ÷ 100) × 2.5 million = 0.1 million = 100,000\nEmployed = Labour force − Unemployed = 2.5 − 0.1 = 2.4 million",
+      answer: "100,000 unemployed; 2.4 million employed",
+    },
+    {
+      id: "unemployment-e7", section: "calc", sub: "Unemployment rate", source: "Lecture 3",
+      prompt: "An economy has an adult population of 4.0 million and a labour-force participation rate of 70%. If 2.66 million people are employed, calculate the unemployment rate (1 d.p.).",
+      marks: 3,
+      rubric: [
+        { point: "States the formulas: LFPR = labour force ÷ adult population × 100 and U-rate = unemployed ÷ labour force × 100", marks: 1 },
+        { point: "Correct working: labour force = 0.70 × 4.0 = 2.8 million; unemployed = 2.8 − 2.66 = 0.14 million; 0.14 ÷ 2.8 × 100", marks: 1 },
+        { point: "Correct answer 5.0%", marks: 1 },
+      ],
+      model: "LFPR = Labour force ÷ Adult population × 100 → Labour force = 0.70 × 4.0 = 2.8 million\nUnemployed = Labour force − Employed = 2.8 − 2.66 = 0.14 million\nU-rate = Unemployed ÷ Labour force × 100 = 0.14 ÷ 2.8 × 100 = 5.0%",
+      answer: "5.0%",
+    },
+    {
+      id: "unemployment-e8", section: "calc", sub: "Discouraged workers", source: "Lecture 3",
+      prompt: "An economy has 9.0 million employed and 1.0 million unemployed. Then 0.2 million of the unemployed become discouraged and stop looking for work. Calculate the unemployment rate before and after (1 d.p.).",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: U-rate = unemployed ÷ labour force × 100, and treats discouraged workers as not in the labour force", marks: 1 },
+        { point: "Correct working: before 1.0 ÷ 10.0 × 100; after unemployed = 0.8, labour force = 9.8, 0.8 ÷ 9.8 × 100", marks: 1 },
+        { point: "Correct answers: 10.0% before, 8.2% after", marks: 1 },
+      ],
+      model: "U-rate = Unemployed ÷ Labour force × 100\nBefore: labour force = 9.0 + 1.0 = 10.0 million; U-rate = 1.0 ÷ 10.0 × 100 = 10.0%\nDiscouraged workers are classified as not in the labour force, so unemployed = 1.0 − 0.2 = 0.8 million and labour force = 9.0 + 0.8 = 9.8 million\nAfter: U-rate = 0.8 ÷ 9.8 × 100 = 8.2%\nThe u-rate falls although no one found a job.",
+      answer: "10.0% before; 8.2% after",
+    },
+    {
+      id: "unemployment-e9", section: "calc", sub: "Minimum wage", source: "Lecture 3",
+      prompt: "In a labour market, a binding minimum wage of $12 an hour is set. At this wage 1,500 workers want to work but firms want to hire only 1,200. Calculate the unemployment in this market and the unemployment rate among those who want to work at the minimum wage (1 d.p.).",
+      marks: 3,
+      rubric: [
+        { point: "States the formulas: unemployment = quantity of labour supplied − quantity demanded; U-rate = unemployed ÷ labour force × 100", marks: 1 },
+        { point: "Correct working: 1,500 − 1,200 = 300; 300 ÷ 1,500 × 100", marks: 1 },
+        { point: "Correct answers: 300 workers unemployed; 20.0%", marks: 1 },
+      ],
+      model: "Unemployment = Quantity of labour supplied − Quantity of labour demanded = 1,500 − 1,200 = 300 workers\nThe labour force here is everyone who wants to work at the minimum wage = 1,500\nU-rate = Unemployed ÷ Labour force × 100 = 300 ÷ 1,500 × 100 = 20.0%",
+      answer: "300 workers; 20.0%",
+    },
+    {
+      id: "unemployment-e10", section: "calc", sub: "Labour force changes", source: "Problem Set 3 Q3",
+      prompt: "Between two years, employment increased by 17.3 million workers but the number of unemployed workers declined by only 6.3 million. Calculate the change in the labour force.",
+      marks: 3,
+      rubric: [
+        { point: "States the formula: Labour force = Employed + Unemployed, so Δ labour force = Δ employed + Δ unemployed", marks: 1 },
+        { point: "Correct working: +17.3 + (−6.3)", marks: 1 },
+        { point: "Correct answer: the labour force rose by 11.0 million", marks: 1 },
+      ],
+      model: "Labour force = Employed + Unemployed\nΔ Labour force = Δ Employed + Δ Unemployed = +17.3 + (−6.3) = +11.0 million\nThe labour force grows as the population grows, which is why employment can rise by more than unemployment falls.",
+      answer: "+11.0 million",
+    },
+
+    // ---------------- short
+    {
+      id: "unemployment-e11", section: "short", sub: "Limitations of the u-rate", source: "Lecture 3",
+      prompt: "The unemployment rate is a useful barometer of the labour market. Give THREE reasons why it is not a perfect indicator of joblessness.",
+      marks: 3,
+      rubric: [
+        { point: "It excludes discouraged workers (who want work but have stopped looking, so count as not in the labour force)", marks: 1 },
+        { point: "It does not distinguish between full-time and part-time work, or people working part time because full-time jobs are not available", marks: 1 },
+        { point: "Some people misreport their work status", marks: 1 },
+      ],
+      model: "First, the u-rate excludes discouraged workers: people who would like to work but have given up looking are counted as not in the labour force, so the u-rate can fall even when the labour market is not improving. Second, it does not distinguish between full-time and part-time work, so someone who loses a full-time job and takes a part-time job because no full-time job is available still counts as employed. Third, some people misreport their work status in the survey. Even so, the u-rate is still a very useful barometer of the labour market and economy.",
+    },
+    {
+      id: "unemployment-e12", section: "short", sub: "Structural unemployment", source: "Lecture 3",
+      prompt: "Structural unemployment occurs when the wage is kept above its equilibrium level. Explain THREE reasons why this can happen.",
+      marks: 3,
+      rubric: [
+        { point: "Minimum-wage laws: a binding minimum wage holds the wage above equilibrium (mostly affecting low-skilled, inexperienced workers such as teenagers)", marks: 1 },
+        { point: "Unions: use market power to bargain the wage above equilibrium, so quantity supplied rises and quantity demanded falls", marks: 1 },
+        { point: "Efficiency wages: firms voluntarily pay above-equilibrium wages to raise productivity and profits", marks: 1 },
+      ],
+      model: "First, minimum-wage laws: if the minimum wage is binding, the law keeps the wage above equilibrium, mostly for workers with little skill and experience such as teenagers. Second, unions: these worker associations use their market power to bargain for wages above equilibrium, so the quantity of labour supplied rises and the quantity demanded falls. Third, efficiency wages: firms voluntarily pay above-equilibrium wages to boost worker productivity and profitability. In each case the quantity of labour supplied exceeds the quantity demanded, so there is unemployment.",
+    },
+    {
+      id: "unemployment-e13", section: "short", sub: "Efficiency wages", source: "Lecture 3",
+      prompt: "Explain THREE reasons, according to efficiency-wage theory, why a firm might find it profitable to pay above the equilibrium wage.",
+      marks: 3,
+      rubric: [
+        { point: "One correctly explained reason, e.g. worker health (better-paid workers eat better, are healthier and more productive) or worker turnover (workers stay, cutting hiring and training costs)", marks: 1 },
+        { point: "A second correctly explained reason, e.g. worker quality (attracts better applicants)", marks: 1 },
+        { point: "A third correctly explained reason, e.g. worker effort (incentive to work hard rather than shirk) or worker morale (content workers are more productive)", marks: 1 },
+      ],
+      model: "Worker turnover: hiring and training new workers is costly, and higher wages give workers more incentive to stay, reducing turnover. Worker quality: offering higher wages attracts better job applicants, raising the quality of the firm's workforce. Worker effort: workers have discretion over how hard they work, and an above-equilibrium wage gives them an incentive to work hard rather than shirk. (Worker health — better-fed workers in less developed countries are more productive — and worker morale — content workers are more productive — are also accepted.)",
+    },
+    {
+      id: "unemployment-e14", section: "short", sub: "Unemployment insurance", source: "Lecture 3",
+      prompt: "Explain the benefits of unemployment insurance and why it tends to increase unemployment.",
+      marks: 3,
+      rubric: [
+        { point: "Benefit: it partially protects workers' incomes, reducing income uncertainty", marks: 1 },
+        { point: "Benefit: with more time to search, the unemployed can look for jobs that better suit their tastes and skills", marks: 1 },
+        { point: "Cost: benefits end when a worker takes a job, so workers have less incentive to search or take jobs while eligible, raising unemployment", marks: 1 },
+      ],
+      model: "Unemployment insurance is a government program that partially protects workers' incomes when they become unemployed, so it reduces income uncertainty. Because the unemployed have more time to search, they can look for jobs that better suit their tastes and skills. However, UI increases unemployment: benefits end when a worker takes a job, so workers have less incentive to search for or accept jobs while they are eligible for benefits.",
+    },
+    {
+      id: "unemployment-e15", section: "short", sub: "Unions", source: "Lecture 3",
+      prompt: "Are unions good or bad for the economy? Give the critics' view and the advocates' view.",
+      marks: 3,
+      rubric: [
+        { point: "Critics: unions are cartels that raise wages above equilibrium, causing unemployment", marks: 1 },
+        { point: "Critics: they depress wages in non-union labour markets and are inefficient and inequitable", marks: 1 },
+        { point: "Advocates: unions counter the market power of large firms, make firms more responsive to workers' concerns and keep a happy, productive workforce", marks: 1 },
+      ],
+      model: "Critics argue that unions are cartels: they raise wages above equilibrium, which causes unemployment among outsiders. The outsiders move into non-union labour markets, raising labour supply and depressing wages there, so unions are both inefficient and inequitable. Advocates argue that unions counter the market power of large firms and make firms more responsive to workers' concerns. They also help keep a happy and productive workforce.",
+    },
+    {
+      id: "unemployment-e16", section: "short", sub: "Labour force", source: "Problem Set 3 Q3",
+      prompt: "Over several years, employment increased by 17.3 million workers but the number unemployed fell by only 6.3 million. How are these numbers consistent, and why might the fall in unemployment be smaller than the rise in employment?",
+      marks: 3,
+      rubric: [
+        { point: "Uses the identity labour force = employed + unemployed", marks: 1 },
+        { point: "Shows the labour force must have grown (by 17.3 − 6.3 = 11.0 million)", marks: 1 },
+        { point: "Explains the labour force constantly increases as the population grows, so new entrants take jobs without having been counted as unemployed", marks: 1 },
+      ],
+      model: "The labour force equals employed plus unemployed. If employment rose by 17.3 million and unemployment fell by 6.3 million, the labour force must have grown by 11.0 million. The labour force constantly increases as the population grows, so many of the newly employed were new entrants rather than people previously counted as unemployed. Therefore the rise in employment can exceed the fall in unemployment.",
+    },
+    {
+      id: "unemployment-e17", section: "short", sub: "Duration", source: "Problem Set 3 Q5",
+      prompt: "Explain whether each worker is more likely to experience short-term or long-term unemployment: (i) a construction worker laid off because of bad weather; (ii) a manufacturing worker who loses a job at a plant in an isolated area; (iii) a short-order cook who loses a job when a new restaurant opens across the street.",
+      marks: 3,
+      rubric: [
+        { point: "(i) Short-term: back to work as soon as the weather clears", marks: 1 },
+        { point: "(ii) Long-term: few other job opportunities in the area; may need to move", marks: 1 },
+        { point: "(iii) Short-term: likely to find another job quickly, perhaps at the new restaurant", marks: 1 },
+      ],
+      model: "(i) The construction worker is likely to be short-term unemployed, because they will be back at work as soon as the weather clears. (ii) The manufacturing worker is likely to be long-term unemployed, because there are probably few other employment opportunities in an isolated area and they may need to move elsewhere. (iii) The short-order cook is likely to be short-term unemployed, because they can probably find another job fairly quickly, perhaps even at the new restaurant.",
+    },
+    {
+      id: "unemployment-e18", section: "short", sub: "Employment-population ratio", source: "Problem Set 3 Q4",
+      prompt: "Compare the unemployment rate and the employment-population ratio as gauges of how well the economy is using its people.",
+      marks: 3,
+      rubric: [
+        { point: "U-rate is useful for assessing how difficult it is to find a job", marks: 1 },
+        { point: "But the u-rate can give a misleadingly positive signal because it drops when discouraged workers stop looking", marks: 1 },
+        { point: "Employment-population ratio shows how effectively the economy uses its human resources and is less affected by people moving in and out of the labour force, but can drop for benign reasons such as an ageing population", marks: 1 },
+      ],
+      model: "Both statistics are important and closely monitored. The unemployment rate is useful for assessing how difficult it is to find employment, but it can give a mistakenly positive signal because it falls when discouraged workers stop looking for jobs. The employment-population ratio measures the share of the adult population that is working, so it gives a clearer picture of how effectively the economy uses its human resources and is less affected by people moving in and out of the labour force. However, it can drop for benign reasons such as an ageing population.",
+    },
+
+    // ---------------- tf
+    {
+      id: "unemployment-e19", section: "tf", sub: "Limitations of the u-rate", source: "Lecture 3", tf: false,
+      prompt: "When unemployed workers become discouraged and stop looking for jobs, the fall in the unemployment rate shows that the labour market is improving.",
+      marks: 3,
+      rubric: [
+        { point: "States False: the u-rate falls but the labour market has not improved", marks: 1 },
+        { point: "Discouraged workers are classified as not in the labour force rather than unemployed", marks: 1 },
+        { point: "Unemployed and the labour force fall by the same number, so the u-rate falls although no one found a job — a misleading signal", marks: 1 },
+      ],
+      model: "False. Discouraged workers would like to work but have given up looking, so they are classified as not in the labour force rather than unemployed. The number unemployed and the labour force both fall, so the u-rate falls. But nobody has found a job, so the falling u-rate gives the impression that the labour market is improving when it is not.",
+    },
+    {
+      id: "unemployment-e20", section: "tf", sub: "Limitations of the u-rate", source: "Lecture 3", tf: false,
+      prompt: "A worker who loses a full-time job and takes a part-time job while looking for a better one is counted as unemployed.",
+      marks: 3,
+      rubric: [
+        { point: "States False: they are counted as employed", marks: 1 },
+        { point: "Employed includes part-time as well as full-time workers", marks: 1 },
+        { point: "So the u-rate is unchanged even though the worker is worse off — the u-rate does not distinguish full-time from part-time work", marks: 1 },
+      ],
+      model: "False. The BLS counts a person as employed whether they work full time or part time. So the number unemployed and the labour force are unchanged, and the u-rate does not change. Things are worse for the worker, but the u-rate fails to show it because it does not distinguish between full-time and part-time work.",
+    },
+    {
+      id: "unemployment-e21", section: "tf", sub: "Natural rate", source: "Lecture 3", tf: false,
+      prompt: "When the economy is working normally, the unemployment rate falls to zero.",
+      marks: 3,
+      rubric: [
+        { point: "States False: even normally there is the natural rate of unemployment", marks: 1 },
+        { point: "The natural rate = frictional + structural unemployment; frictional unemployment is inevitable because job search takes time and the economy is always changing", marks: 1 },
+        { point: "Structural unemployment exists when wages are above equilibrium (minimum wages, unions, efficiency wages); only cyclical unemployment varies with short-run fluctuations", marks: 1 },
+      ],
+      model: "False. The unemployment rate fluctuates around the natural rate of unemployment, which is frictional plus structural unemployment. Frictional unemployment is inevitable because it takes time for workers to search for suitable jobs and the economy is always changing (sectoral shifts). Structural unemployment exists when minimum wages, unions or efficiency wages keep wages above equilibrium. Only cyclical unemployment disappears when the economy is at its normal level.",
+    },
+    {
+      id: "unemployment-e22", section: "tf", sub: "Unemployment insurance", source: "Lecture 3", tf: true,
+      prompt: "Unemployment insurance reduces income uncertainty but tends to increase unemployment.",
+      marks: 3,
+      rubric: [
+        { point: "States True", marks: 1 },
+        { point: "UI partially protects incomes, reducing uncertainty, and gives the unemployed more time to find jobs that suit their tastes and skills", marks: 1 },
+        { point: "Benefits end when a worker takes a job, so workers have less incentive to search or take jobs while eligible", marks: 1 },
+      ],
+      model: "True. Unemployment insurance partially protects workers' incomes when they become unemployed, which reduces income uncertainty and gives them more time to search for jobs that better suit their tastes and skills. However, UI benefits end when a worker takes a job. So workers have less incentive to search for or take jobs while eligible for benefits, which increases unemployment.",
+    },
+    {
+      id: "unemployment-e23", section: "tf", sub: "Minimum wage", source: "Lecture 3", tf: false,
+      prompt: "A binding minimum wage reduces the wages of all workers in the economy equally.",
+      marks: 3,
+      rubric: [
+        { point: "States False", marks: 1 },
+        { point: "A minimum wage does not affect workers whose wages are already above the legal minimum; it mostly affects low-skilled, inexperienced workers such as teenagers", marks: 1 },
+        { point: "For those affected it raises (not lowers) the wage above equilibrium, so quantity supplied exceeds quantity demanded → structural unemployment", marks: 1 },
+      ],
+      model: "False. A minimum wage does not affect workers whose wages are already above the legal minimum; it mostly affects people with low levels of skill and experience, such as teenagers. For them a binding minimum wage keeps the wage above, not below, the equilibrium level. As a result the quantity of labour supplied exceeds the quantity demanded, causing structural unemployment.",
+    },
+    {
+      id: "unemployment-e24", section: "tf", sub: "Unions", source: "Lecture 3", tf: false,
+      prompt: "Because unions raise wages, all workers in the economy are better off when workers unionise.",
+      marks: 3,
+      rubric: [
+        { point: "States False", marks: 1 },
+        { point: "Insiders who stay employed are better off, but outsiders who lose their jobs at the above-equilibrium wage are worse off", marks: 1 },
+        { point: "Outsiders move to non-union markets, increasing labour supply and reducing wages there", marks: 1 },
+      ],
+      model: "False. A union raises the wage above equilibrium, so the quantity of labour demanded falls and some workers lose their jobs. Insiders, who remain employed, are better off, but outsiders, who lose their jobs, are worse off. Some outsiders go to non-unionised labour markets, which increases labour supply and reduces wages in those markets.",
+    },
+    {
+      id: "unemployment-e25", section: "tf", sub: "Efficiency wages", source: "Lecture 3", tf: true,
+      prompt: "Structural unemployment can exist even without minimum-wage laws or unions.",
+      marks: 3,
+      rubric: [
+        { point: "States True", marks: 1 },
+        { point: "Under efficiency-wage theory, firms voluntarily pay above-equilibrium wages to raise productivity and profitability", marks: 1 },
+        { point: "With the wage above equilibrium, quantity of labour supplied exceeds quantity demanded, so there is structural unemployment; gives a reason, e.g. turnover, quality, effort, morale or health", marks: 1 },
+      ],
+      model: "True. According to efficiency-wage theory, firms may voluntarily pay above-equilibrium wages because doing so boosts worker productivity and profitability — for example by reducing turnover, attracting better applicants or giving workers an incentive not to shirk. With the wage above equilibrium, the quantity of labour supplied exceeds the quantity demanded. So structural unemployment arises even with no minimum wage or union.",
+    },
+    {
+      id: "unemployment-e26", section: "tf", sub: "LFPR", source: "Problem Set 3 Q2", tf: true,
+      prompt: "When a retiree dies, the unemployment rate is unchanged but the labour-force participation rate rises.",
+      marks: 3,
+      rubric: [
+        { point: "States True", marks: 1 },
+        { point: "A retiree is not in the labour force, so unemployed and the labour force are unchanged → u-rate unchanged", marks: 1 },
+        { point: "The adult population (denominator of the LFPR) falls while the labour force is unchanged → LFPR rises", marks: 1 },
+      ],
+      model: "True. A retiree is part of the adult population but not in the labour force. When she dies, the number unemployed and the labour force are unchanged, so the unemployment rate does not change. But the adult population falls while the labour force stays the same, so LFPR = labour force ÷ adult population × 100 rises.",
+    },
+    {
+      id: "unemployment-e27", section: "tf", sub: "Employer mandate", source: "Problem Set 3 Q9", tf: false,
+      prompt: "If the government requires firms to provide a benefit costing $4 per worker-hour, employment must fall even if workers value the benefit at exactly $4.",
+      marks: 3,
+      rubric: [
+        { point: "States False", marks: 1 },
+        { point: "Labour demand shifts down by exactly $4 (extra cost per worker) and labour supply also shifts down by exactly $4 (workers accept $4 less for a benefit worth $4)", marks: 1 },
+        { point: "So if the wage adjusts freely, the wage falls by $4, employment is unchanged and both sides are as well off as before", marks: 1 },
+      ],
+      model: "False. The mandate shifts the labour demand curve down by exactly $4 at each quantity, because firms will not pay as high a wage given the extra cost. If workers value the benefit at exactly $4, they will work the same amount for a wage $4 lower, so labour supply also shifts down by $4. If the wage can freely adjust, the wage falls by $4 and employment is unchanged, so employers and employees are just as well off. (Employment would fall only if workers did not value the benefit or a minimum wage stopped the wage from falling.)",
+    },
+
+    // ---------------- diagram
+    {
+      id: "unemployment-e28", section: "diagram", sub: "Minimum wage", source: "Problem Set 3 Q6",
+      prompt: "A labour market for low-skilled workers is initially in equilibrium with no minimum wage.",
+      parts: [
+        { label: "(a)", prompt: "Using a clearly labelled diagram of the labour market, show the effect of introducing a binding minimum wage on the wage, the quantity of labour supplied, the quantity demanded and unemployment.", marks: 5 },
+        { label: "(b)", prompt: "The government then raises the minimum wage further. Show the effect on your diagram and explain what happens to unemployment.", marks: 5 },
+      ],
+      marks: 10,
+      rubric: [
+        { point: "(a) Axes labelled wage (W) and quantity of labour (L); upward-sloping labour supply and downward-sloping labour demand", marks: 1 },
+        { point: "(a) Initial equilibrium at Wₑ, Lₑ where supply meets demand", marks: 1 },
+        { point: "(a) Minimum wage drawn as a horizontal line ABOVE Wₑ (binding)", marks: 1 },
+        { point: "(a) Shows quantity supplied Lˢ₁ > Lₑ > quantity demanded Lᵈ₁ at the minimum wage", marks: 1 },
+        { point: "(a) Identifies unemployment = Lˢ₁ − Lᵈ₁ (structural unemployment: surplus of labour)", marks: 1 },
+        { point: "(b) Higher minimum wage line W₂ drawn above W₁", marks: 1 },
+        { point: "(b) Quantity of labour supplied increases to Lˢ₂", marks: 1 },
+        { point: "(b) Quantity of labour demanded decreases to Lᵈ₂", marks: 1 },
+        { point: "(b) Unemployment Lˢ₂ − Lᵈ₂ is larger than before", marks: 1 },
+        { point: "(b) Explanation: higher wage attracts more workers but firms hire fewer; mostly affects low-skilled, inexperienced workers", marks: 1 },
+      ],
+      model: "(a) Draw a labour market with the wage on the vertical axis and quantity of labour on the horizontal axis. Without a minimum wage, supply (S) and demand (D) meet at E, with wage Wₑ and employment Lₑ. A binding minimum wage W₁ is set above Wₑ. At W₁, more people want to work (quantity supplied rises to Lˢ₁) but firms want to hire fewer workers (quantity demanded falls to Lᵈ₁). The wage paid rises to W₁, employment falls to Lᵈ₁, and unemployment equals Lˢ₁ − Lᵈ₁. This is structural unemployment, because the wage is kept above equilibrium.\n\n(b) Raising the minimum wage to W₂ moves the horizontal line up. At the higher wage the quantity of labour supplied increases further to Lˢ₂, while the quantity of labour demanded falls to Lᵈ₂. Unemployment rises from Lˢ₁ − Lᵈ₁ to Lˢ₂ − Lᵈ₂. The workers hit hardest are those with low skill and experience, such as teenagers, whose equilibrium wage is below the legal minimum.",
+      diagram: [minWageRise],
+    },
+    {
+      id: "unemployment-e29", section: "diagram", sub: "Unions", source: "Problem Set 3 Q7",
+      prompt: "An economy has two labour markets — one for manufacturing workers and one for service workers. Initially neither is unionised. Then manufacturing workers form a union.",
+      parts: [
+        { label: "(a)", prompt: "Using a clearly labelled diagram of the manufacturing labour market, show and explain what happens to wages and employment in manufacturing.", marks: 5 },
+        { label: "(b)", prompt: "Using a second diagram, show and explain how these changes affect the supply of labour, the wage and employment in the service-worker market.", marks: 5 },
+      ],
+      marks: 10,
+      rubric: [
+        { point: "(a) Axes labelled wage and quantity of labour; labour supply and demand curves with non-union equilibrium Wₙᵤ, Lₙᵤ", marks: 1 },
+        { point: "(a) Union wage Wᵤ drawn above Wₙᵤ", marks: 1 },
+        { point: "(a) Quantity demanded falls to Lᵈᵤ (employment in manufacturing falls)", marks: 1 },
+        { point: "(a) Quantity supplied rises to Lˢᵤ; unemployment = Lˢᵤ − Lᵈᵤ", marks: 1 },
+        { point: "(a) Explanation: union uses market power; insiders better off, outsiders lose jobs", marks: 1 },
+        { point: "(b) Service market axes, demand curve and initial supply S₁ with equilibrium W₁, L₁", marks: 1 },
+        { point: "(b) Supply shifts right from S₁ to S₂ as outsiders seek service jobs", marks: 1 },
+        { point: "(b) New equilibrium: service wage falls from W₁ to W₂", marks: 1 },
+        { point: "(b) Service employment rises from L₁ to L₂", marks: 1 },
+        { point: "(b) Links to the critics' view: unions depress wages in non-union labour markets", marks: 1 },
+      ],
+      model: "(a) In the manufacturing market, supply and demand initially meet at the non-union wage Wₙᵤ and employment Lₙᵤ. The union uses its market power to raise the wage to Wᵤ, above equilibrium. At Wᵤ the quantity of labour demanded falls to Lᵈᵤ, so manufacturing employment falls, while the quantity supplied rises to Lˢᵤ. There are Lˢᵤ − Lᵈᵤ unemployed workers in manufacturing. Insiders who keep their jobs are better off; outsiders who lose their jobs are worse off.\n\n(b) The workers who become unemployed in manufacturing seek jobs in the non-unionised service market, so the supply of service labour shifts right from S₁ to S₂. The equilibrium moves down along the demand curve: the service wage falls from W₁ to W₂ and service employment rises from L₁ to L₂. This is why critics argue that unions depress wages in non-union labour markets.",
+      diagram: [unionMfg, unionSvc],
+    },
+  ],
+};
+
+export default data;
