@@ -22,6 +22,13 @@ const COURSES = [
     blurb: "13 chapters from number systems to FSMs in Verilog, taught with live circuit, K-map, timing and state-machine visualisations, plus 400 past-paper-style questions.",
     color: "var(--t-eig)",
   },
+  {
+    href: "/hp1000",
+    code: "HP1000",
+    title: "Introduction to Psychology",
+    blurb: "All 11 lectures as revision notes, scenario flashcards for naming theories and terms, and fill-in-the-blank, MCQ and short-answer questions marked in batches of 5, with a Word download.",
+    color: "var(--t-cx)",
+  },
 ];
 
 export default function Home() {

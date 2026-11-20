@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "NTU Course Prep",
-  description: "Learn, practise and revise SC1004 Linear Algebra for Computing, SC1001 Python and SC1005 Digital Logic.",
+  description: "Learn, practise and revise SC1004 Linear Algebra for Computing, SC1001 Python, SC1005 Digital Logic and HP1000 Introduction to Psychology.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

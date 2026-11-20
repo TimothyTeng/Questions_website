@@ -1,0 +1,207 @@
+/* HP1000 section: revision notes, flashcards and fill-in-the-blank questions. */
+
+.hp .notes-section {
+  margin-bottom: 18px;
+}
+.hp .notes-section h2 {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.hp .notes-section .sec-num {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.hp .point {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.hp .point:first-of-type {
+  border-top: 0;
+}
+.hp .point .term {
+  font-weight: 700;
+  color: var(--text);
+  border-radius: 6px;
+  transition: filter 0.15s, background 0.15s;
+}
+.hp .point .eg {
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-2);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.92rem;
+}
+.hp .point .eg::before {
+  content: "e.g. ";
+  font-weight: 600;
+  color: var(--accent);
+}
+/* "Hide terms" self-test: blur every bolded term until it is clicked. */
+.hp .hide-terms .term:not(.shown) {
+  filter: blur(6px);
+  background: var(--accent-soft);
+  cursor: pointer;
+  user-select: none;
+}
+.hp .hide-terms td.term-cell:not(.shown) {
+  filter: blur(5px);
+  cursor: pointer;
+}
+
+.hp table.notes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  margin: 10px 0 4px;
+}
+.hp .table-wrap {
+  overflow-x: auto;
+}
+.hp table.notes-table th,
+.hp table.notes-table td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.hp table.notes-table th {
+  background: var(--surface-2);
+}
+
+.hp .toc {
+  position: sticky;
+  top: 72px;
+  align-self: start;
+}
+.hp .toc a {
+  display: block;
+  padding: 3px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.hp .toc a:hover {
+  color: var(--accent);
+}
+.hp .lesson-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+}
+@media (max-width: 860px) {
+  .hp .lesson-grid {
+    grid-template-columns: 1fr;
+  }
+  .hp .toc {
+    display: none;
+  }
+}
+
+/* ---- flashcards ---- */
+.hp .flash {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hp .flash .scenario {
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+.hp .flash .reveal {
+  border-top: 1px dashed var(--border);
+  padding-top: 12px;
+}
+.hp .flash .answer {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.hp input.answer-input {
+  width: 100%;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.hp input.answer-input.ok {
+  border-color: var(--good);
+  background: var(--good-soft);
+}
+.hp input.answer-input.bad {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+.hp .kbd {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 0.78rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 5px;
+  color: var(--muted);
+}
+
+/* ---- fill-in-the-blank ---- */
+.hp .fill-prompt {
+  line-height: 2.1;
+}
+.hp .fill-prompt input {
+  font: inherit;
+  width: 13em;
+  max-width: 100%;
+  padding: 2px 8px;
+  margin: 0 3px;
+  border: 0;
+  border-bottom: 2px solid var(--accent);
+  border-radius: 6px 6px 0 0;
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.hp .fill-prompt input:disabled {
+  opacity: 1;
+}
+.hp .fill-prompt input.ok {
+  border-bottom-color: var(--good);
+  background: var(--good-soft);
+}
+.hp .fill-prompt input.bad {
+  border-bottom-color: var(--bad);
+  background: var(--bad-soft);
+  text-decoration: line-through;
+}
+.hp .model-point {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 6px 0;
+}
+.hp .model-point input {
+  margin-top: 5px;
+}
+.hp textarea.answer-input {
+  width: 100%;
+  min-height: 140px;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+}
+.hp .btn.sm {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+.hp .batch-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
