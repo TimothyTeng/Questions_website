@@ -11,11 +11,13 @@
     "check:sc1001": "tsx --tsconfig tsconfig.json scripts/check-sc1001.ts",
     "check:sc1005": "tsx --tsconfig tsconfig.json scripts/check-sc1005.ts",
     "check:hp1000": "tsx --tsconfig tsconfig.json scripts/check-hp1000.ts",
-    "check:he1002": "tsx --tsconfig tsconfig.json scripts/check-he1002.ts"
+    "check:he1002": "tsx --tsconfig tsconfig.json scripts/check-he1002.ts",
+    "check:he1004": "tsx --tsconfig tsconfig.json scripts/check-he1004.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "katex": "^0.19.1",
+    "mathjax-full": "^3.2.2",
     "next": "16.4.5",
     "react": "19.3.0",
     "react-dom": "19.3.0"

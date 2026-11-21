@@ -36,6 +36,13 @@ const COURSES = [
     blurb: "All 12 lectures as notes with diagrams, term and scenario flashcards, a formula bank, fill-in-the-blank topic quizzes, and exam-format questions with rubrics and Gemini marking, downloadable as Word.",
     color: "var(--t-alg)",
   },
+  {
+    href: "/he1004",
+    code: "HE1004S",
+    title: "Mathematics for Economists I",
+    blurb: "All 11 lecture notes as notes with function graphs, method flashcards for every question type, MCQ quizzes marked every 5, and past-paper-format questions with rubrics and Gemini marking, downloadable as Word.",
+    color: "var(--t-eig)",
+  },
 ];
 
 export default function Home() {

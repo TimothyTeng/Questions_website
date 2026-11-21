@@ -10,6 +10,7 @@ const TABS = [
   { href: "/sc1005", label: "SC1005" },
   { href: "/hp1000", label: "HP1000" },
   { href: "/he1002", label: "HE1002" },
+  { href: "/he1004", label: "HE1004S" },
 ];
 
 /** Each course's own pages, shown after the course tabs while inside that course. */
@@ -40,6 +41,13 @@ const SUBTABS: Record<string, { href: string; label: string }[]> = {
     { href: "/he1002/formulas", label: "Formulas" },
     { href: "/he1002/questions", label: "Questions" },
   ],
+  "/he1004": [
+    { href: "/he1004/learn", label: "Learn" },
+    { href: "/he1004/flashcards", label: "Flashcards" },
+    { href: "/he1004/quiz", label: "MCQ" },
+    { href: "/he1004/formulas", label: "Formulas" },
+    { href: "/he1004/questions", label: "Questions" },
+  ],
 };
 
 export function Nav() {
@@ -64,6 +72,10 @@ export function Nav() {
         ) : course === "/he1002" ? (
           <Link href="/he1002" className="brand">
             HE1002<span>·</span>Macroeconomics <small className="muted">Prep</small>
+          </Link>
+        ) : course === "/he1004" ? (
+          <Link href="/he1004" className="brand">
+            HE1004S<span>·</span>Maths for Economists <small className="muted">Prep</small>
           </Link>
         ) : course === "/sc1004" ? (
           <Link href="/sc1004" className="brand">

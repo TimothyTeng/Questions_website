@@ -1,0 +1,460 @@
+/* HE1004 section: notes, flashcards, topic quizzes, formula bank and exam questions. */
+
+.hm .notes-section {
+  margin-bottom: 18px;
+}
+.hm .notes-section h2 {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.hm .notes-section .sec-num {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.hm .point {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.hm .point:first-of-type {
+  border-top: 0;
+}
+.hm .point .term {
+  font-weight: 700;
+  color: var(--text);
+  border-radius: 6px;
+  transition: filter 0.15s, background 0.15s;
+}
+.hm .point .eg {
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-2);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.92rem;
+}
+.hm .point .eg::before {
+  content: "e.g. ";
+  font-weight: 600;
+  color: var(--accent);
+}
+/* "Hide terms" self-test: blur every bolded term until it is clicked. */
+.hm .hide-terms .term:not(.shown) {
+  filter: blur(6px);
+  background: var(--accent-soft);
+  cursor: pointer;
+  user-select: none;
+}
+.hm .hide-terms td.term-cell:not(.shown) {
+  filter: blur(5px);
+  cursor: pointer;
+}
+
+.hm table.notes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  margin: 10px 0 4px;
+}
+.hm .table-wrap {
+  overflow-x: auto;
+}
+.hm table.notes-table th,
+.hm table.notes-table td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.hm table.notes-table th {
+  background: var(--surface-2);
+}
+
+.hm .toc {
+  position: sticky;
+  top: 72px;
+  align-self: start;
+}
+.hm .toc a {
+  display: block;
+  padding: 3px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.hm .toc a:hover {
+  color: var(--accent);
+}
+.hm .lesson-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+}
+@media (max-width: 860px) {
+  .hm .lesson-grid {
+    grid-template-columns: 1fr;
+  }
+  .hm .toc {
+    display: none;
+  }
+}
+
+/* ---- flashcards ---- */
+.hm .flash {
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hm .flash .scenario {
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+.hm .flash .reveal {
+  border-top: 1px dashed var(--border);
+  padding-top: 12px;
+}
+.hm .flash .answer {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.hm input.answer-input {
+  width: 100%;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.hm input.answer-input.ok {
+  border-color: var(--good);
+  background: var(--good-soft);
+}
+.hm input.answer-input.bad {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+.hm .kbd {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 0.78rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 5px;
+  color: var(--muted);
+}
+
+/* ---- fill-in-the-blank ---- */
+.hm .fill-prompt {
+  line-height: 2.1;
+}
+.hm .fill-prompt input {
+  font: inherit;
+  width: 13em;
+  max-width: 100%;
+  padding: 2px 8px;
+  margin: 0 3px;
+  border: 0;
+  border-bottom: 2px solid var(--accent);
+  border-radius: 6px 6px 0 0;
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.hm .fill-prompt input:disabled {
+  opacity: 1;
+}
+.hm .fill-prompt input.ok {
+  border-bottom-color: var(--good);
+  background: var(--good-soft);
+}
+.hm .fill-prompt input.bad {
+  border-bottom-color: var(--bad);
+  background: var(--bad-soft);
+  text-decoration: line-through;
+}
+.hm .model-point {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 6px 0;
+}
+.hm .model-point input {
+  margin-top: 5px;
+}
+.hm textarea.answer-input {
+  width: 100%;
+  min-height: 140px;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+}
+.hm .btn.sm {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+.hm .batch-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---- formulas, worked examples, diagrams ---- */
+.hm .formulas {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+.hm .formula {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--warn);
+  background: var(--warn-soft);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.hm .formula .f-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--warn);
+}
+.hm .formula .f-expr {
+  font-size: 0.98rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.hm .formula .f-expr .katex-display {
+  margin: 4px 0;
+  text-align: left;
+}
+.hm .formula .f-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.hm .hide-formulas .f-expr:not(.shown) {
+  filter: blur(6px);
+  cursor: pointer;
+  user-select: none;
+}
+.hm .worked {
+  margin-top: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.hm .worked summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.hm .worked .sol {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 0.93rem;
+}
+.hm .graphs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 12px 0 4px;
+}
+.hm figure.graph {
+  margin: 0;
+  flex: 1 1 300px;
+  max-width: 380px;
+}
+.hm .graph-svg svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.hm figure.graph figcaption {
+  margin-top: 2px;
+}
+
+/* ---- exam questions ---- */
+.hm .exam-stem {
+  font-size: 1.02rem;
+}
+.hm .parts {
+  margin: 8px 0 0;
+  display: grid;
+  gap: 4px;
+}
+.hm .model-answer {
+  font-size: 0.95rem;
+}
+.hm .rubric {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin: 6px 0;
+}
+.hm .rubric td {
+  border-top: 1px solid var(--border);
+  padding: 6px 6px;
+  vertical-align: top;
+}
+.hm .rubric td.m {
+  white-space: nowrap;
+  text-align: right;
+  font-weight: 600;
+  width: 1%;
+}
+.hm .rubric tr.full td.m {
+  color: var(--good);
+}
+.hm .rubric tr.part td.m {
+  color: var(--warn);
+}
+.hm .rubric tr.zero td.m {
+  color: var(--bad);
+}
+.hm .status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+.hm .status.queued {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.hm .status.marking {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.hm .status.done {
+  background: var(--good-soft);
+  color: var(--good);
+}
+.hm .status.error {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+.hm .feedback {
+  border-left: 3px solid var(--accent);
+  padding: 6px 10px;
+  background: var(--accent-soft);
+  border-radius: 0 8px 8px 0;
+  margin: 8px 0;
+  font-size: 0.93rem;
+}
+.hm .queue-bar {
+  position: sticky;
+  top: 64px;
+  z-index: 5;
+}
+.hm .thumb {
+  max-height: 120px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.hm select.ai-model {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+}
+.hm .qnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.hm .qnav a {
+  min-width: 34px;
+  text-align: center;
+  padding: 3px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--text);
+}
+.hm .qnav a.done {
+  background: var(--good-soft);
+  border-color: var(--good);
+}
+.hm .qnav a.wait {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.hm .qnav a.err {
+  background: var(--bad-soft);
+  border-color: var(--bad);
+}
+.hm .flash .back {
+  white-space: pre-line;
+}
+.hm .flash .answer.mono {
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-size: 1.1rem;
+}
+
+/* ---- maths-heavy rich text ---- */
+.hm .rich p {
+  margin: 0 0 6px;
+}
+.hm .rich p:last-child {
+  margin-bottom: 0;
+}
+.hm .rich .katex-display {
+  margin: 6px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.hm .point .rich,
+.hm .point .eg .rich {
+  display: inline;
+}
+.hm .point > .rich p:first-child {
+  display: inline;
+}
+.hm .flash .answer .rich p {
+  margin: 0;
+}
+.hm .opt .rich p {
+  margin: 0;
+}
+.hm .statements {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 4px;
+}
+.hm .statements label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.hm .statements label.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.hm .statements label.right {
+  border-color: var(--good);
+}
+.hm .statements label.wrongpick {
+  border-color: var(--bad);
+}
+.hm .statements .num {
+  font-weight: 700;
+  min-width: 2.2em;
+}
+.hm .paper-q {
+  border-left: 4px solid var(--accent);
+  padding-left: 12px;
+}
+.hm .flash .why {
+  margin: 8px 0 14px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+.hm .inline-rich, .hm .inline-rich p { display: inline; }
